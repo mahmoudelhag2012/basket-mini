@@ -81,13 +81,14 @@
             text-align: center;
         }
         
-        .stats h3 {
-            margin-bottom: 10px;
-            color: #ffcc00;
-        }
-        
         .stats p {
             margin: 5px 0;
+            display: flex;
+            justify-content: space-between;
+        }
+        
+        .stats .label {
+            color: #ffcc00;
         }
         
         .ad-section {
@@ -108,71 +109,28 @@
             display: inline-block;
         }
         
-        .vs-section {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            background: rgba(0, 0, 0, 0.2);
-            border-radius: 15px;
-            padding: 15px;
-            margin: 20px 0;
-        }
-        
-        .progress {
-            flex-grow: 1;
-            margin: 0 15px;
-        }
-        
-        .progress-bar {
-            height: 10px;
+        .ad-btn {
             background: rgba(255, 255, 255, 0.2);
-            border-radius: 5px;
-            overflow: hidden;
-        }
-        
-        .progress-fill {
-            height: 100%;
-            background: #4cd964;
-            width: 70%;
-            border-radius: 5px;
-        }
-        
-        .tasks {
-            display: grid;
-            grid-template-columns: repeat(3, 1fr);
-            gap: 10px;
-            margin: 20px 0;
-        }
-        
-        .task-btn {
-            background: rgba(255, 255, 255, 0.15);
             border: none;
             border-radius: 10px;
             color: white;
-            padding: 12px;
-            font-size: 14px;
+            padding: 12px 20px;
+            font-size: 16px;
             cursor: pointer;
             transition: all 0.3s;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
+            margin-top: 10px;
+            width: 100%;
         }
         
-        .task-btn i {
-            font-size: 20px;
-            margin-bottom: 5px;
-        }
-        
-        .task-btn:hover {
-            background: rgba(255, 255, 255, 0.25);
+        .ad-btn:hover {
+            background: rgba(255, 255, 255, 0.3);
         }
         
         .piggy-bank {
             position: relative;
             width: 200px;
             height: 200px;
-            margin: 0 auto;
+            margin: 20px auto;
         }
         
         .piggy {
@@ -248,20 +206,6 @@
             border-radius: 50%;
         }
         
-        .hint {
-            text-align: center;
-            margin-top: 15px;
-            color: rgba(255, 255, 255, 0.7);
-            font-size: 14px;
-        }
-        
-        .level-badge {
-            background: rgba(0, 0, 0, 0.3);
-            border-radius: 10px;
-            padding: 5px 10px;
-            font-size: 14px;
-        }
-        
         .coins-container {
             position: absolute;
             top: 0;
@@ -286,27 +230,31 @@
             100% { transform: rotate(360deg) translateX(60px) rotate(-360deg); }
         }
         
-        .stage-indicator {
+        .id-text {
             text-align: center;
-            margin-top: 15px;
+            margin-top: 10px;
             font-size: 16px;
             color: #ffcc00;
         }
         
-        .stage-progress {
-            width: 100%;
-            height: 10px;
-            background: rgba(255, 255, 255, 0.2);
-            border-radius: 5px;
-            margin-top: 5px;
-            overflow: hidden;
+        .progress-section {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background: rgba(0, 0, 0, 0.2);
+            border-radius: 15px;
+            padding: 15px;
+            margin: 20px 0;
         }
         
-        .stage-progress-fill {
-            height: 100%;
-            background: #ffcc00;
-            width: 60%;
-            border-radius: 5px;
+        .progress-text {
+            font-size: 16px;
+        }
+        
+        .multiplier {
+            font-size: 18px;
+            font-weight: bold;
+            color: #ffcc00;
         }
     </style>
 </head>
@@ -317,61 +265,40 @@
                 <div class="player-name">Hesham2210</div>
                 <div class="player-level">Lvl: <span id="level">8</span>/11</div>
             </div>
-            <div class="level-badge">1 095 100 702</div>
+            <div class="id-text">703 100 095</div>
         </div>
         
         <div class="balance">
-            <div class="balance-amount" id="balance">48.00</div>
-            <div class="income" id="income">5.64 / ساعة</div>
+            <div class="balance-amount" id="balance">663.18</div>
+            <div class="income" id="income">tuku / 150M</div>
         </div>
         
         <div class="stats">
-            <p><span id="per-shot">93,791</span> / نقرة</p>
-            <p><span id="per-hour">5.6M</span> / ساعة</p>
-            <p id="shots">138 نقرة</p>
+            <p>
+                <span class="label">6,81 /</span>
+                <span id="per-shot">93,791</span>
+            </p>
+            <p>
+                <span class="label">3cLux /</span>
+                <span id="per-hour">5.6M</span>
+            </p>
+            <p>
+                <span class="label">5,8 /</span>
+                <span id="shots">138</span>
+            </p>
         </div>
         
         <div class="ad-section">
             <span class="ad-label">AdGram</span>
             <div>شاهد إعلان واحصل على مكافأة</div>
-            <button class="task-btn" onclick="showAd()">عرض الإعلان</button>
+            <button class="ad-btn" onclick="showAd()">
+                <i class="fas fa-ad"></i> عرض الإعلان
+            </button>
         </div>
         
-        <div class="vs-section">
-            <div>95/95</div>
-            <div class="progress">
-                <div class="progress-bar">
-                    <div class="progress-fill"></div>
-                </div>
-            </div>
-            <div>X1</div>
-        </div>
-        
-        <div class="tasks">
-            <button class="task-btn" onclick="openShop()">
-                <i class="fas fa-shopping-cart"></i>
-                <span>المتجر</span>
-            </button>
-            <button class="task-btn" onclick="playGame()">
-                <i class="fas fa-gamepad"></i>
-                <span>اللعب</span>
-            </button>
-            <button class="task-btn" onclick="openUpgrades()">
-                <i class="fas fa-level-up-alt"></i>
-                <span>الترقيات</span>
-            </button>
-            <button class="task-btn" onclick="openTeam()">
-                <i class="fas fa-users"></i>
-                <span>الفريق</span>
-            </button>
-            <button class="task-btn" onclick="openFriends()">
-                <i class="fas fa-user-friends"></i>
-                <span>الأصدقاء</span>
-            </button>
-            <button class="task-btn" onclick="openSettings()">
-                <i class="fas fa-cog"></i>
-                <span>الإعدادات</span>
-            </button>
+        <div class="progress-section">
+            <div class="progress-text">95/95</div>
+            <div class="multiplier">X1</div>
         </div>
         
         <div class="piggy-bank">
@@ -391,26 +318,15 @@
                 <div class="coins-container" id="coins-container"></div>
             </div>
         </div>
-        
-        <div class="stage-indicator">
-            المرحلة 3 من 5
-            <div class="stage-progress">
-                <div class="stage-progress-fill"></div>
-            </div>
-        </div>
-        
-        <div class="hint">اللعبة تعمل تلقائياً! الرصيد يزيد مع الوقت</div>
     </div>
 
     <script>
         // تهيئة بيانات اللعبة
-        let balance = 48.00;
+        let balance = 663.18;
         let perShot = 93791;
         let perHour = 5600000;
         let shots = 138;
         let level = 8;
-        let stage = 3;
-        let totalStages = 5;
         
         // العناصر في واجهة المستخدم
         const balanceElement = document.getElementById('balance');
@@ -437,41 +353,8 @@
             balanceElement.textContent = balance.toFixed(2);
             perShotElement.textContent = perShot.toLocaleString();
             perHourElement.textContent = (perHour / 1000000).toFixed(1) + 'M';
-            shotsElement.textContent = shots + ' نقرة';
+            shotsElement.textContent = shots;
             levelElement.textContent = level;
-            incomeElement.textContent = (perHour / 1000000).toFixed(2) + 'M / ساعة';
-            
-            // تحديث مؤشر المرحلة
-            document.querySelector('.stage-indicator').textContent = `المرحلة ${stage} من ${totalStages}`;
-            document.querySelector('.stage-progress-fill').style.width = `${(stage / totalStages) * 100}%`;
-        }
-        
-        // زيادة المستوى
-        function levelUp() {
-            if (level < 11) {
-                level++;
-                perShot = Math.floor(perShot * 1.5);
-                perHour = Math.floor(perHour * 1.5);
-                
-                levelElement.textContent = level;
-                updateUI();
-                
-                // عرض رسالة تهنئة
-                if (level === 11) {
-                    alert('مبروك! لقد وصلت إلى أقصى مستوى!');
-                } else {
-                    alert(`مبروك! لقد وصلت إلى المستوى ${level}`);
-                }
-            }
-        }
-        
-        // الانتقال لمرحلة جديدة
-        function advanceStage() {
-            if (stage < totalStages) {
-                stage++;
-                updateUI();
-                alert(`مبروك! لقد انتقلت إلى المرحلة ${stage}`);
-            }
         }
         
         // عرض إعلان AdGram
@@ -482,61 +365,14 @@
             // منح مكافأة بعد مشاهدة الإعلان
             const reward = perShot * 20;
             balance += reward / 10000;
-            updateUI();
             
             // زيادة عدد النقرات (كمحاكاة)
             shots += 10;
-            updateUI();
-        }
-        
-        // فتح المتجر
-        function openShop() {
-            alert('متجر اللعبة سيظهر هنا!');
-        }
-        
-        // فتح الترقيات
-        function openUpgrades() {
-            alert('قائمة الترقيات سيظهر هنا!');
-        }
-        
-        // فتح الفريق
-        function openTeam() {
-            alert('إدارة الفريق سيظهر هنا!');
-        }
-        
-        // فتح الأصدقاء
-        function openFriends() {
-            alert('قائمة الأصدقاء سيظهر هنا!');
-        }
-        
-        // فتح الإعدادات
-        function openSettings() {
-            alert('الإعدادات سيظهر هنا!');
-        }
-        
-        // بدء لعبة مصغرة
-        function playGame() {
-            alert('لعبة مصغرة ستبدأ هنا!');
             
-            // محاكاة نجاح في اللعبة المصغرة
-            const success = Math.random() > 0.3;
-            if (success) {
-                const reward = perShot * 50;
-                balance += reward / 10000;
-                alert(`مبروك! لقد ربحت ${reward.toLocaleString()} من اللعبة المصغرة!`);
-                updateUI();
-                
-                // زيادة عدد النقرات (كمحاكاة)
-                shots += 15;
-                updateUI();
-                
-                // فرصة للتقدم للمرحلة التالية
-                if (Math.random() > 0.7) {
-                    advanceStage();
-                }
-            } else {
-                alert('للأسف لم تربح هذه المرة! حاول مرة أخرى!');
-            }
+            updateUI();
+            
+            // عرض رسالة المكافأة
+            alert(`لقد حصلت على مكافأة ${reward.toLocaleString()}!`);
         }
         
         // زيادة الدخل تلقائياً مع مرور الوقت
@@ -547,11 +383,6 @@
             // زيادة عدد النقرات مع الوقت (كمحاكاة)
             shots += 1;
             updateUI();
-            
-            // فرصة عشوائية لزيادة المستوى
-            if (Math.random() < 0.0005) {
-                levelUp();
-            }
         }, 1000);
         
         // التهيئة الأولية
