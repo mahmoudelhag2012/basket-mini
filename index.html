@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Piggy Bank - لعبة التوفير</title>
-    <script src="https://telegram.org/js/telegram-web-app.js"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
         * {
             margin: 0;
@@ -153,6 +153,15 @@
             font-size: 14px;
             cursor: pointer;
             transition: all 0.3s;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        .task-btn i {
+            font-size: 20px;
+            margin-bottom: 5px;
         }
         
         .task-btn:hover {
@@ -173,13 +182,17 @@
             border-radius: 50%;
             position: relative;
             overflow: hidden;
-            cursor: pointer;
-            transition: transform 0.2s;
             box-shadow: 0 10px 20px rgba(0, 0, 0, 0.2);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            animation: piggyFloat 3s ease-in-out infinite;
         }
         
-        .piggy:active {
-            transform: scale(0.95);
+        @keyframes piggyFloat {
+            0% { transform: translateY(0); }
+            50% { transform: translateY(-10px); }
+            100% { transform: translateY(0); }
         }
         
         .piggy-face {
@@ -235,7 +248,21 @@
             border-radius: 50%;
         }
         
-        .coin-display {
+        .hint {
+            text-align: center;
+            margin-top: 15px;
+            color: rgba(255, 255, 255, 0.7);
+            font-size: 14px;
+        }
+        
+        .level-badge {
+            background: rgba(0, 0, 0, 0.3);
+            border-radius: 10px;
+            padding: 5px 10px;
+            font-size: 14px;
+        }
+        
+        .coins-container {
             position: absolute;
             top: 0;
             left: 0;
@@ -250,44 +277,36 @@
             height: 20px;
             background: linear-gradient(135deg, #ffcc00 0%, #ff9900 100%);
             border-radius: 50%;
-            animation: coinFly 1s forwards;
-            pointer-events: none;
+            animation: coinSpin 5s linear infinite;
+            opacity: 0.7;
         }
         
-        @keyframes coinFly {
-            0% {
-                transform: translate(0, 0) scale(1);
-                opacity: 1;
-            }
-            100% {
-                transform: translate(var(--tx), var(--ty)) scale(0);
-                opacity: 0;
-            }
+        @keyframes coinSpin {
+            0% { transform: rotate(0deg) translateX(60px) rotate(0deg); }
+            100% { transform: rotate(360deg) translateX(60px) rotate(-360deg); }
         }
         
-        .hint {
+        .stage-indicator {
             text-align: center;
             margin-top: 15px;
-            color: rgba(255, 255, 255, 0.7);
-            font-size: 14px;
+            font-size: 16px;
+            color: #ffcc00;
         }
         
-        /* أنيميشن للعملات */
-        @keyframes pulse {
-            0% { transform: scale(1); }
-            50% { transform: scale(1.05); }
-            100% { transform: scale(1); }
+        .stage-progress {
+            width: 100%;
+            height: 10px;
+            background: rgba(255, 255, 255, 0.2);
+            border-radius: 5px;
+            margin-top: 5px;
+            overflow: hidden;
         }
         
-        .pulse {
-            animation: pulse 0.5s ease-in-out;
-        }
-        
-        .level-badge {
-            background: rgba(0, 0, 0, 0.3);
-            border-radius: 10px;
-            padding: 5px 10px;
-            font-size: 14px;
+        .stage-progress-fill {
+            height: 100%;
+            background: #ffcc00;
+            width: 60%;
+            border-radius: 5px;
         }
     </style>
 </head>
@@ -329,16 +348,34 @@
         </div>
         
         <div class="tasks">
-            <button class="task-btn" onclick="openShop()">المتجر</button>
-            <button class="task-btn" onclick="play()">اللعب</button>
-            <button class="task-btn" onclick="openUpgrades()">الترقيات</button>
-            <button class="task-btn" onclick="openTeam()">الفريق</button>
-            <button class="task-btn" onclick="openFriends()">الأصدقاء</button>
-            <button class="task-btn" onclick="openSettings()">الإعدادات</button>
+            <button class="task-btn" onclick="openShop()">
+                <i class="fas fa-shopping-cart"></i>
+                <span>المتجر</span>
+            </button>
+            <button class="task-btn" onclick="playGame()">
+                <i class="fas fa-gamepad"></i>
+                <span>اللعب</span>
+            </button>
+            <button class="task-btn" onclick="openUpgrades()">
+                <i class="fas fa-level-up-alt"></i>
+                <span>الترقيات</span>
+            </button>
+            <button class="task-btn" onclick="openTeam()">
+                <i class="fas fa-users"></i>
+                <span>الفريق</span>
+            </button>
+            <button class="task-btn" onclick="openFriends()">
+                <i class="fas fa-user-friends"></i>
+                <span>الأصدقاء</span>
+            </button>
+            <button class="task-btn" onclick="openSettings()">
+                <i class="fas fa-cog"></i>
+                <span>الإعدادات</span>
+            </button>
         </div>
         
         <div class="piggy-bank">
-            <div class="piggy" id="piggy">
+            <div class="piggy">
                 <div class="piggy-face">
                     <div class="eyes">
                         <div class="eye"><div class="pupil"></div></div>
@@ -351,11 +388,18 @@
                         </div>
                     </div>
                 </div>
-                <div class="coin-display" id="coin-display"></div>
+                <div class="coins-container" id="coins-container"></div>
             </div>
         </div>
         
-        <div class="hint">انقر على Piggy Bank لجمع العملات!</div>
+        <div class="stage-indicator">
+            المرحلة 3 من 5
+            <div class="stage-progress">
+                <div class="stage-progress-fill"></div>
+            </div>
+        </div>
+        
+        <div class="hint">اللعبة تعمل تلقائياً! الرصيد يزيد مع الوقت</div>
     </div>
 
     <script>
@@ -365,6 +409,8 @@
         let perHour = 5600000;
         let shots = 138;
         let level = 8;
+        let stage = 3;
+        let totalStages = 5;
         
         // العناصر في واجهة المستخدم
         const balanceElement = document.getElementById('balance');
@@ -373,8 +419,18 @@
         const perHourElement = document.getElementById('per-hour');
         const shotsElement = document.getElementById('shots');
         const levelElement = document.getElementById('level');
-        const piggy = document.getElementById('piggy');
-        const coinDisplay = document.getElementById('coin-display');
+        const coinsContainer = document.getElementById('coins-container');
+        
+        // إنشاء العملات الدوارة حول Piggy Bank
+        function createCoins() {
+            coinsContainer.innerHTML = '';
+            for (let i = 0; i < 8; i++) {
+                const coin = document.createElement('div');
+                coin.classList.add('coin');
+                coin.style.animationDelay = `${i * 0.5}s`;
+                coinsContainer.appendChild(coin);
+            }
+        }
         
         // تحديث واجهة المستخدم
         function updateUI() {
@@ -384,105 +440,10 @@
             shotsElement.textContent = shots + ' نقرة';
             levelElement.textContent = level;
             incomeElement.textContent = (perHour / 1000000).toFixed(2) + 'M / ساعة';
-        }
-        
-        // النقر على Piggy Bank
-        piggy.addEventListener('click', function(e) {
-            // زيادة الرصيد
-            balance += perShot / 10000;
-            shots++;
             
-            // إنشاء عملة متحركة
-            createCoin(e);
-            
-            // تأثير اهتزاز
-            piggy.classList.add('pulse');
-            setTimeout(() => {
-                piggy.classList.remove('pulse');
-            }, 500);
-            
-            // تحديث الواجهة
-            updateUI();
-            
-            // فرصة عشوائية للحصول على مكافأة إضافية
-            if (Math.random() < 0.1) {
-                const bonus = perShot * 5;
-                balance += bonus / 10000;
-                showBonus(bonus);
-                updateUI();
-            }
-            
-            // زيادة المستوى بعد عدد معين من النقرات
-            if (shots % 50 === 0) {
-                levelUp();
-            }
-        });
-        
-        // إنشاء عملة متحركة
-        function createCoin(event) {
-            const coin = document.createElement('div');
-            coin.classList.add('coin');
-            
-            // تحديد موقع النقر
-            const rect = piggy.getBoundingClientRect();
-            const x = event.clientX - rect.left;
-            const y = event.clientY - rect.top;
-            
-            // تحديد الوجهة (الزاوية العلوية اليسرى للرصيد)
-            const balanceRect = balanceElement.getBoundingClientRect();
-            const targetX = balanceRect.left - rect.left + balanceRect.width / 2;
-            const targetY = balanceRect.top - rect.top + balanceRect.height / 2;
-            
-            // تعيين موقع البداية
-            coin.style.left = x + 'px';
-            coin.style.top = y + 'px';
-            
-            // حساب متجه الحركة
-            const tx = targetX - x;
-            const ty = targetY - y;
-            
-            coin.style.setProperty('--tx', tx + 'px');
-            coin.style.setProperty('--ty', ty + 'px');
-            
-            coinDisplay.appendChild(coin);
-            
-            // إزالة العملة بعد انتهاء الأنيميشن
-            setTimeout(() => {
-                coin.remove();
-            }, 1000);
-        }
-        
-        // عرض مكافأة
-        function showBonus(amount) {
-            const bonus = document.createElement('div');
-            bonus.textContent = `+${amount.toLocaleString()}`;
-            bonus.style.position = 'absolute';
-            bonus.style.color = '#ffcc00';
-            bonus.style.fontWeight = 'bold';
-            bonus.style.fontSize = '20px';
-            bonus.style.textShadow = '0 0 5px rgba(0,0,0,0.5)';
-            bonus.style.animation = 'bonusFloat 2s forwards';
-            
-            // إضافة أنيميشن للعائمة
-            const style = document.createElement('style');
-            style.textContent = `
-                @keyframes bonusFloat {
-                    0% { transform: translate(-50%, 0); opacity: 1; }
-                    100% { transform: translate(-50%, -100px); opacity: 0; }
-                }
-            `;
-            document.head.appendChild(style);
-            
-            bonus.style.left = '50%';
-            bonus.style.top = '50%';
-            bonus.style.transform = 'translate(-50%, 0)';
-            
-            piggy.appendChild(bonus);
-            
-            // إزالة العنصر بعد انتهاء الأنيميشن
-            setTimeout(() => {
-                bonus.remove();
-            }, 2000);
+            // تحديث مؤشر المرحلة
+            document.querySelector('.stage-indicator').textContent = `المرحلة ${stage} من ${totalStages}`;
+            document.querySelector('.stage-progress-fill').style.width = `${(stage / totalStages) * 100}%`;
         }
         
         // زيادة المستوى
@@ -495,7 +456,21 @@
                 levelElement.textContent = level;
                 updateUI();
                 
-                alert(`مبروك! لقد وصلت إلى المستوى ${level}`);
+                // عرض رسالة تهنئة
+                if (level === 11) {
+                    alert('مبروك! لقد وصلت إلى أقصى مستوى!');
+                } else {
+                    alert(`مبروك! لقد وصلت إلى المستوى ${level}`);
+                }
+            }
+        }
+        
+        // الانتقال لمرحلة جديدة
+        function advanceStage() {
+            if (stage < totalStages) {
+                stage++;
+                updateUI();
+                alert(`مبروك! لقد انتقلت إلى المرحلة ${stage}`);
             }
         }
         
@@ -507,7 +482,10 @@
             // منح مكافأة بعد مشاهدة الإعلان
             const reward = perShot * 20;
             balance += reward / 10000;
-            showBonus(reward);
+            updateUI();
+            
+            // زيادة عدد النقرات (كمحاكاة)
+            shots += 10;
             updateUI();
         }
         
@@ -536,544 +514,49 @@
             alert('الإعدادات سيظهر هنا!');
         }
         
-        // بدء اللعبة
-        function play() {
-            alert('بدء لعبة جديدة!');
-        }
-        
-        // زيادة الدخل تلقائياً مع مرور الوقت
-        setInterval(() => {
-            balance += perHour / 10000 / 3600;
-            updateUI();
-        }, 1000);
-        
-        // التهيئة الأولية
-        updateUI();
-    </script>
-</body>
-</html><!DOCTYPE html>
-<html lang="ar" dir="rtl">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Piggy Bank - لعبة التوفير</title>
-    <script src="https://telegram.org/js/telegram-web-app.js"></script>
-    <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-        }
-        
-        body {
-            background: linear-gradient(135deg, #6a11cb 0%, #2575fc 100%);
-            color: #fff;
-            min-height: 100vh;
-            padding: 20px;
-        }
-        
-        .container {
-            max-width: 400px;
-            margin: 0 auto;
-            background: rgba(255, 255, 255, 0.1);
-            backdrop-filter: blur(10px);
-            border-radius: 20px;
-            padding: 20px;
-            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
-        }
-        
-        .header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 20px;
-            padding-bottom: 15px;
-            border-bottom: 1px solid rgba(255, 255, 255, 0.2);
-        }
-        
-        .player-info {
-            text-align: right;
-        }
-        
-        .player-name {
-            font-size: 18px;
-            font-weight: bold;
-        }
-        
-        .player-level {
-            font-size: 14px;
-            color: #ffcc00;
-        }
-        
-        .balance {
-            text-align: center;
-            margin: 25px 0;
-        }
-        
-        .balance-amount {
-            font-size: 40px;
-            font-weight: bold;
-            color: #ffcc00;
-            text-shadow: 0 0 10px rgba(255, 204, 0, 0.5);
-        }
-        
-        .income {
-            font-size: 18px;
-            color: #4cd964;
-        }
-        
-        .stats {
-            background: rgba(0, 0, 0, 0.2);
-            border-radius: 15px;
-            padding: 15px;
-            margin: 20px 0;
-            text-align: center;
-        }
-        
-        .stats h3 {
-            margin-bottom: 10px;
-            color: #ffcc00;
-        }
-        
-        .stats p {
-            margin: 5px 0;
-        }
-        
-        .ad-section {
-            background: rgba(255, 255, 255, 0.15);
-            border-radius: 15px;
-            padding: 15px;
-            margin: 20px 0;
-            text-align: center;
-        }
-        
-        .ad-label {
-            background: #ff3366;
-            color: white;
-            padding: 5px 10px;
-            border-radius: 20px;
-            font-size: 14px;
-            margin-bottom: 10px;
-            display: inline-block;
-        }
-        
-        .vs-section {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            background: rgba(0, 0, 0, 0.2);
-            border-radius: 15px;
-            padding: 15px;
-            margin: 20px 0;
-        }
-        
-        .progress {
-            flex-grow: 1;
-            margin: 0 15px;
-        }
-        
-        .progress-bar {
-            height: 10px;
-            background: rgba(255, 255, 255, 0.2);
-            border-radius: 5px;
-            overflow: hidden;
-        }
-        
-        .progress-fill {
-            height: 100%;
-            background: #4cd964;
-            width: 70%;
-            border-radius: 5px;
-        }
-        
-        .tasks {
-            display: grid;
-            grid-template-columns: repeat(3, 1fr);
-            gap: 10px;
-            margin: 20px 0;
-        }
-        
-        .task-btn {
-            background: rgba(255, 255, 255, 0.15);
-            border: none;
-            border-radius: 10px;
-            color: white;
-            padding: 12px;
-            font-size: 14px;
-            cursor: pointer;
-            transition: all 0.3s;
-        }
-        
-        .task-btn:hover {
-            background: rgba(255, 255, 255, 0.25);
-        }
-        
-        .piggy-bank {
-            position: relative;
-            width: 200px;
-            height: 200px;
-            margin: 0 auto;
-        }
-        
-        .piggy {
-            width: 100%;
-            height: 100%;
-            background: #ff99cc;
-            border-radius: 50%;
-            position: relative;
-            overflow: hidden;
-            cursor: pointer;
-            transition: transform 0.2s;
-            box-shadow: 0 10px 20px rgba(0, 0, 0, 0.2);
-        }
-        
-        .piggy:active {
-            transform: scale(0.95);
-        }
-        
-        .piggy-face {
-            position: absolute;
-            top: 40%;
-            left: 50%;
-            transform: translate(-50%, -50%);
-            width: 80px;
-        }
-        
-        .eyes {
-            display: flex;
-            justify-content: space-around;
-            margin-bottom: 15px;
-        }
-        
-        .eye {
-            width: 20px;
-            height: 20px;
-            background: white;
-            border-radius: 50%;
-            position: relative;
-        }
-        
-        .pupil {
-            width: 10px;
-            height: 10px;
-            background: black;
-            border-radius: 50%;
-            position: absolute;
-            top: 5px;
-            left: 5px;
-        }
-        
-        .nose {
-            width: 30px;
-            height: 20px;
-            background: #ff66a3;
-            border-radius: 50%;
-            margin: 0 auto;
-        }
-        
-        .nostrils {
-            display: flex;
-            justify-content: space-around;
-            padding-top: 5px;
-        }
-        
-        .nostril {
-            width: 6px;
-            height: 6px;
-            background: #cc3380;
-            border-radius: 50%;
-        }
-        
-        .coin-display {
-            position: absolute;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            pointer-events: none;
-        }
-        
-        .coin {
-            position: absolute;
-            width: 20px;
-            height: 20px;
-            background: linear-gradient(135deg, #ffcc00 0%, #ff9900 100%);
-            border-radius: 50%;
-            animation: coinFly 1s forwards;
-            pointer-events: none;
-        }
-        
-        @keyframes coinFly {
-            0% {
-                transform: translate(0, 0) scale(1);
-                opacity: 1;
-            }
-            100% {
-                transform: translate(var(--tx), var(--ty)) scale(0);
-                opacity: 0;
-            }
-        }
-        
-        .hint {
-            text-align: center;
-            margin-top: 15px;
-            color: rgba(255, 255, 255, 0.7);
-            font-size: 14px;
-        }
-        
-        /* أنيميشن للعملات */
-        @keyframes pulse {
-            0% { transform: scale(1); }
-            50% { transform: scale(1.05); }
-            100% { transform: scale(1); }
-        }
-        
-        .pulse {
-            animation: pulse 0.5s ease-in-out;
-        }
-    </style>
-</head>
-<body>
-    <div class="container">
-        <div class="header">
-            <div class="player-info">
-                <div class="player-name">Hesham2210</div>
-                <div class="player-level">Lvl: <span id="level">8</span>/11</div>
-            </div>
-            <div class="logo">Piggy Bank</div>
-        </div>
-        
-        <div class="balance">
-            <div class="balance-amount" id="balance">48.00</div>
-            <div class="income" id="income">5.64 / ساعة</div>
-        </div>
-        
-        <div class="stats">
-            <h3>1 095 100 702</h3>
-            <p><span id="per-shot">93 791</span> / نقرة</p>
-            <p><span id="per-hour">5.6M</span> / ساعة</p>
-            <p id="shots">138 نقرة</p>
-        </div>
-        
-        <div class="ad-section">
-            <span class="ad-label">AD</span>
-            <div>AIR DROP</div>
-            <button class="task-btn" onclick="showAd()">شاهد إعلان واحصل على مكافأة!</button>
-        </div>
-        
-        <div class="vs-section">
-            <div>95/95 636</div>
-            <div class="progress">
-                <div class="progress-bar">
-                    <div class="progress-fill"></div>
-                </div>
-            </div>
-            <div>X1</div>
-        </div>
-        
-        <div class="tasks">
-            <button class="task-btn" onclick="openShop()">المتجر</button>
-            <button class="task-btn" onclick="play()">اللعب</button>
-            <button class="task-btn" onclick="openUpgrades()">الترقيات</button>
-            <button class="task-btn" onclick="openTeam()">الفريق</button>
-            <button class="task-btn" onclick="openFriends()">الأصدقاء</button>
-            <button class="task-btn" onclick="openSettings()">الإعدادات</button>
-        </div>
-        
-        <div class="piggy-bank">
-            <div class="piggy" id="piggy">
-                <div class="piggy-face">
-                    <div class="eyes">
-                        <div class="eye"><div class="pupil"></div></div>
-                        <div class="eye"><div class="pupil"></div></div>
-                    </div>
-                    <div class="nose">
-                        <div class="nostrils">
-                            <div class="nostril"></div>
-                            <div class="nostril"></div>
-                        </div>
-                    </div>
-                </div>
-                <div class="coin-display" id="coin-display"></div>
-            </div>
-        </div>
-        
-        <div class="hint">انقر على Piggy Bank لجمع العملات!</div>
-    </div>
-
-    <script>
-        // تهيئة بيانات اللعبة
-        let balance = 48.00;
-        let perShot = 93791;
-        let perHour = 5600000;
-        let shots = 138;
-        let level = 8;
-        
-        // العناصر في واجهة المستخدم
-        const balanceElement = document.getElementById('balance');
-        const incomeElement = document.getElementById('income');
-        const perShotElement = document.getElementById('per-shot');
-        const perHourElement = document.getElementById('per-hour');
-        const shotsElement = document.getElementById('shots');
-        const levelElement = document.getElementById('level');
-        const piggy = document.getElementById('piggy');
-        const coinDisplay = document.getElementById('coin-display');
-        
-        // تحديث واجهة المستخدم
-        function updateUI() {
-            balanceElement.textContent = balance.toFixed(2);
-            perShotElement.textContent = perShot.toLocaleString();
-            perHourElement.textContent = (perHour / 1000000).toFixed(1) + 'M';
-            shotsElement.textContent = shots + ' نقرة';
-            levelElement.textContent = level;
-        }
-        
-        // النقر على Piggy Bank
-        piggy.addEventListener('click', function(e) {
-            // زيادة الرصيد
-            balance += perShot / 10000;
-            shots++;
+        // بدء لعبة مصغرة
+        function playGame() {
+            alert('لعبة مصغرة ستبدأ هنا!');
             
-            // إنشاء عملة متحركة
-            createCoin(e);
-            
-            // تأثير اهتزاز
-            piggy.classList.add('pulse');
-            setTimeout(() => {
-                piggy.classList.remove('pulse');
-            }, 500);
-            
-            // تحديث الواجهة
-            updateUI();
-            
-            // فرصة عشوائية للحصول على مكافأة إضافية
-            if (Math.random() < 0.1) {
-                const bonus = perShot * 5;
-                balance += bonus / 10000;
-                showBonus(bonus);
+            // محاكاة نجاح في اللعبة المصغرة
+            const success = Math.random() > 0.3;
+            if (success) {
+                const reward = perShot * 50;
+                balance += reward / 10000;
+                alert(`مبروك! لقد ربحت ${reward.toLocaleString()} من اللعبة المصغرة!`);
                 updateUI();
-            }
-        });
-        
-        // إنشاء عملة متحركة
-        function createCoin(event) {
-            const coin = document.createElement('div');
-            coin.classList.add('coin');
-            
-            // تحديد موقع النقر
-            const rect = piggy.getBoundingClientRect();
-            const x = event.clientX - rect.left;
-            const y = event.clientY - rect.top;
-            
-            // تحديد الوجهة (الزاوية العلوية اليسرى للرصيد)
-            const balanceRect = balanceElement.getBoundingClientRect();
-            const targetX = balanceRect.left - rect.left + balanceRect.width / 2;
-            const targetY = balanceRect.top - rect.top + balanceRect.height / 2;
-            
-            // تعيين موقع البداية
-            coin.style.left = x + 'px';
-            coin.style.top = y + 'px';
-            
-            // حساب متجه الحركة
-            const tx = targetX - x;
-            const ty = targetY - y;
-            
-            coin.style.setProperty('--tx', tx + 'px');
-            coin.style.setProperty('--ty', ty + 'px');
-            
-            coinDisplay.appendChild(coin);
-            
-            // إزالة العملة بعد انتهاء الأنيميشن
-            setTimeout(() => {
-                coin.remove();
-            }, 1000);
-        }
-        
-        // عرض مكافأة
-        function showBonus(amount) {
-            const bonus = document.createElement('div');
-            bonus.textContent = `+${amount.toLocaleString()}`;
-            bonus.style.position = 'absolute';
-            bonus.style.color = '#ffcc00';
-            bonus.style.fontWeight = 'bold';
-            bonus.style.fontSize = '20px';
-            bonus.style.textShadow = '0 0 5px rgba(0,0,0,0.5)';
-            bonus.style.animation = 'bonusFloat 2s forwards';
-            
-            // إضافة أنيميشن للعائمة
-            const style = document.createElement('style');
-            style.textContent = `
-                @keyframes bonusFloat {
-                    0% { transform: translate(-50%, 0); opacity: 1; }
-                    100% { transform: translate(-50%, -100px); opacity: 0; }
+                
+                // زيادة عدد النقرات (كمحاكاة)
+                shots += 15;
+                updateUI();
+                
+                // فرصة للتقدم للمرحلة التالية
+                if (Math.random() > 0.7) {
+                    advanceStage();
                 }
-            `;
-            document.head.appendChild(style);
-            
-            bonus.style.left = '50%';
-            bonus.style.top = '50%';
-            bonus.style.transform = 'translate(-50%, 0)';
-            
-            piggy.appendChild(bonus);
-            
-            // إزالة العنصر بعد انتهاء الأنيميشن
-            setTimeout(() => {
-                bonus.remove();
-            }, 2000);
-        }
-        
-        // عرض إعلان
-        function showAd() {
-            // محاكاة عرض إعلان AdGram
-            alert('عرض إعلان AdGram هنا...\nستحصل على مكافأة بعد مشاهدة الإعلان!');
-            
-            // منح مكافأة بعد مشاهدة الإعلان
-            const reward = perShot * 20;
-            balance += reward / 10000;
-            showBonus(reward);
-            updateUI();
-        }
-        
-        // فتح المتجر
-        function openShop() {
-            alert('متجر اللعبة سيظهر هنا!');
-        }
-        
-        // فتح الترقيات
-        function openUpgrades() {
-            alert('قائمة الترقيات سيظهر هنا!');
-        }
-        
-        // فتح الفريق
-        function openTeam() {
-            alert('إدارة الفريق سيظهر هنا!');
-        }
-        
-        // فتح الأصدقاء
-        function openFriends() {
-            alert('قائمة الأصدقاء سيظهر هنا!');
-        }
-        
-        // فتح الإعدادات
-        function openSettings() {
-            alert('الإعدادات سيظهر هنا!');
-        }
-        
-        // بدء اللعبة
-        function play() {
-            alert('بدء لعبة جديدة!');
+            } else {
+                alert('للأسف لم تربح هذه المرة! حاول مرة أخرى!');
+            }
         }
         
         // زيادة الدخل تلقائياً مع مرور الوقت
         setInterval(() => {
             balance += perHour / 10000 / 3600;
             updateUI();
+            
+            // زيادة عدد النقرات مع الوقت (كمحاكاة)
+            shots += 1;
+            updateUI();
+            
+            // فرصة عشوائية لزيادة المستوى
+            if (Math.random() < 0.0005) {
+                levelUp();
+            }
         }, 1000);
         
         // التهيئة الأولية
+        createCoins();
         updateUI();
     </script>
 </body>
 </html>
-
