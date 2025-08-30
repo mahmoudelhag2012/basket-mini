@@ -1,179 +1,161 @@
 <!doctype html>
 <html lang="ar" dir="rtl">
 <head>
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Basket Mini — Pro v3</title>
-  <script src="https://telegram.org/js/telegram-web-app.js"></script>
-  <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@500;700;800&display=swap" rel="stylesheet">
-  <style>
-    :root{
-      --bg:#0a0e17; --text:#eef2ff; --muted:#96a0b9;
-      --panel:#101824; --panel2:#0f1521; --ring:#ffffff18;
-      --rim:#ff7a3c; --glass:#e9f0ffcc;
-      --wood1:#905828; --wood2:#a66b36; --wood3:#7a4a22;
-      --gold1:#ffd46a; --gold2:#ffb724;
-    }
-    *{box-sizing:border-box}
-    html,body{margin:0;background:radial-gradient(1200px 600px at 50% -10%, #1b2540 0%, var(--bg) 60%);color:var(--text);font-family:"Cairo",system-ui}
-    .wrap{max-width:540px;margin:0 auto;padding:16px}
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1"/>
+<title>Basket Mini — v4</title>
+<link href="https://fonts.googleapis.com/css2?family=Cairo:wght@600;800&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#0b0f18;--text:#eef2ff;--muted:#9ba7c0;--ring:#ffffff18;--gold1:#ffd46a;--gold2:#ffb724;--rim:#ff6a2e}
+*{box-sizing:border-box}
+html,body{margin:0;background:radial-gradient(1200px 620px at 50% -10%,#1b2540 0,#0b0f18 60%);color:var(--text);font-family:"Cairo",system-ui}
+.wrap{max-width:540px;margin:0 auto;padding:16px}
+.grid3{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}
+.badge{background:linear-gradient(180deg,#11192a,#0f1522);border-radius:18px;padding:12px 14px;box-shadow:0 10px 26px #0009,inset 0 1px 0 var(--ring)}
+.k{font-size:13px;color:var(--muted)}.v{font-weight:800;font-size:22px}
 
-    .grid3{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}
-    .badge{background:linear-gradient(180deg,var(--panel),var(--panel2));border-radius:18px;padding:12px 14px;box-shadow:0 8px 24px #0008, inset 0 1px 0 var(--ring)}
-    .k{font-size:13px;color:var(--muted)}
-    .v{font-weight:800;font-size:22px}
+.arena{position:relative;height:520px;margin:14px 0 12px;border-radius:22px;overflow:hidden;box-shadow:0 24px 60px #000a,inset 0 0 0 1px var(--ring);background:linear-gradient(180deg,#0c1322 0%,#0a0f18 48%,#090d15 100%)}
+.lights{position:absolute;inset:0;background:
+ radial-gradient(900px 240px at 50% -20px,#ffffff1c 0,transparent 70%),
+ radial-gradient(1100px 240px at 50% 0,#1d2848 0,transparent 65%)}
 
-    .arena{position:relative;height:500px;margin:14px 0 10px;border-radius:22px;overflow:hidden;box-shadow:0 24px 60px #000a, inset 0 0 0 1px var(--ring);background:linear-gradient(180deg,#0c1322 0%,#0a0e17 48%, #090d15 100%)}
+/* backboard + rim + net */
+.hoop{position:absolute;top:110px;left:50%;transform:translateX(-50%);width:320px;height:240px}
+svg{width:100%;height:100%}
 
-    /* stadium lights & crowd */
-    .crowd{position:absolute;inset:0;background:
-      radial-gradient(800px 140px at 50% 20px,#ffffff14 0,#ffffff04 40%,transparent 60%),
-      radial-gradient(1200px 200px at 50% 0,#1c2745 0%, transparent 65%);
-    }
-    .lightbar{position:absolute;left:50%;top:24px;transform:translateX(-50%);width:70%;height:62px;border-radius:40px;background:radial-gradient(280px 34px at 50% 50%, #ffffff66 0, #ffffff15 60%, transparent 75%)}
+/* court wood using conic gradients */
+.court{position:absolute;left:50%;bottom:-24px;transform:translateX(-50%);width:95%;height:300px;border-radius:50%/22%;overflow:hidden;filter:drop-shadow(0 -10px 32px #000a)}
+.wood{position:absolute;inset:0;background:
+ repeating-linear-gradient(90deg,#8f5525 0 18px,#a86833 18px 32px,#7a4720 32px 50px);
+ box-shadow:inset 0 110px 170px #0007}
+.midcircle{position:absolute;left:50%;bottom:108px;transform:translateX(-50%);width:290px;height:150px;border:4px solid #ffffff22;border-radius:50%}
 
-    /* HOOP: glass backboard + rim + net */
-    .hoop{position:absolute;top:110px;left:50%;transform:translateX(-50%);width:300px;height:230px}
-    svg{width:100%;height:100%}
-    .netGlow{opacity:0;transition:.16s}
+/* ball */
+.ball{position:absolute;left:50%;bottom:48px;transform:translateX(-50%);width:108px;height:108px;border-radius:50%;
+ background:
+  radial-gradient(40px 40px at 34% 34%,#ffb77f 0,#ff944f 46%,transparent 47%),
+  radial-gradient(140px 140px at 70% 70%,#ff6e22 0,#d24a0f 70%);
+ box-shadow:0 20px 38px #000c,inset -14px -14px 24px #0003}
+.ball:before,.ball:after{content:"";position:absolute;inset:0;border-radius:50%}
+.ball:before{border-top:6px solid #00000055;border-left:6px solid #00000055;opacity:.55}
+.ball:after{background:radial-gradient(130px 130px at 30% 30%,transparent 52%,#00000055 53% 56%,transparent 57%)}
+.shadow{position:absolute;left:50%;bottom:28px;transform:translateX(-50%);width:140px;height:24px;border-radius:50%;background:#00000058;filter:blur(8px)}
 
-    /* COURT wood ellipse */
-    .court{position:absolute;left:50%;bottom:-34px;transform:translateX(-50%);width:92%;height:280px;border-radius:50%/22%;overflow:hidden;filter:drop-shadow(0 -10px 32px #000a)}
-    .planks{position:absolute;inset:0;background:
-      repeating-linear-gradient(90deg,var(--wood1) 0 18px,var(--wood2) 18px 30px,var(--wood3) 30px 48px);
-      box-shadow:inset 0 100px 160px #0007;
-    }
-    .circle{position:absolute;left:50%;bottom:96px;transform:translateX(-50%);width:260px;height:140px;border:4px solid #ffffff22;border-radius:50%}
+/* motion with arc + spin */
+.ball.up{animation:up .6s cubic-bezier(.25,.7,.2,1) forwards}
+.ball.down{animation:down .46s cubic-bezier(.25,.65,.2,1) forwards}
+.ball.spin{animation:spin 1.06s linear}
+.shadow.up{animation:shrink .6s linear forwards}
+.shadow.down{animation:grow .46s linear forwards}
+@keyframes up{0%{transform:translate(-50%,0) scale(1)}60%{transform:translate(calc(-50% + var(--dx)), -300px) scale(.96)}100%{transform:translate(calc(-50% + var(--dx)), -190px) scale(.92)}}
+@keyframes down{0%{transform:translate(calc(-50% + var(--dx)), -190px) scale(.92)}100%{transform:translate(-50%, 60px) scale(.88)}}
+@keyframes spin{to{rotate:360deg}}
+@keyframes shrink{0%{transform:translateX(-50%) scale(1)}100%{transform:translateX(-50%) scale(.6)}}
+@keyframes grow{0%{transform:translateX(-50%) scale(.6)}100%{transform:translateX(-50%) scale(1.06)}}
 
-    /* ball + seams + shadow */
-    .ball{position:absolute;left:50%;bottom:42px;transform:translateX(-50%);width:100px;height:100px;border-radius:50%;
-      background:
-        radial-gradient(38px 38px at 34% 34%, #ffb57c 0%, #ff934d 46%, transparent 47%),
-        radial-gradient(130px 130px at 70% 70%, #ff6e22 0%, #d24a0f 70%);
-      box-shadow:0 18px 36px #000c, inset -12px -12px 22px #0003;
-    }
-    .ball:before, .ball:after{content:"";position:absolute;inset:0;border-radius:50%}
-    .ball:before{border-top:5px solid #00000055;border-left:5px solid #00000055;opacity:.55;filter:blur(.2px)}
-    .ball:after{background:radial-gradient(120px 120px at 30% 30%, transparent 52%, #00000055 53% 56%, transparent 57%)}
-    .shadow{position:absolute;left:50%;bottom:26px;transform:translateX(-50%);width:130px;height:22px;border-radius:50%;background:#00000058;filter:blur(7px)}
+/* buttons */
+.btn{width:100%;border:0;background:linear-gradient(180deg,var(--gold1),var(--gold2));color:#1b1100;font-weight:800;font-size:18px;border-radius:16px;padding:14px 16px;box-shadow:0 12px 22px #0008,inset 0 1px 0 #fff7;cursor:pointer}
+.hint{color:var(--muted);text-align:center;font-size:12px;margin-top:8px}
 
-    /* motion */
-    .ball.up{animation:up .58s cubic-bezier(.25,.65,.2,1) forwards}
-    .ball.down{animation:down .44s linear forwards}
-    .shadow.up{animation:shrink .58s linear forwards}
-    .shadow.down{animation:grow .44s linear forwards}
-    @keyframes up{0%{transform:translateX(-50%) translateY(0) scale(1)}60%{transform:translateX(-50%) translateY(-280px) scale(.96)}100%{transform:translateX(-50%) translateY(-180px) scale(.92)}}
-    @keyframes down{0%{transform:translateX(-50%) translateY(-180px) scale(.92)}100%{transform:translateX(-50%) translateY(46px) scale(.88)}}
-    @keyframes shrink{0%{transform:translateX(-50%) scale(1)}100%{transform:translateX(-50%) scale(.6)}}
-    @keyframes grow{0%{transform:translateX(-50%) scale(.6)}100%{transform:translateX(-50%) scale(1.05)}}
-
-    /* UI */
-    .btn{width:100%;border:0;background:linear-gradient(180deg,var(--gold1),var(--gold2));color:#1b1100;font-weight:800;font-size:18px;border-radius:16px;padding:14px 16px;box-shadow:0 12px 22px #0007, inset 0 1px 0 #fff7;cursor:pointer}
-    .hint{color:var(--muted);text-align:center;font-size:12px;margin-top:8px}
-
-    .overlay{position:absolute;inset:0;display:none;place-items:center;background:#0007;backdrop-filter:blur(2px)}
-    .panel{background:linear-gradient(180deg,var(--panel2),var(--panel));border-radius:20px;padding:18px 16px;box-shadow:0 16px 40px #000c;min-width:72%}
-    .row{display:flex;gap:10px;margin-top:10px}
-    .btn2{flex:1;border:0;border-radius:14px;padding:12px 14px;font-weight:800}
-    .go{background:#111;color:#fff}
-    .reward{background:#13322d;color:#c7fff5;border:1px solid #2dd4bf55}
-  </style>
+.overlay{position:absolute;inset:0;display:none;place-items:center;background:#0007;backdrop-filter:blur(2px)}
+.panel{background:linear-gradient(180deg,#0f1522,#101824);border-radius:20px;padding:18px 16px;box-shadow:0 16px 40px #000c;min-width:72%}
+.row{display:flex;gap:10px;margin-top:10px}
+.btn2{flex:1;border:0;border-radius:14px;padding:12px 14px;font-weight:800}
+.go{background:#111;color:#fff}.reward{background:#13322d;color:#c7fff5;border:1px solid #2dd4bf55}
+</style>
 </head>
 <body>
-  <div class="wrap">
-    <div class="grid3">
-      <div class="badge"><div class="k">المستوى</div><div class="v" id="level">1</div></div>
-      <div class="badge"><div class="k">السكور</div><div class="v" id="score">0</div></div>
-      <div class="badge"><div class="k">المحاولات</div><div class="v" id="lives">3</div></div>
+<div class="wrap">
+  <div class="grid3">
+    <div class="badge"><div class="k">المستوى</div><div class="v" id="level">1</div></div>
+    <div class="badge"><div class="k">السكور</div><div class="v" id="score">0</div></div>
+    <div class="badge"><div class="k">المحاولات</div><div class="v" id="lives">3</div></div>
+  </div>
+  <div class="arena">
+    <div class="lights"></div>
+    <div class="hoop">
+      <svg viewBox="0 0 320 240" xmlns="http://www.w3.org/2000/svg">
+        <!-- glass backboard -->
+        <rect x="70" y="18" width="180" height="28" rx="14" fill="#e9f0ffcc"/>
+        <rect x="90" y="46" width="14" height="96" rx="7" fill="#e9eef6"/>
+        <rect x="216" y="46" width="14" height="96" rx="7" fill="#e9eef6"/>
+        <!-- rim -->
+        <path d="M100 140 Q160 164 220 140" stroke="var(--rim)" stroke-width="14" fill="none" stroke-linecap="round"/>
+        <!-- net -->
+        <g id="net">
+          <path d="M120 142 L200 142 L184 200 L136 200 Z" fill="url(#mesh)" stroke="var(--rim)" stroke-width="8" stroke-linejoin="round"/>
+          <g id="strands" stroke="#ffffffcc" stroke-width="2" stroke-linecap="round" opacity=".85">
+            <path d="M128 142 L176 200"/><path d="M136 142 L184 200"/><path d="M144 142 L192 200"/>
+            <path d="M152 142 L200 196"/><path d="M160 142 L200 186"/><path d="M168 142 L192 178"/>
+            <path d="M176 142 L184 172"/>
+          </g>
+        </g>
+        <defs>
+          <pattern id="mesh" width="12" height="12" patternUnits="userSpaceOnUse">
+            <path d="M0 12 L12 0 M-2 2 L2 -2 M10 14 L14 10" stroke="#ffffff30" stroke-width="1"/>
+          </pattern>
+        </defs>
+      </svg>
     </div>
 
-    <div class="arena" id="arena">
-      <div class="crowd"></div>
-      <div class="lightbar"></div>
-      <div class="hoop">
-        <svg viewBox="0 0 300 230" xmlns="http://www.w3.org/2000/svg">
-          <!-- glass backboard -->
-          <rect x="60" y="10" width="180" height="26" rx="13" fill="var(--glass)" />
-          <rect x="78" y="36" width="12" height="92" rx="6" fill="#e9eef6"/>
-          <rect x="210" y="36" width="12" height="92" rx="6" fill="#e9eef6"/>
-          <!-- rim -->
-          <path d="M96 132 Q150 154 204 132" stroke="var(--rim)" stroke-width="12" fill="none" stroke-linecap="round"/>
-          <!-- net (simple) -->
-          <path id="net" d="M116 134 L184 134 L170 188 L130 188 Z" fill="url(#mesh)" stroke="var(--rim)" stroke-width="7" stroke-linejoin="round"/>
-          <g class="netGlow"><ellipse cx="150" cy="158" rx="92" ry="40" fill="url(#g)"/></g>
-          <defs>
-            <radialGradient id="g" cx="50%" cy="50%" r="60%">
-              <stop offset="0%" stop-color="#ff934e" stop-opacity="1"/>
-              <stop offset="100%" stop-color="#ff934e" stop-opacity="0"/>
-            </radialGradient>
-            <pattern id="mesh" width="12" height="12" patternUnits="userSpaceOnUse">
-              <path d="M0 12 L12 0 M-2 2 L2 -2 M10 14 L14 10" stroke="#ffffff3a" stroke-width="1"/>
-            </pattern>
-          </defs>
-        </svg>
-      </div>
+    <div class="ball" id="ball"></div>
+    <div class="shadow" id="shadow"></div>
 
-      <div class="ball" id="ball"></div>
-      <div class="shadow" id="shadow"></div>
+    <div class="court"><div class="wood"></div><div class="midcircle"></div></div>
 
-      <div class="court">
-        <div class="planks"></div>
-        <div class="circle"></div>
-      </div>
-
-      <div class="overlay" id="overlay">
-        <div class="panel">
-          <h3 id="ovTitle">انتهت المحاولات</h3>
-          <div style="color:var(--muted);font-size:14px" id="ovText">شاهد إعلان مكافأة للمتابعة؟</div>
-          <div class="row">
-            <button class="btn2 reward" id="continueBtn">متابعة (إعلان)</button>
-            <button class="btn2 go" id="restartBtn">إعادة</button>
-          </div>
+    <div class="overlay" id="overlay">
+      <div class="panel">
+        <h3 id="ovTitle">انتهت المحاولات</h3>
+        <div style="color:var(--muted);font-size:14px" id="ovText">شاهد إعلان مكافأة للمتابعة؟</div>
+        <div class="row">
+          <button class="btn2 reward" id="continueBtn">متابعة (إعلان)</button>
+          <button class="btn2 go" id="restartBtn">إعادة</button>
         </div>
       </div>
     </div>
-
-    <button class="btn" id="shootBtn">تصويب 🏀</button>
-    <div class="hint">تصويب بحركة Swish + ظل ومؤثرات. كل مستوى أصعب.</div>
   </div>
 
+  <button class="btn" id="shootBtn">تصويب 🏀</button>
+  <div class="hint">انحناءة واقعية + دوران + اهتزاز بسيط للشبكة.</div>
+</div>
+
 <script>
-  const $ = id=>document.getElementById(id);
-  const levelEl=$('level'), scoreEl=$('score'), livesEl=$('lives');
-  const ball=$('ball'), sh=$('shadow'), shootBtn=$('shootBtn');
-  const overlay=$('overlay'), continueBtn=$('continueBtn'), restartBtn=$('restartBtn');
-  const netGlow=document.querySelector('.netGlow');
+const $=id=>document.getElementById(id);
+const levelEl=$('level'),scoreEl=$('score'),livesEl=$('lives');
+const ball=$('ball'),shadow=$('shadow'),shootBtn=$('shootBtn');
+const overlay=$('overlay');
+let level=1,score=0,lives=3,target=3,anim=false;
 
-  let level=1, score=0, lives=3, target=3, anim=false;
-  const rng=()=>Math.random();
-  const RENDER=()=>{ levelEl.textContent=level; scoreEl.textContent=score; livesEl.textContent=lives; };
-  RENDER();
+function render(){levelEl.textContent=level;scoreEl.textContent=score;livesEl.textContent=lives}
+render();
 
-  function nextLevel(){ level++; target+=2; RENDER(); }
-  function fail(){ lives--; RENDER(); if(lives<=0) showOverlay('انتهت المحاولات','شاهد إعلان مكافأة للحصول على محاولة إضافية؟'); }
+function nextLevel(){level++;target+=2;render()}
+function fail(){lives--;render();if(lives<=0) overlay.style.display='grid'}
 
-  function shoot(){
-    if(anim) return; anim=true;
-    ball.classList.remove('down'); sh.classList.remove('down'); void ball.offsetWidth;
-    ball.classList.add('up'); sh.classList.add('up');
+function shoot(){
+  if(anim) return; anim=true;
+  const dx=((Math.random()*.6-.3)*60).toFixed(1); // انحراف بسيط يمين/شمال
+  ball.style.setProperty('--dx',dx+'px');
+  ball.classList.remove('down');shadow.classList.remove('down');
+  void ball.offsetWidth; // restart animation
+  ball.classList.add('up','spin');shadow.classList.add('up');
+  const success=Math.random()<Math.max(.2,.80-(level-1)*.08);
+  setTimeout(()=>{
+    ball.classList.remove('up');shadow.classList.remove('up');
+    if(success){
+      // نزول داخل الشبكة + رجّة خفيفة
+      const strands=document.querySelectorAll('#strands path');
+      strands.forEach((p,i)=>{p.animate([{transform:'translateY(0)'},{transform:'translateY(6px)'}],{duration:180+ i*12,iterations:1,direction:'alternate',easing:'ease-out'})});
+      ball.classList.add('down');shadow.classList.add('down');
+      setTimeout(()=>{score++;render();if(score%target===0) nextLevel();anim=false},460)
+    }else{anim=false;fail()}
+  },600)
+}
+shootBtn.onclick=shoot;
 
-    const success = rng() < Math.max(0.18, 0.80 - (level-1)*0.08);
-    setTimeout(()=>{
-      ball.classList.remove('up'); sh.classList.remove('up');
-      if(success){
-        netGlow.style.opacity=1; setTimeout(()=>netGlow.style.opacity=0, 160);
-        ball.classList.add('down'); sh.classList.add('down');
-        setTimeout(()=>{ score++; RENDER(); if(score % target===0) nextLevel(); anim=false; }, 440);
-      } else { anim=false; fail(); }
-    }, 580);
-  }
-
-  function showOverlay(t,sub){ $('ovTitle').textContent=t; $('ovText').textContent=sub; overlay.style.display='grid'; }
-  function hideOverlay(){ overlay.style.display='none'; }
-
-  continueBtn.onclick=()=>{ lives=1; hideOverlay(); RENDER(); };
-  restartBtn.onclick=()=>{ level=1; score=0; lives=3; target=3; hideOverlay(); RENDER(); };
-  shootBtn.onclick=shoot;
+// overlay buttons
+$('continueBtn')?.addEventListener('click',()=>{lives=1;overlay.style.display='none';render()})
+$('restartBtn')?.addEventListener('click',()=>{level=1;score=0;lives=3;target=3;overlay.style.display='none';render()})
 </script>
 </body>
 </html>
