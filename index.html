@@ -1,405 +1,375 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="ar" dir="rtl">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Basket Blitz - لعبة كرة السلة</title>
-    <style>
-        body {
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            background: linear-gradient(135deg, #3498db, #8e44ad);
-            margin: 0;
-            padding: 0;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            height: 100vh;
-            color: white;
-            text-align: center;
-            overflow: hidden;
-        }
-        
-        .container {
-            background-color: rgba(0, 0, 0, 0.7);
-            border-radius: 20px;
-            padding: 20px;
-            box-shadow: 0 0 20px rgba(0, 0, 0, 0.5);
-            max-width: 400px;
-            width: 90%;
-        }
-        
-        h1 {
-            color: #f1c40f;
-            margin-top: 0;
-            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.5);
-        }
-        
-        .score-board {
-            background-color: #2c3e50;
-            padding: 10px;
-            border-radius: 10px;
-            margin: 10px 0;
-            display: flex;
-            justify-content: space-around;
-        }
-        
-        .score {
-            font-size: 24px;
-            font-weight: bold;
-        }
-        
-        .game-area {
-            position: relative;
-            height: 400px;
-            margin: 20px 0;
-            background-color: #34495e;
-            border-radius: 10px;
-            overflow: hidden;
-            border: 2px solid #f1c40f;
-        }
-        
-        .basket {
-            position: absolute;
-            bottom: 20px;
-            width: 80px;
-            height: 60px;
-            background-image: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 60"><path d="M0,10 Q40,0 80,10 L80,50 Q40,60 0,50 Z" fill="%23e74c3c"/><rect x="0" y="50" width="80" height="10" fill="%2395a5a6"/></svg>');
-            background-repeat: no-repeat;
-            transition: transform 0.1s;
-        }
-        
-        .ball {
-            position: absolute;
-            width: 40px;
-            height: 40px;
-            background: radial-gradient(circle at 30% 30%, #f1c40f, #e67e22);
-            border-radius: 50%;
-            box-shadow: inset -5px -5px 10px rgba(0, 0, 0, 0.3);
-        }
-        
-        .controls {
-            display: flex;
-            justify-content: center;
-            gap: 20px;
-            margin: 15px 0;
-        }
-        
-        button {
-            background: linear-gradient(to bottom, #f1c40f, #e67e22);
-            border: none;
-            border-radius: 50px;
-            padding: 12px 25px;
-            color: white;
-            font-weight: bold;
-            font-size: 16px;
-            cursor: pointer;
-            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
-            transition: transform 0.1s;
-        }
-        
-        button:active {
-            transform: scale(0.95);
-        }
-        
-        .ad-container {
-            width: 100%;
-            height: 60px;
-            background-color: #2c3e50;
-            border-radius: 10px;
-            margin: 10px 0;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            color: #95a5a6;
-            font-style: italic;
-        }
-        
-        .instructions {
-            background-color: rgba(255, 255, 255, 0.1);
-            padding: 15px;
-            border-radius: 10px;
-            margin-top: 15px;
-            font-size: 14px;
-        }
-        
-        .level {
-            font-size: 18px;
-            margin: 10px 0;
-            color: #f1c40f;
-        }
-        
-        @media (max-width: 480px) {
-            .container {
-                width: 95%;
-                padding: 15px;
-            }
-            
-            .game-area {
-                height: 300px;
-            }
-            
-            button {
-                padding: 10px 20px;
-                font-size: 14px;
-            }
-        }
-    </style>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Basket Blitz — Canvas</title>
+<style>
+  :root{
+    --bg:#0b0f18; --bg2:#111a2c; --text:#ecf1ff; --muted:#98a3be;
+    --gold1:#ffd46a; --gold2:#ffb724; --accent:#30e0a1;
+    --rim:#ff6a2e; --glass:#eaf0ff; --panel:#121a2b; --ring:#ffffff18;
+  }
+  *{box-sizing:border-box}
+  html,body{margin:0;height:100%;background:radial-gradient(1200px 620px at 50% -10%,#1b2540 0,#0b0f18 60%);color:var(--text);font-family:system-ui,Arial}
+  .wrap{max-width:560px;margin:0 auto;padding:12px}
+  .hud{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-bottom:8px}
+  .badge{background:linear-gradient(180deg,var(--panel),#0f1522);border-radius:16px;padding:10px 12px;box-shadow:0 8px 22px #0008,inset 0 1px 0 var(--ring);text-align:center}
+  .k{font-size:12px;color:var(--muted)} .v{font-weight:800;font-size:20px}
+  .stage{position:relative;border-radius:20px;overflow:hidden;height:520px;background:linear-gradient(180deg,#0c1322 0%,#0a0f18 48%,#090d15 100%);box-shadow:0 22px 60px #000a,inset 0 0 0 1px var(--ring)}
+  .btn{width:100%;border:0;background:linear-gradient(180deg,var(--gold1),var(--gold2));color:#1b1100;font-weight:800;font-size:18px;border-radius:16px;padding:12px 14px;box-shadow:0 12px 22px #0007,inset 0 1px 0 #fff7;cursor:pointer;margin-top:10px}
+  .hint{color:var(--muted);text-align:center;font-size:12px;margin-top:6px}
+  canvas{width:100%;height:100%;display:block}
+  .overlay{position:absolute;inset:0;display:none;place-items:center;background:#0007;backdrop-filter:blur(2px)}
+  .panel{background:linear-gradient(180deg,#141d30,#101824);border-radius:18px;padding:16px;box-shadow:0 16px 40px #000c;min-width:72%;text-align:center}
+  .row{display:flex;gap:8px;margin-top:10px}
+  .btn2{flex:1;border:0;border-radius:14px;padding:12px 14px;font-weight:800}
+  .go{background:#111;color:#fff} .reward{background:#13322d;color:#c7fff5;border:1px solid #2dd4bf55}
+</style>
 </head>
 <body>
-    <div class="container">
-        <h1>Basket Blitz</h1>
-        
-        <div class="score-board">
-            <div>النقاط: <span id="score" class="score">0</span></div>
-            <div>الوقت: <span id="timer" class="score">60</span></div>
-        </div>
-        
-        <div class="level">المستوى: <span id="level">1</span></div>
-        
-        <div class="game-area" id="gameArea">
-            <div class="basket" id="basket"></div>
-        </div>
-        
-        <div class="controls">
-            <button id="leftBtn">يسار</button>
-            <button id="rightBtn">يمين</button>
-        </div>
-        
-        <div class="ad-container">
-            مساحة إعلانية - سيتم عرض الإعلانات هنا
-        </div>
-        
-        <div class="instructions">
-            استخدم أزرار اليسار واليمين لتحريك السلة والتقاط الكرات!
-        </div>
-    </div>
+<div class="wrap">
+  <div class="hud">
+    <div class="badge"><div class="k">النقاط</div><div class="v" id="score">0</div></div>
+    <div class="badge"><div class="k">الكومبو</div><div class="v" id="combo">x1</div></div>
+    <div class="badge"><div class="k">المستوى</div><div class="v" id="level">1</div></div>
+    <div class="badge"><div class="k">الوقت</div><div class="v" id="time">60</div></div>
+  </div>
 
-    <script>
-        document.addEventListener('DOMContentLoaded', function() {
-            const gameArea = document.getElementById('gameArea');
-            const basket = document.getElementById('basket');
-            const scoreDisplay = document.getElementById('score');
-            const timerDisplay = document.getElementById('timer');
-            const levelDisplay = document.getElementById('level');
-            const leftBtn = document.getElementById('leftBtn');
-            const rightBtn = document.getElementById('rightBtn');
-            
-            let score = 0;
-            let timer = 60;
-            let level = 1;
-            let basketX = gameArea.offsetWidth / 2 - basket.offsetWidth / 2;
-            let gameInterval;
-            let ballInterval;
-            let gameSpeed = 1500; // سرعة ظهور الكرات (ميلي ثانية)
-            
-            // وضع السلة في المنتصف في البداية
-            basket.style.left = basketX + 'px';
-            
-            // بدء اللعبة
-            startGame();
-            
-            function startGame() {
-                // بدء المؤقت
-                const countdown = setInterval(() => {
-                    timer--;
-                    timerDisplay.textContent = timer;
-                    
-                    if (timer <= 0) {
-                        clearInterval(countdown);
-                        endGame();
-                    }
-                }, 1000);
-                
-                // إنشاء كرات بشكل دوري
-                ballInterval = setInterval(createBall, gameSpeed);
-                
-                // بدء حركة اللعبة
-                gameInterval = requestAnimationFrame(updateGame);
-            }
-            
-            function updateGame() {
-                // تحديث اللعبة
-                gameInterval = requestAnimationFrame(updateGame);
-            }
-            
-            function createBall() {
-                const ball = document.createElement('div');
-                ball.className = 'ball';
-                
-                // وضع الكرة في مكان عشوائي في الجزء العلوي
-                const xPos = Math.random() * (gameArea.offsetWidth - 40);
-                ball.style.left = xPos + 'px';
-                ball.style.top = '0px';
-                
-                gameArea.appendChild(ball);
-                
-                // تحريك الكرة إلى الأسفل
-                let ballY = 0;
-                const ballFall = setInterval(() => {
-                    ballY += 2 + level; // زيادة السرعة مع كل مستوى
-                    ball.style.top = ballY + 'px';
-                    
-                    // الكرة وصلت إلى الأسفل
-                    if (ballY > gameArea.offsetHeight - 40) {
-                        clearInterval(ballFall);
-                        
-                        // التحقق إذا دخلت الكرة السلة
-                        const ballRect = ball.getBoundingClientRect();
-                        const basketRect = basket.getBoundingClientRect();
-                        
-                        if (ballRect.left > basketRect.left && 
-                            ballRect.right < basketRect.right &&
-                            ballRect.bottom > basketRect.top) {
-                            // الكرة دخلت السلة
-                            score += 10;
-                            scoreDisplay.textContent = score;
-                            
-                            // تأثير عند تسجيل النقطة
-                            basket.style.transform = 'scale(1.1)';
-                            setTimeout(() => {
-                                basket.style.transform = 'scale(1)';
-                            }, 100);
-                            
-                            // زيادة المستوى كل 50 نقطة
-                            if (score % 50 === 0) {
-                                level++;
-                                levelDisplay.textContent = level;
-                                
-                                // زيادة صعوبة اللعبة
-                                clearInterval(ballInterval);
-                                gameSpeed = Math.max(500, 1500 - (level * 100));
-                                ballInterval = setInterval(createBall, gameSpeed);
-                            }
-                        }
-                        
-                        // إزالة الكرة
-                        gameArea.removeChild(ball);
-                    }
-                }, 20);
-            }
-            
-            function endGame() {
-                cancelAnimationFrame(gameInterval);
-                clearInterval(ballInterval);
-                
-                // عرض رسالة نهاية اللعبة
-                const gameOver = document.createElement('div');
-                gameOver.style.position = 'absolute';
-                gameOver.style.top = '0';
-                gameOver.style.left = '0';
-                gameOver.style.width = '100%';
-                gameOver.style.height = '100%';
-                gameOver.style.backgroundColor = 'rgba(0, 0, 0, 0.8)';
-                gameOver.style.display = 'flex';
-                gameOver.style.flexDirection = 'column';
-                gameOver.style.alignItems = 'center';
-                gameOver.style.justifyContent = 'center';
-                gameOver.style.color = 'white';
-                gameOver.style.fontSize = '24px';
-                gameOver.innerHTML = `
-                    <h2>انتهت اللعبة!</h2>
-                    <p>النقاط النهائية: ${score}</p>
-                    <button id="restartBtn" style="margin-top: 20px;">اللعب مرة أخرى</button>
-                `;
-                
-                gameArea.appendChild(gameOver);
-                
-                document.getElementById('restartBtn').addEventListener('click', () => {
-                    gameArea.removeChild(gameOver);
-                    resetGame();
-                    startGame();
-                });
-            }
-            
-            function resetGame() {
-                score = 0;
-                timer = 60;
-                level = 1;
-                gameSpeed = 1500;
-                scoreDisplay.textContent = score;
-                timerDisplay.textContent = timer;
-                levelDisplay.textContent = level;
-                
-                // إزالة أي كرات متبقية
-                const balls = document.querySelectorAll('.ball');
-                balls.forEach(ball => {
-                    if (ball.parentNode) {
-                        ball.parentNode.removeChild(ball);
-                    }
-                });
-            }
-            
-            // تحريك السلة
-            const basketSpeed = 10;
-            
-            leftBtn.addEventListener('mousedown', () => {
-                moveBasket(-basketSpeed);
-            });
-            
-            rightBtn.addEventListener('mousedown', () => {
-                moveBasket(basketSpeed);
-            });
-            
-            leftBtn.addEventListener('touchstart', (e) => {
-                e.preventDefault();
-                moveBasket(-basketSpeed);
-            });
-            
-            rightBtn.addEventListener('touchstart', (e) => {
-                e.preventDefault();
-                moveBasket(basketSpeed);
-            });
-            
-            // إيقاف الحركة عند رفع الزر
-            document.addEventListener('mouseup', stopBasket);
-            document.addEventListener('touchend', stopBasket);
-            
-            let moveInterval;
-            
-            function moveBasket(speed) {
-                clearInterval(moveInterval);
-                moveInterval = setInterval(() => {
-                    basketX += speed;
-                    
-                    // منع السلة من الخروج من حدود منطقة اللعبة
-                    if (basketX < 0) basketX = 0;
-                    if (basketX > gameArea.offsetWidth - basket.offsetWidth) {
-                        basketX = gameArea.offsetWidth - basket.offsetWidth;
-                    }
-                    
-                    basket.style.left = basketX + 'px';
-                }, 20);
-            }
-            
-            function stopBasket() {
-                clearInterval(moveInterval);
-            }
-            
-            // دعم الإيماءات على الأجهزة المحمولة
-            let touchStartX = 0;
-            
-            gameArea.addEventListener('touchstart', (e) => {
-                touchStartX = e.touches[0].clientX;
-            });
-            
-            gameArea.addEventListener('touchmove', (e) => {
-                e.preventDefault();
-                const touchX = e.touches[0].clientX;
-                const diff = touchX - touchStartX;
-                
-                basketX += diff * 0.5;
-                
-                // منع السلة من الخروج من حدود منطقة اللعبة
-                if (basketX < 0) basketX = 0;
-                if (basketX > gameArea.offsetWidth - basket.offsetWidth) {
-                    basketX = gameArea.offsetWidth - basket.offsetWidth;
-                }
-                
-                basket.style.left = basketX + 'px';
-                touchStartX = touchX;
-            });
-        });
-    </script>
+  <div class="stage" id="stage">
+    <canvas id="game"></canvas>
+    <div class="overlay" id="overlay">
+      <div class="panel">
+        <h2 style="margin:0 0 8px 0">انتهى الوقت</h2>
+        <div style="opacity:.8">نتيجتك: <span id="finalScore">0</span></div>
+        <div class="row">
+          <button class="btn2 reward" id="continueBtn">+15 ثانية (إعلان)</button>
+          <button class="btn2 go" id="restartBtn">إعادة</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <button class="btn" id="shootBtn">اضغط واسحب للتصويب 🏀</button>
+  <div class="hint">اسحب من الكرة لتحديد الاتجاه والقوة. سويش = نقاط إضافية + زيادة الكومبو.</div>
+</div>
+
+<script>
+/* ---------- Canvas & utils ---------- */
+const c = document.getElementById('game');
+const ctx = c.getContext('2d');
+let W, H, dpr = Math.max(1, window.devicePixelRatio || 1);
+function resize(){
+  const rect = c.getBoundingClientRect();
+  W = Math.floor(rect.width * dpr);
+  H = Math.floor(rect.height * dpr);
+  c.width = W; c.height = H;
+}
+resize(); addEventListener('resize', resize);
+const clamp=(n,a,b)=>Math.max(a,Math.min(b,n));
+const lerp=(a,b,t)=>a+(b-a)*t;
+const dist=(x1,y1,x2,y2)=>Math.hypot(x2-x1,y2-y1);
+
+/* ---------- Game state ---------- */
+let score=0, combo=1, level=1, timeLeft=60, playing=true;
+const ui={
+  score:document.getElementById('score'),
+  combo:document.getElementById('combo'),
+  level:document.getElementById('level'),
+  time:document.getElementById('time'),
+  overlay:document.getElementById('overlay'),
+  finalScore:document.getElementById('finalScore'),
+  continueBtn:document.getElementById('continueBtn'),
+  restartBtn:document.getElementById('restartBtn'),
+};
+function updateHUD(){
+  ui.score.textContent = score;
+  ui.combo.textContent = 'x'+combo;
+  ui.level.textContent = level;
+  ui.time.textContent = Math.max(0, Math.ceil(timeLeft));
+}
+updateHUD();
+
+/* ---------- Court / Hoop ---------- */
+const court = {
+  y: H*0.78, rX: W*0.42, rY: H*0.17,
+};
+function drawCourt(){
+  // floor ellipse (wood)
+  const cx=W/2, cy=court.y, rx=court.rX, ry=court.rY;
+  ctx.save();
+  ctx.beginPath();
+  ctx.ellipse(cx, cy, rx, ry, 0, 0, Math.PI*2);
+  ctx.clip();
+  const grad = ctx.createLinearGradient(cx-rx,0,cx+rx,0);
+  const stripes=16;
+  for(let i=0;i<=stripes;i++){
+    const t=i/stripes;
+    const col = i%2? '#d79a5f' : '#a86c3a';
+    grad.addColorStop(t, col);
+  }
+  ctx.fillStyle = grad;
+  ctx.fillRect(cx-rx, cy-ry, rx*2, ry*2);
+  // vignette
+  const g2 = ctx.createLinearGradient(0, cy-ry, 0, cy+ry);
+  g2.addColorStop(0,'#0000'); g2.addColorStop(1,'#0008');
+  ctx.fillStyle=g2; ctx.fillRect(cx-rx, cy-ry, rx*2, ry*2);
+  // center ring
+  ctx.strokeStyle='#ffffff33'; ctx.lineWidth=4*dpr;
+  ctx.beginPath(); ctx.ellipse(cx, cy-ry*0.25, rx*0.55, ry*0.32, 0, 0, Math.PI*2); ctx.stroke();
+  ctx.restore();
+}
+
+const hoop = {
+  y: H*0.42,
+  x: W*0.5,
+  speed: 0.6, // px per ms (scaled later)
+  t: 0,
+  width: 180*dpr,
+  postH: 70*dpr,
+  rimR: 12*dpr,
+  inner: 120*dpr,
+  move(dt){
+    this.t+=dt*(0.00035 + level*0.00005);
+    this.x = W/2 + Math.sin(this.t)*W*0.22;
+  },
+  draw(){
+    const x=this.x, y=this.y;
+    // backboard
+    ctx.fillStyle='#eaf0ff';
+    ctx.fillRect(x-90*dpr, y-38*dpr, 180*dpr, 16*dpr);
+    ctx.fillRect(x-70*dpr, y-22*dpr, 12*dpr, this.postH);
+    ctx.fillRect(x+58*dpr, y-22*dpr, 12*dpr, this.postH);
+    // rim
+    ctx.strokeStyle=getComputedStyle(document.documentElement).getPropertyValue('--rim').trim() || '#ff6a2e';
+    ctx.lineWidth=16*dpr; ctx.lineCap='round';
+    ctx.beginPath(); ctx.moveTo(x-60*dpr, y+this.postH-4*dpr); ctx.quadraticCurveTo(x, y+this.postH+20*dpr, x+60*dpr, y+this.postH-4*dpr); ctx.stroke();
+    // net (static lines)
+    ctx.strokeStyle='#ffffff'; ctx.lineWidth=2*dpr; ctx.globalAlpha=0.9;
+    const topY=y+this.postH;
+    for(let i=0;i<7;i++){
+      const tx=lerp(x-56*dpr,x+56*dpr,i/6);
+      ctx.beginPath(); ctx.moveTo(tx, topY);
+      ctx.lineTo(lerp(x-20*dpr,x+20*dpr, i/6), topY+58*dpr);
+      ctx.stroke();
+    }
+    ctx.globalAlpha=1;
+  },
+  left(){ return {x:this.x - this.inner/2, y:this.y+this.postH-2*dpr}; },
+  right(){ return {x:this.x + this.inner/2, y:this.y+this.postH-2*dpr}; },
+};
+
+/* ---------- Ball & physics ---------- */
+const ball = {
+  r: 18*dpr,
+  x: W/2, y: court.y-12*dpr,
+  vx:0, vy:0,
+  ready:true, aiming:false, launched:false,
+  lastX:0,lastY:0,
+  reset(){
+    this.x=W/2; this.y=court.y-12*dpr; this.vx=0; this.vy=0; this.ready=true; this.launched=false; this.aiming=false;
+  }
+};
+function drawBall(){
+  // shadow
+  const shA = clamp(1 - ( (ball.y-(court.y-40*dpr)) / (H*0.6) ), 0.3, 1);
+  ctx.save();
+  ctx.globalAlpha=shA;
+  ctx.fillStyle='#00000066';
+  ctx.beginPath(); ctx.ellipse(ball.x, court.y-16*dpr, 40*dpr, 10*dpr, 0, 0, Math.PI*2); ctx.fill();
+  ctx.restore();
+
+  // ball
+  const g1 = ctx.createRadialGradient(ball.x-6*dpr, ball.y-6*dpr, 1, ball.x-6*dpr, ball.y-6*dpr, 22*dpr);
+  g1.addColorStop(0,'#ffbe8a'); g1.addColorStop(1,'#ff9247');
+  const g2 = ctx.createRadialGradient(ball.x+20*dpr, ball.y+20*dpr, 1, ball.x+20*dpr, ball.y+20*dpr, 46*dpr);
+  g2.addColorStop(0,'#ff6e22'); g2.addColorStop(1,'#c94a10');
+
+  ctx.fillStyle=g2; ctx.beginPath(); ctx.arc(ball.x, ball.y, ball.r, 0, Math.PI*2); ctx.fill();
+  ctx.fillStyle=g1; ctx.beginPath(); ctx.arc(ball.x-6*dpr, ball.y-6*dpr, 18*dpr, 0, Math.PI*2); ctx.fill();
+
+  // seams
+  ctx.strokeStyle='rgba(0,0,0,.45)'; ctx.lineWidth=3*dpr;
+  ctx.beginPath(); ctx.arc(ball.x, ball.y, ball.r*0.92, Math.PI*0.08, Math.PI*1.08); ctx.stroke();
+  ctx.beginPath(); ctx.arc(ball.x, ball.y, ball.r*0.92, -Math.PI*0.42, Math.PI*0.58); ctx.stroke();
+}
+
+let pointer=null, guidePts=[];
+function drawGuide(){
+  if(!ball.aiming || guidePts.length<2) return;
+  ctx.strokeStyle='rgba(255,255,255,.45)'; ctx.lineWidth=2*dpr;
+  ctx.beginPath();
+  ctx.moveTo(guidePts[0].x, guidePts[0].y);
+  for(const p of guidePts) ctx.lineTo(p.x,p.y);
+  ctx.stroke();
+}
+
+/* ---------- Input (mouse/touch) ---------- */
+const stage = document.getElementById('stage');
+const btn = document.getElementById('shootBtn');
+
+function onDown(e){
+  if(!ball.ready) return;
+  const rect = c.getBoundingClientRect();
+  const ex = (('touches' in e)? e.touches[0].clientX : e.clientX) - rect.left;
+  const ey = (('touches' in e)? e.touches[0].clientY : e.clientY) - rect.top;
+  const x = ex*dpr, y = ey*dpr;
+  if(dist(x,y,ball.x,ball.y) <= ball.r*1.4){
+    pointer={sx:x, sy:y, x, y};
+    ball.aiming=true;
+  }
+}
+function onMove(e){
+  if(!pointer || !ball.aiming) return;
+  const rect = c.getBoundingClientRect();
+  const ex = (('touches' in e)? e.touches[0].clientX : e.clientX) - rect.left;
+  const ey = (('touches' in e)? e.touches[0].clientY : e.clientY) - rect.top;
+  pointer.x = ex*dpr; pointer.y = ey*dpr;
+
+  // guide prediction
+  const dx = (pointer.sx - pointer.x), dy = (pointer.sy - pointer.y);
+  const power = clamp(Math.hypot(dx,dy), 0, 240*dpr);
+  const angle = Math.atan2(dy, dx); // aim up-left means positive vy
+  const sp = power*0.03;
+  const ivx = Math.cos(angle)*sp, ivy = Math.sin(angle)*sp;
+  guidePts = [];
+  let px=ball.x, py=ball.y, vx=ivx, vy=ivy, g=0.8*dpr;
+  for(let t=0;t<60;t++){
+    vx *= 0.996; vy += g;
+    px += vx*8; py += vy*8;
+    guidePts.push({x:px, y:py});
+    if(py>H) break;
+  }
+}
+function onUp(){
+  if(!pointer || !ball.aiming) { pointer=null; return; }
+  const dx = (pointer.sx - pointer.x), dy = (pointer.sy - pointer.y);
+  const power = clamp(Math.hypot(dx,dy), 0, 260*dpr);
+  const angle = Math.atan2(dy, dx);
+  const sp = power*0.03;
+  ball.vx = Math.cos(angle)*sp;
+  ball.vy = Math.sin(angle)*sp;
+  ball.ready=false; ball.launched=true; ball.aiming=false; guidePts.length=0;
+  pointer=null;
+}
+stage.addEventListener('mousedown', onDown); stage.addEventListener('mousemove', onMove); addEventListener('mouseup', onUp);
+stage.addEventListener('touchstart', onDown, {passive:true}); stage.addEventListener('touchmove', onMove, {passive:true}); stage.addEventListener('touchend', onUp);
+
+/* ---------- Scoring & collisions ---------- */
+let lastTime = performance.now();
+let swishArmed=false, hitRim=false;
+
+function physics(dt){
+  if(ball.launched){
+    ball.lastX=ball.x; ball.lastY=ball.y;
+    ball.vx *= 0.998; // air
+    ball.vy += 0.8*dpr; // gravity
+    ball.x += ball.vx*dt*0.06;
+    ball.y += ball.vy*dt*0.06;
+
+    // Rim collision (2 circles)
+    const L=hoop.left(), R=hoop.right();
+    [L,R].forEach(p=>{
+      const dx=ball.x-p.x, dy=ball.y-p.y, rr=ball.r+hoop.rimR;
+      const d = Math.hypot(dx,dy);
+      if(d<rr && ball.vy>0){ // simple bounce
+        const nx=dx/d, ny=dy/d;
+        // push out
+        ball.x = p.x + nx*rr; ball.y = p.y + ny*rr;
+        // reflect
+        const dot = ball.vx*nx + ball.vy*ny;
+        ball.vx -= 1.8*dot*nx;
+        ball.vy -= 1.8*dot*ny;
+        hitRim=true;
+      }
+    });
+
+    // Arm swish when crossing rim height upward
+    const rimY = hoop.y + hoop.postH;
+    if(ball.lastY < rimY-10*dpr && ball.y >= rimY-10*dpr){ swishArmed=true; hitRim=false; }
+
+    // Score (swish or drop)
+    if(swishArmed && ball.vy>0 && ball.y>rimY && !hitRim){
+      goal(true); swishArmed=false;
+    }else if(ball.y>rimY+40*dpr && (ball.x>hoop.x-hoop.inner/2 && ball.x<hoop.x+hoop.inner/2)){
+      if(hitRim){ goal(false); }
+      swishArmed=false; hitRim=false;
+    }
+
+    // out of bounds
+    if(ball.y > H+60*dpr){ miss(); }
+  }
+}
+
+function particles(x,y,color='#fff'){
+  // simple sparkles
+  for(let i=0;i<14;i++){
+    spark.push({x,y, vx:(Math.random()*2-1)*3*dpr, vy:(-Math.random()*2.5-0.5)*dpr, a:1, c:color});
+  }
+}
+const spark=[];
+function drawParticles(dt){
+  for(let i=spark.length-1;i>=0;i--){
+    const s=spark[i];
+    s.vy += 0.04*dpr; s.x+=s.vx*dt*0.12; s.y+=s.vy*dt*0.12; s.a-=0.02;
+    if(s.a<=0){ spark.splice(i,1); continue; }
+    ctx.globalAlpha=s.a; ctx.fillStyle=s.c;
+    ctx.fillRect(s.x, s.y, 3*dpr, 3*dpr);
+    ctx.globalAlpha=1;
+  }
+}
+
+function goal(swish){
+  const base = swish? 3:2;
+  score += base*combo;
+  combo = Math.min(9, combo + (swish?2:1));
+  if(score % 10 === 0){ level++; }
+  particles(hoop.x, hoop.y+hoop.postH, swish? '#30e0a1':'#ffd46a');
+  ball.reset(); updateHUD();
+}
+function miss(){
+  combo = 1; updateHUD();
+  ball.reset();
+}
+
+/* ---------- Game loop ---------- */
+function drawBG(){
+  // crowd light
+  ctx.fillStyle='rgba(255,255,255,.07)';
+  ctx.beginPath();
+  ctx.ellipse(W/2, H*0.16, W*0.32, H*0.06, 0, 0, Math.PI*2); ctx.fill();
+}
+function loop(t){
+  const dt = Math.min(32, t-lastTime); lastTime=t;
+  ctx.clearRect(0,0,W,H);
+  drawBG();
+  hoop.move(dt);
+  drawCourt();
+  hoop.draw();
+  physics(dt);
+  drawBall();
+  drawGuide();
+  drawParticles(dt);
+
+  if(playing){
+    timeLeft -= dt/1000;
+    if(timeLeft<=0){
+      playing=false;
+      ui.finalScore.textContent = score;
+      ui.overlay.style.display='grid';
+    }
+    updateHUD();
+    requestAnimationFrame(loop);
+  }
+}
+requestAnimationFrame(loop);
+
+/* ---------- Timer & Controls ---------- */
+ui.restartBtn.onclick = ()=>{ score=0; combo=1; level=1; timeLeft=60; playing=true; ball.reset(); ui.overlay.style.display='none'; updateHUD(); requestAnimationFrame(loop); };
+ui.continueBtn.onclick = ()=>{ // مكان إعلان مكافأة
+  timeLeft += 15; ui.overlay.style.display='none'; playing=true; requestAnimationFrame(loop);
+};
+document.getElementById('shootBtn').onclick = ()=>{}; // للواجهة فقط
+</script>
 </body>
 </html>
