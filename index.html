@@ -1,391 +1,559 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="ar" dir="rtl">
 <head>
-<meta charset="utf-8"/>
-<meta name="viewport" content="width=device-width, initial-scale=1"/>
-<title>Basket Mini — لعبة كرة السلة</title>
-<link href="https://fonts.googleapis.com/css2?family=Cairo:wght@600;800&display=swap" rel="stylesheet">
-<style>
-:root{--bg:#0b0f18;--text:#eef2ff;--muted:#9ba7c0;--ring:#ffffff18;--gold1:#ffd46a;--gold2:#ffb724;--rim:#ff6a2e}
-*{box-sizing:border-box}
-html,body{margin:0;background:radial-gradient(1200px 620px at 50% -10%,#1b2540 0,#0b0f18 60%);color:var(--text);font-family:"Cairo",system-ui}
-.wrap{max-width:540px;margin:0 auto;padding:16px}
-.grid3{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}
-.badge{background:linear-gradient(180deg,#11192a,#0f1522);border-radius:18px;padding:12px 14px;box-shadow:0 10px 26px #0009,inset 0 1px 0 var(--ring)}
-.k{font-size:13px;color:var(--muted)}.v{font-weight:800;font-size:22px}
-
-.arena{position:relative;height:520px;margin:14px 0 12px;border-radius:22px;overflow:hidden;box-shadow:0 24px 60px #000a,inset 0 0 0 1px var(--ring);background:linear-gradient(180deg,#0c1322 0%,#0a0f18 48%,#090d15 100%)}
-.lights{position:absolute;inset:0;background:
- radial-gradient(900px 240px at 50% -20px,#ffffff1c 0,transparent 70%),
- radial-gradient(1100px 240px at 50% 0,#1d2848 0,transparent 65%)}
-
-/* backboard + rim + net */
-.hoop{position:absolute;top:110px;left:50%;transform:translateX(-50%);width:320px;height:240px}
-svg{width:100%;height:100%}
-
-/* court wood using conic gradients */
-.court{position:absolute;left:50%;bottom:-24px;transform:translateX(-50%);width:95%;height:300px;border-radius:50%/22%;overflow:hidden;filter:drop-shadow(0 -10px 32px #000a)}
-.wood{position:absolute;inset:0;background:
- repeating-linear-gradient(90deg,#8f5525 0 18px,#a86833 18px 32px,#7a4720 32px 50px);
- box-shadow:inset 0 110px 170px #0007}
-.midcircle{position:absolute;left:50%;bottom:108px;transform:translateX(-50%);width:290px;height:150px;border:4px solid #ffffff22;border-radius:50%}
-
-/* ball */
-.ball{position:absolute;left:50%;bottom:48px;transform:translateX(-50%);width:108px;height:108px;border-radius:50%;
- background:
-  radial-gradient(40px 40px at 34% 34%,#ffb77f 0,#ff944f 46%,transparent 47%),
-  radial-gradient(140px 140px at 70% 70%,#ff6e22 0,#d24a0f 70%);
- box-shadow:0 20px 38px #000c,inset -14px -14px 24px #0003}
-.ball:before,.ball:after{content:"";position:absolute;inset:0;border-radius:50%}
-.ball:before{border-top:6px solid #00000055;border-left:6px solid #00000055;opacity:.55}
-.ball:after{background:radial-gradient(130px 130px at 30% 30%,transparent 52%,#00000055 53% 56%,transparent 57%)}
-.shadow{position:absolute;left:50%;bottom:28px;transform:translateX(-50%);width:140px;height:24px;border-radius:50%;background:#00000058;filter:blur(8px)}
-
-/* motion with arc + spin */
-.ball.up{animation:up .6s cubic-bezier(.25,.7,.2,1) forwards}
-.ball.down{animation:down .46s cubic-bezier(.25,.65,.2,1) forwards}
-.ball.spin{animation:spin 1.06s linear}
-.shadow.up{animation:shrink .6s linear forwards}
-.shadow.down{animation:grow .46s linear forwards}
-@keyframes up{0%{transform:translate(-50%,0) scale(1)}60%{transform:translate(calc(-50% + var(--dx)), -300px) scale(.96)}100%{transform:translate(calc(-50% + var(--dx)), -190px) scale(.92)}}
-@keyframes down{0%{transform:translate(calc(-50% + var(--dx)), -190px) scale(.92)}100%{transform:translate(-50%, 60px) scale(.88)}}
-@keyframes spin{to{rotate:360deg}}
-@keyframes shrink{0%{transform:translateX(-50%) scale(1)}100%{transform:translateX(-50%) scale(.6)}}
-@keyframes grow{0%{transform:translateX(-50%) scale(.6)}100%{transform:translateX(-50%) scale(1.06)}}
-
-/* buttons */
-.btn{width:100%;border:0;background:linear-gradient(180deg,var(--gold1),var(--gold2));color:#1b1100;font-weight:800;font-size:18px;border-radius:16px;padding:14px 16px;box-shadow:0 12px 22px #0008,inset 0 1px 0 #fff7;cursor:pointer}
-.hint{color:var(--muted);text-align:center;font-size:12px;margin-top:8px}
-
-.overlay{position:absolute;inset:0;display:none;place-items:center;background:#0007;backdrop-filter:blur(2px);z-index:10}
-.panel{background:linear-gradient(180deg,#0f1522,#101824);border-radius:20px;padding:18px 16px;box-shadow:0 16px 40px #000c;min-width:72%}
-.row{display:flex;gap:10px;margin-top:10px}
-.btn2{flex:1;border:0;border-radius:14px;padding:12px 14px;font-weight:800}
-.go{background:#111;color:#fff}.reward{background:#13322d;color:#c7fff5;border:1px solid #2dd4bf55}
-
-/* إعلانات */
-.ad-container {
-  margin: 15px 0;
-  padding: 10px;
-  background: #0f1522;
-  border-radius: 12px;
-  text-align: center;
-  min-height: 90px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  border: 1px solid #ffffff18;
-}
-
-.ad-container .ad-placeholder {
-  color: var(--muted);
-  font-size: 14px;
-}
-
-/* شاشة البداية */
-.start-screen {
-  position: absolute;
-  inset: 0;
-  display: flex;
-  flex-direction: column;
-  justify-content: center;
-  align-items: center;
-  background: rgba(11, 15, 24, 0.9);
-  z-index: 20;
-  padding: 20px;
-  text-align: center;
-}
-
-.start-screen h1 {
-  font-size: 32px;
-  margin-bottom: 10px;
-  color: var(--gold1);
-}
-
-.start-screen p {
-  color: var(--muted);
-  margin-bottom: 30px;
-}
-
-.start-btn {
-  background: linear-gradient(180deg, var(--gold1), var(--gold2));
-  color: #1b1100;
-  border: none;
-  padding: 15px 40px;
-  font-size: 18px;
-  font-weight: 800;
-  border-radius: 50px;
-  cursor: pointer;
-  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.3);
-}
-
-/* شاشة الفوز بالمستوى */
-.level-complete {
-  position: absolute;
-  inset: 0;
-  display: none;
-  flex-direction: column;
-  justify-content: center;
-  align-items: center;
-  background: rgba(11, 15, 24, 0.9);
-  z-index: 15;
-  padding: 20px;
-  text-align: center;
-}
-
-.level-complete h2 {
-  font-size: 28px;
-  margin-bottom: 10px;
-  color: var(--gold1);
-}
-
-.level-complete p {
-  color: var(--muted);
-  margin-bottom: 20px;
-}
-
-/* مؤشر الصعوبة */
-.difficulty-indicator {
-  height: 6px;
-  background: #1d2848;
-  border-radius: 3px;
-  margin: 15px 0;
-  overflow: hidden;
-}
-
-.difficulty-progress {
-  height: 100%;
-  background: linear-gradient(90deg, var(--gold2), var(--rim));
-  width: 0%;
-  transition: width 0.5s ease;
-}
-</style>
-</head>
-<body>
-<div class="wrap">
-  <!-- إعلان في الأعلى -->
-  <div class="ad-container">
-    <div class="ad-placeholder">مساحة إعلانية - يمكنك وضع إعلانك هنا</div>
-  </div>
-  
-  <div class="grid3">
-    <div class="badge"><div class="k">المستوى</div><div class="v" id="level">1</div></div>
-    <div class="badge"><div class="k">السكور</div><div class="v" id="score">0</div></div>
-    <div class="badge"><div class="k">المحاولات</div><div class="v" id="lives">5</div></div>
-  </div>
-  
-  <!-- مؤشر الصعوبة -->
-  <div class="difficulty-indicator">
-    <div class="difficulty-progress" id="difficultyProgress"></div>
-  </div>
-  
-  <div class="arena">
-    <div class="lights"></div>
-    <div class="hoop">
-      <svg viewBox="0 0 320 240" xmlns="http://www.w3.org/2000/svg">
-        <!-- glass backboard -->
-        <rect x="70" y="18" width="180" height="28" rx="14" fill="#e9f0ffcc"/>
-        <rect x="90" y="46" width="14" height="96" rx="7" fill="#e9eef6"/>
-        <rect x="216" y="46" width="14" height="96" rx="7" fill="#e9eef6"/>
-        <!-- rim -->
-        <path d="M100 140 Q160 164 220 140" stroke="var(--rim)" stroke-width="14" fill="none" stroke-linecap="round"/>
-        <!-- net -->
-        <g id="net">
-          <path d="M120 142 L200 142 L184 200 L136 200 Z" fill="url(#mesh)" stroke="var(--rim)" stroke-width="8" stroke-linejoin="round"/>
-          <g id="strands" stroke="#ffffffcc" stroke-width="2" stroke-linecap="round" opacity=".85">
-            <path d="M128 142 L176 200"/><path d="M136 142 L184 200"/><path d="M144 142 L192 200"/>
-            <path d="M152 142 L200 196"/><path d="M160 142 L200 186"/><path d="M168 142 L192 178"/>
-            <path d="M176 142 L184 172"/>
-          </g>
-        </g>
-        <defs>
-          <pattern id="mesh" width="12" height="12" patternUnits="userSpaceOnUse">
-            <path d="M0 12 L12 0 M-2 2 L2 -2 M10 14 L14 10" stroke="#ffffff30" stroke-width="1"/>
-          </pattern>
-        </defs>
-      </svg>
-    </div>
-
-    <div class="ball" id="ball"></div>
-    <div class="shadow" id="shadow"></div>
-
-    <div class="court"><div class="wood"></div><div class="midcircle"></div></div>
-
-    <!-- شاشة البداية -->
-    <div class="start-screen" id="startScreen">
-      <h1>لعبة كرة السلة</h1>
-      <p>اضغط على الزر للبدء واستهدف السلة!</p>
-      <button class="start-btn" id="startBtn">ابدأ اللعب</button>
-    </div>
-
-    <!-- شاشة اكتمال المستوى -->
-    <div class="level-complete" id="levelComplete">
-      <h2>مبروك! لقد أكملت المستوى <span id="completedLevel">1</span></h2>
-      <p>استعد للمستوى التالي</p>
-      <button class="start-btn" id="nextLevelBtn">المستوى التالي</button>
-    </div>
-
-    <!-- شاشة نهاية اللعبة -->
-    <div class="overlay" id="overlay">
-      <div class="panel">
-        <h3 id="ovTitle">انتهت المحاولات</h3>
-        <div style="color:var(--muted);font-size:14px" id="ovText">شاهد إعلان مكافأة للمتابعة؟</div>
-        <div class="row">
-          <button class="btn2 reward" id="continueBtn">متابعة (إعلان)</button>
-          <button class="btn2 go" id="restartBtn">إعادة</button>
-        </div>
-      </div>
-    </div>
-  </div>
-
-  <button class="btn" id="shootBtn">تصويب 🏀</button>
-  <div class="hint">انحناءة واقعية + دوران + اهتزاز بسيط للشبكة.</div>
-  
-  <!-- إعلان في الأسفل -->
-  <div class="ad-container">
-    <div class="ad-placeholder">مساحة إعلانية - يمكنك وضع إعلانك هنا</div>
-  </div>
-</div>
-
-<script>
-const $=id=>document.getElementById(id);
-const levelEl=$('level'),scoreEl=$('score'),livesEl=$('lives');
-const ball=$('ball'),shadow=$('shadow'),shootBtn=$('shootBtn');
-const overlay=$('overlay'), startScreen=$('startScreen'), levelComplete=$('levelComplete');
-const difficultyProgress = $('#difficultyProgress');
-let level=1,score=0,lives=5,target=5,anim=false,gameStarted=false;
-
-// تحديث واجهة اللعبة
-function render(){
-  levelEl.textContent=level;
-  scoreEl.textContent=score;
-  livesEl.textContent=lives;
-  
-  // تحديث مؤشر الصعوبة
-  const progress = Math.min(100, (level-1) * 20);
-  difficultyProgress.style.width = `${progress}%`;
-}
-
-// الانتقال للمستوى التالي
-function nextLevel(){
-  level++;
-  target += 2; // زيادة صعوبة المستوى
-  levelComplete.style.display = 'flex';
-  $('#completedLevel').textContent = level-1;
-  
-  // إظهار إعلان بين المستويات (يمكن تفعيله لاحقاً)
-  // showAd();
-}
-
-// عند الفشل في التصويب
-function fail(){
-  lives--;
-  render();
-  if(lives<=0) {
-    overlay.style.display='grid';
-    // إظهار إعلان عند انتهاء المحاولات (يمكن تفعيله لاحقاً)
-    // showAd();
-  }
-}
-
-// تصويب الكرة
-function shoot(){
-  if(anim || !gameStarted) return; 
-  anim=true;
-  
-  // حساب الانحراف بناءً على مستوى الصعوبة
-  const maxDeviation = Math.max(10, 60 - (level * 4));
-  const dx=((Math.random()*maxDeviation - maxDeviation/2)).toFixed(1);
-  ball.style.setProperty('--dx',dx+'px');
-  
-  ball.classList.remove('down');
-  shadow.classList.remove('down');
-  void ball.offsetWidth; // إعادة تشغيل التحريك
-  
-  ball.classList.add('up','spin');
-  shadow.classList.add('up');
-  
-  // حساب فرصة النجاح بناءً على مستوى الصعوبة
-  const baseSuccessRate = Math.max(0.2, 0.80 - (level-1)*0.07);
-  const success=Math.random() < baseSuccessRate;
-  
-  setTimeout(()=>{
-    ball.classList.remove('up');
-    shadow.classList.remove('up');
-    
-    if(success){
-      // نزول داخل الشبكة + رجّة خفيفة
-      const strands=document.querySelectorAll('#strands path');
-      strands.forEach((p,i)=>{
-        p.animate([{transform:'translateY(0)'},{transform:'translateY(6px)'}],{
-          duration:180 + i*12,
-          iterations:1,
-          direction:'alternate',
-          easing:'ease-out'
-        })
-      });
-      
-      ball.classList.add('down');
-      shadow.classList.add('down');
-      
-      setTimeout(()=>{
-        score++;
-        render();
-        
-        if(score >= target) {
-          nextLevel();
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>كرة السلة - لعبة تليجرام</title>
+    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;800&display=swap" rel="stylesheet">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Cairo', sans-serif;
         }
         
-        anim=false;
-      },460)
-    }else{
-      anim=false;
-      fail();
-    }
-  },600)
-}
+        body {
+            background: linear-gradient(135deg, #0b0f18 0%, #1a243a 100%);
+            color: #eef2ff;
+            min-height: 100vh;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        .container {
+            max-width: 500px;
+            width: 100%;
+            background: rgba(13, 19, 33, 0.8);
+            border-radius: 20px;
+            padding: 20px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+        
+        .header {
+            text-align: center;
+            margin-bottom: 20px;
+            padding-bottom: 15px;
+            border-bottom: 2px solid rgba(255, 106, 46, 0.3);
+        }
+        
+        .header h1 {
+            font-size: 28px;
+            font-weight: 800;
+            color: #ffb724;
+            text-shadow: 0 2px 4px rgba(0, 0, 0, 0.5);
+            margin-bottom: 5px;
+        }
+        
+        .header p {
+            color: #9ba7c0;
+            font-size: 14px;
+        }
+        
+        .stats {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+        
+        .stat-box {
+            background: linear-gradient(180deg, #11192a, #0f1522);
+            border-radius: 15px;
+            padding: 12px;
+            text-align: center;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
+        }
+        
+        .stat-label {
+            font-size: 12px;
+            color: #9ba7c0;
+            margin-bottom: 5px;
+        }
+        
+        .stat-value {
+            font-size: 22px;
+            font-weight: 800;
+            color: #ffd46a;
+        }
+        
+        .game-area {
+            position: relative;
+            height: 400px;
+            margin: 20px 0;
+            border-radius: 20px;
+            overflow: hidden;
+            background: linear-gradient(180deg, #0c1322 0%, #0a0f18 48%, #090d15 100%);
+            box-shadow: 0 15px 35px rgba(0, 0, 0, 0.5);
+        }
+        
+        .court {
+            position: absolute;
+            bottom: 0;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 90%;
+            height: 180px;
+            background: repeating-linear-gradient(90deg, #8f5525 0 15px, #a86833 15px 30px, #7a4720 30px 45px);
+            border-radius: 50% 50% 0 0;
+            box-shadow: inset 0 60px 100px rgba(0, 0, 0, 0.6);
+        }
+        
+        .hoop {
+            position: absolute;
+            top: 100px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 280px;
+            height: 200px;
+        }
+        
+        .backboard {
+            position: absolute;
+            top: 0;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 160px;
+            height: 25px;
+            background: rgba(233, 240, 255, 0.8);
+            border-radius: 12px;
+        }
+        
+        .rim {
+            position: absolute;
+            top: 120px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 200px;
+            height: 12px;
+            background: #ff6a2e;
+            border-radius: 6px;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.3);
+        }
+        
+        .net {
+            position: absolute;
+            top: 132px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 180px;
+            height: 60px;
+            background: linear-gradient(to right, transparent 0%, rgba(255, 255, 255, 0.3) 50%, transparent 100%);
+            clip-path: polygon(0 0, 100% 0, 80% 100%, 20% 100%);
+        }
+        
+        .ball {
+            position: absolute;
+            left: 50%;
+            bottom: 40px;
+            transform: translateX(-50%);
+            width: 70px;
+            height: 70px;
+            border-radius: 50%;
+            background: radial-gradient(circle at 30% 30%, #ffb77f 0%, #ff944f 40%, #ff6e22 70%, #d24a0f 100%);
+            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.5), inset -8px -8px 15px rgba(0, 0, 0, 0.3);
+            transition: transform 0.3s;
+            z-index: 10;
+        }
+        
+        .ball::before {
+            content: "";
+            position: absolute;
+            top: 10px;
+            left: 15px;
+            width: 25px;
+            height: 25px;
+            border-radius: 50%;
+            background: rgba(0, 0, 0, 0.2);
+        }
+        
+        .controls {
+            display: flex;
+            gap: 15px;
+            margin-top: 20px;
+        }
+        
+        .btn {
+            flex: 1;
+            padding: 15px;
+            border: none;
+            border-radius: 15px;
+            font-weight: 700;
+            font-size: 16px;
+            cursor: pointer;
+            transition: all 0.3s;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
+        }
+        
+        .shoot-btn {
+            background: linear-gradient(180deg, #ffd46a, #ffb724);
+            color: #1b1100;
+        }
+        
+        .shoot-btn:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 8px 20px rgba(0, 0, 0, 0.4);
+        }
+        
+        .ad-btn {
+            background: linear-gradient(180deg, #4c6ef5, #3b5bdb);
+            color: white;
+        }
+        
+        .ad-btn:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 8px 20px rgba(0, 0, 0, 0.4);
+        }
+        
+        .ad-container {
+            margin: 20px 0;
+            padding: 15px;
+            background: rgba(15, 21, 34, 0.7);
+            border-radius: 15px;
+            text-align: center;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+        
+        .ad-placeholder {
+            color: #9ba7c0;
+            font-size: 14px;
+            padding: 20px;
+            background: rgba(0, 0, 0, 0.2);
+            border-radius: 10px;
+        }
+        
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.8);
+            z-index: 100;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        .modal-content {
+            background: linear-gradient(180deg, #0f1522, #101824);
+            border-radius: 20px;
+            padding: 25px;
+            text-align: center;
+            max-width: 350px;
+            width: 90%;
+            box-shadow: 0 15px 35px rgba(0, 0, 0, 0.5);
+        }
+        
+        .modal h2 {
+            color: #ffb724;
+            margin-bottom: 15px;
+            font-size: 24px;
+        }
+        
+        .modal p {
+            color: #9ba7c0;
+            margin-bottom: 20px;
+        }
+        
+        .modal-buttons {
+            display: flex;
+            gap: 10px;
+        }
+        
+        .modal-btn {
+            flex: 1;
+            padding: 12px;
+            border: none;
+            border-radius: 12px;
+            font-weight: 700;
+            cursor: pointer;
+        }
+        
+        .reward-btn {
+            background: linear-gradient(180deg, #20c997, #099268);
+            color: white;
+        }
+        
+        .restart-btn {
+            background: #2f3a52;
+            color: white;
+        }
+        
+        .level-up {
+            animation: levelUp 1s ease;
+        }
+        
+        @keyframes levelUp {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.1); }
+            100% { transform: scale(1); }
+        }
+        
+        /* أنيميشن الكرة */
+        @keyframes shoot {
+            0% { bottom: 40px; transform: translateX(-50%) scale(1); }
+            50% { bottom: 250px; transform: translateX(calc(-50% + var(--dx, 0px))) scale(0.95); }
+            100% { bottom: 40px; transform: translateX(-50%) scale(0.9); }
+        }
+        
+        .shooting {
+            animation: shoot 1s forwards;
+        }
+        
+        /* تصميم متجاوب */
+        @media (max-width: 500px) {
+            .header h1 {
+                font-size: 24px;
+            }
+            
+            .stat-value {
+                font-size: 18px;
+            }
+            
+            .game-area {
+                height: 350px;
+            }
+            
+            .btn {
+                padding: 12px;
+                font-size: 14px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🏀 كرة السلة - تليجرام</h1>
+            <p>اصنع النقاط وتحدى المراحل!</p>
+        </div>
+        
+        <div class="stats">
+            <div class="stat-box">
+                <div class="stat-label">المستوى</div>
+                <div class="stat-value" id="level">1</div>
+            </div>
+            <div class="stat-box">
+                <div class="stat-label">النقاط</div>
+                <div class="stat-value" id="score">0</div>
+            </div>
+            <div class="stat-box">
+                <div class="stat-label">المحاولات</div>
+                <div class="stat-value" id="attempts">5</div>
+            </div>
+        </div>
+        
+        <div class="game-area">
+            <div class="court"></div>
+            <div class="hoop">
+                <div class="backboard"></div>
+                <div class="rim"></div>
+                <div class="net"></div>
+            </div>
+            <div class="ball" id="ball"></div>
+        </div>
+        
+        <div class="ad-container">
+            <div class="ad-placeholder">مساحة إعلانية - شاهد إعلانًا لمضاعفة النقاط!</div>
+        </div>
+        
+        <div class="controls">
+            <button class="btn shoot-btn" id="shootBtn">تصويب 🏀</button>
+            <button class="btn ad-btn" id="adBtn">إعلان ⭐</button>
+        </div>
+    </div>
+    
+    <div class="modal" id="levelUpModal">
+        <div class="modal-content">
+            <h2>مبروك! مستوى جديد</h2>
+            <p>لقد انتقلت إلى المستوى <span id="newLevel">2</span></p>
+            <div class="modal-buttons">
+                <button class="modal-btn reward-btn" id="rewardBtn">مكافأة إعلانية</button>
+                <button class="modal-btn restart-btn" id="continueBtn">متابعة</button>
+            </div>
+        </div>
+    </div>
+    
+    <div class="modal" id="gameOverModal">
+        <div class="modal-content">
+            <h2>انتهت المحاولات</h2>
+            <p>نقاطك النهائية: <span id="finalScore">0</span></p>
+            <div class="modal-buttons">
+                <button class="modal-btn reward-btn" id="adContinueBtn">إعلان للمتابعة</button>
+                <button class="modal-btn restart-btn" id="restartBtn">إعادة اللعب</button>
+            </div>
+        </div>
+    </div>
 
-// دالة لعرض الإعلانات (يمكنك تعديلها لدمج خدمة الإعلانات)
-function showAd() {
-  // هذه دالة افتراضية، يمكنك استبدالها بخدمة إعلانات حقيقية
-  console.log("عرض الإعلان هنا");
-  
-  // في الواقع، هنا ستدمج كود الإعلانات مثل:
-  // AdMob, Google AdSense, etc.
-}
-
-// أحداث الأزرار
-shootBtn.onclick=shoot;
-
-$('startBtn').addEventListener('click', ()=>{
-  startScreen.style.display = 'none';
-  gameStarted = true;
-});
-
-$('nextLevelBtn').addEventListener('click', ()=>{
-  levelComplete.style.display = 'none';
-  render();
-});
-
-$('continueBtn').addEventListener('click', ()=>{
-  // عند مشاهدة إعلان للمتابعة
-  showAd();
-  lives=2;
-  overlay.style.display='none';
-  render();
-});
-
-$('restartBtn').addEventListener('click', ()=>{
-  level=1;
-  score=0;
-  lives=5;
-  target=5;
-  overlay.style.display='none';
-  render();
-});
-
-// تهيئة اللعبة
-render();
-</script>
+    <script>
+        // عناصر DOM
+        const ball = document.getElementById('ball');
+        const shootBtn = document.getElementById('shootBtn');
+        const levelEl = document.getElementById('level');
+        const scoreEl = document.getElementById('score');
+        const attemptsEl = document.getElementById('attempts');
+        const levelUpModal = document.getElementById('levelUpModal');
+        const gameOverModal = document.getElementById('gameOverModal');
+        const newLevelEl = document.getElementById('newLevel');
+        const finalScoreEl = document.getElementById('finalScore');
+        const continueBtn = document.getElementById('continueBtn');
+        const restartBtn = document.getElementById('restartBtn');
+        const rewardBtn = document.getElementById('rewardBtn');
+        const adContinueBtn = document.getElementById('adContinueBtn');
+        const adBtn = document.getElementById('adBtn');
+        
+        // حالة اللعبة
+        let gameState = {
+            level: 1,
+            score: 0,
+            attempts: 5,
+            requiredScore: 5,
+            isShooting: false
+        };
+        
+        // تحديث واجهة اللعبة
+        function updateUI() {
+            levelEl.textContent = gameState.level;
+            scoreEl.textContent = gameState.score;
+            attemptsEl.textContent = gameState.attempts;
+        }
+        
+        // تصويب الكرة
+        function shootBall() {
+            if (gameState.isShooting) return;
+            if (gameState.attempts <= 0) {
+                showGameOver();
+                return;
+            }
+            
+            gameState.isShooting = true;
+            gameState.attempts--;
+            
+            // تحديد انحراف الكرة بناء على المستوى (كلما زاد المستوى زادت الصعوبة)
+            const maxDeviation = 100 - (gameState.level * 5);
+            const deviation = Math.random() * maxDeviation - (maxDeviation / 2);
+            ball.style.setProperty('--dx', `${deviation}px`);
+            
+            // تطبيق أنيميشن التصويب
+            ball.classList.add('shooting');
+            
+            // تحديد ما إذا كانت الكرة ستدخل بناء على المستوى
+            const successChance = Math.max(0.3, 0.8 - (gameState.level * 0.1));
+            const isSuccess = Math.random() < successChance;
+            
+            // نتيجة التصويب
+            setTimeout(() => {
+                ball.classList.remove('shooting');
+                
+                if (isSuccess) {
+                    // نجح التصويب
+                    gameState.score += gameState.level; // نقاط أكثر في المستويات الأعلى
+                    
+                    // تحقق إذا انتقل للمستوى التالي
+                    if (gameState.score >= gameState.requiredScore) {
+                        levelUp();
+                    }
+                }
+                
+                updateUI();
+                gameState.isShooting = false;
+                
+                // تحقق إذا انتهت المحاولات
+                if (gameState.attempts <= 0) {
+                    setTimeout(showGameOver, 500);
+                }
+            }, 1000);
+        }
+        
+        // الانتقال لمستوى أعلى
+        function levelUp() {
+            gameState.level++;
+            gameState.requiredScore += gameState.level * 2;
+            
+            // إظهار رسالة المستوى الجديد
+            newLevelEl.textContent = gameState.level;
+            levelUpModal.style.display = 'flex';
+            
+            // تأثير للمستوى الجديد
+            levelEl.classList.add('level-up');
+            setTimeout(() => {
+                levelEl.classList.remove('level-up');
+            }, 1000);
+        }
+        
+        // عرض شاشة Game Over
+        function showGameOver() {
+            finalScoreEl.textContent = gameState.score;
+            gameOverModal.style.display = 'flex';
+        }
+        
+        // إعادة تشغيل اللعبة
+        function restartGame() {
+            gameState = {
+                level: 1,
+                score: 0,
+                attempts: 5,
+                requiredScore: 5,
+                isShooting: false
+            };
+            updateUI();
+            gameOverModal.style.display = 'none';
+            levelUpModal.style.display = 'none';
+        }
+        
+        // مشاهدة إعلان للحصول على محاولات إضافية
+        function watchAdForExtraAttempts() {
+            // محاكاة مشاهدة إعلان
+            gameState.attempts += 3;
+            updateUI();
+            gameOverModal.style.display = 'none';
+            
+            // هنا يمكنك دمج كود الإعلان الفعلي
+            console.log("عرض إعلان هنا");
+        }
+        
+        // مشاهدة إعلان لمضاعفة النقاط
+        function watchAdForPoints() {
+            // محاكاة مشاهدة إعلان
+            gameState.score *= 2;
+            updateUI();
+            levelUpModal.style.display = 'none';
+            
+            // هنا يمكنك دمج كود الإعلان الفعلي
+            console.log("عرض إعلان لمضاعفة النقاط");
+        }
+        
+        // مشاهدة إعلان لمضاعفة النقاط من الزر الرئيسي
+        function watchAdForBonus() {
+            // محاكاة مشاهدة إعلان
+            gameState.score += 5;
+            updateUI();
+            
+            // تأثير مرئي
+            scoreEl.classList.add('level-up');
+            setTimeout(() => {
+                scoreEl.classList.remove('level-up');
+            }, 1000);
+            
+            // هنا يمكنك دمج كود الإعلان الفعلي
+            console.log("عرض إعلان للمكافأة");
+        }
+        
+        // إعداد event listeners
+        shootBtn.addEventListener('click', shootBall);
+        continueBtn.addEventListener('click', () => levelUpModal.style.display = 'none');
+        restartBtn.addEventListener('click', restartGame);
+        rewardBtn.addEventListener('click', watchAdForPoints);
+        adContinueBtn.addEventListener('click', watchAdForExtraAttempts);
+        adBtn.addEventListener('click', watchAdForBonus);
+        
+        // تهيئة اللعبة
+        updateUI();
+    </script>
 </body>
 </html>
