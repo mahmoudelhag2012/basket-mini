@@ -3,65 +3,72 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Basket Mini — Pro Look v2</title>
+  <title>Basket Mini — Pro v3</title>
   <script src="https://telegram.org/js/telegram-web-app.js"></script>
-  <script src="https://sad.adsgram.ai/js/sad.min.js"></script>
   <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@500;700;800&display=swap" rel="stylesheet">
   <style>
     :root{
-      --bg:#0a0f18; --text:#eaf0ff; --muted:#9fb0d1;
-      --panel:#0f1523; --panel2:#121a2b; --ring:#ffffff1f;
-      --accent:#ffc857; --rim:#ff7a3c;
-      --wood1:#8c5a2b; --wood2:#a56a36; --wood3:#6e4421; --woodHL:#f1c27d33;
+      --bg:#0a0e17; --text:#eef2ff; --muted:#96a0b9;
+      --panel:#101824; --panel2:#0f1521; --ring:#ffffff18;
+      --rim:#ff7a3c; --glass:#e9f0ffcc;
+      --wood1:#905828; --wood2:#a66b36; --wood3:#7a4a22;
+      --gold1:#ffd46a; --gold2:#ffb724;
     }
     *{box-sizing:border-box}
     html,body{margin:0;background:radial-gradient(1200px 600px at 50% -10%, #1b2540 0%, var(--bg) 60%);color:var(--text);font-family:"Cairo",system-ui}
-    .wrap{max-width:520px;margin:0 auto;padding:16px}
+    .wrap{max-width:540px;margin:0 auto;padding:16px}
 
     .grid3{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}
     .badge{background:linear-gradient(180deg,var(--panel),var(--panel2));border-radius:18px;padding:12px 14px;box-shadow:0 8px 24px #0008, inset 0 1px 0 var(--ring)}
     .k{font-size:13px;color:var(--muted)}
     .v{font-weight:800;font-size:22px}
 
-    .arena{position:relative;height:470px;margin:14px 0 10px;border-radius:22px;overflow:hidden;box-shadow:0 20px 60px #000a, inset 0 0 0 1px var(--ring);background:linear-gradient(180deg,#0b1120 0%,#0a0f18 45%, #090e16 100%)}
+    .arena{position:relative;height:500px;margin:14px 0 10px;border-radius:22px;overflow:hidden;box-shadow:0 24px 60px #000a, inset 0 0 0 1px var(--ring);background:linear-gradient(180deg,#0c1322 0%,#0a0e17 48%, #090d15 100%)}
 
-    /* stadium lights */
-    .light{position:absolute;left:50%;top:18px;transform:translateX(-50%);width:62%;height:56px;border-radius:40px;background:radial-gradient(200px 30px at 50% 50%, #ffffff55 0, #ffffff10 60%, transparent 70%)}
-    .beam{position:absolute;left:50%;top:18px;transform:translateX(-50%);width:70%;height:180px;background:radial-gradient(350px 120px at 50% 0, #ffffff16 0, transparent 70%)}
+    /* stadium lights & crowd */
+    .crowd{position:absolute;inset:0;background:
+      radial-gradient(800px 140px at 50% 20px,#ffffff14 0,#ffffff04 40%,transparent 60%),
+      radial-gradient(1200px 200px at 50% 0,#1c2745 0%, transparent 65%);
+    }
+    .lightbar{position:absolute;left:50%;top:24px;transform:translateX(-50%);width:70%;height:62px;border-radius:40px;background:radial-gradient(280px 34px at 50% 50%, #ffffff66 0, #ffffff15 60%, transparent 75%)}
 
-    /* backboard + rim */
-    .hoop{position:absolute;top:110px;left:50%;transform:translateX(-50%);width:280px;height:220px}
+    /* HOOP: glass backboard + rim + net */
+    .hoop{position:absolute;top:110px;left:50%;transform:translateX(-50%);width:300px;height:230px}
     svg{width:100%;height:100%}
-    .netGlow{opacity:0;transition:.18s}
+    .netGlow{opacity:0;transition:.16s}
 
-    /* wood floor */
-    .court{position:absolute;left:0;right:0;bottom:-40px;height:260px;border-radius:40% 40% 0 0/18% 18% 0 0;overflow:hidden;filter:drop-shadow(0 -8px 30px #0008)}
+    /* COURT wood ellipse */
+    .court{position:absolute;left:50%;bottom:-34px;transform:translateX(-50%);width:92%;height:280px;border-radius:50%/22%;overflow:hidden;filter:drop-shadow(0 -10px 32px #000a)}
     .planks{position:absolute;inset:0;background:
-      linear-gradient(90deg, var(--wood1) 0 16px, var(--wood2) 16px 24px, var(--wood1) 24px 40px, var(--wood2) 40px 48px, var(--wood1) 48px 64px, var(--wood2) 64px 72px, var(--wood1) 72px 88px, var(--wood2) 88px 96px, var(--wood1) 96px 112px, var(--wood2) 112px 120px, var(--wood1) 120px 136px, var(--wood2) 136px 144px, var(--wood1) 144px 160px, var(--wood2) 160px 168px, var(--wood1) 168px 184px, var(--wood2) 184px 192px, var(--wood1) 192px 208px, var(--wood2) 208px 216px, var(--wood1) 216px 232px, var(--wood2) 232px 240px, var(--wood1) 240px 256px, var(--wood2) 256px 264px, var(--wood1) 264px 280px, var(--wood2) 280px 288px, var(--wood1) 288px 304px, var(--wood2) 304px 312px, var(--wood1) 312px 328px, var(--wood2) 328px 336px, var(--wood1) 336px 352px, var(--wood2) 352px 360px, var(--wood1) 360px 376px, var(--wood2) 376px 384px, var(--wood1) 384px 400px, var(--wood2) 400px 408px, var(--wood1) 408px 424px, var(--wood2) 424px 432px, var(--wood1) 432px 448px, var(--wood2) 448px 456px, var(--wood1) 456px 472px, var(--wood2) 472px 480px);
-      box-shadow:inset 0 80px 140px #0007;
+      repeating-linear-gradient(90deg,var(--wood1) 0 18px,var(--wood2) 18px 30px,var(--wood3) 30px 48px);
+      box-shadow:inset 0 100px 160px #0007;
     }
-    .courtMark{position:absolute;left:50%;bottom:74px;transform:translateX(-50%);width:220px;height:120px;border:4px solid #ffffff25;border-radius:50%}
+    .circle{position:absolute;left:50%;bottom:96px;transform:translateX(-50%);width:260px;height:140px;border:4px solid #ffffff22;border-radius:50%}
 
-    /* ball + shadow */
-    .ball{position:absolute;left:50%;bottom:36px;transform:translateX(-50%);width:96px;height:96px;border-radius:50%;
+    /* ball + seams + shadow */
+    .ball{position:absolute;left:50%;bottom:42px;transform:translateX(-50%);width:100px;height:100px;border-radius:50%;
       background:
-        radial-gradient(34px 34px at 32% 32%, #ffb57c 0%, #ff8f48 46%, transparent 47%),
-        radial-gradient(120px 120px at 70% 70%, #ff6e22 0%, #d24a0f 70%);
-      box-shadow:0 18px 36px #000c, inset -10px -10px 18px #0003;
+        radial-gradient(38px 38px at 34% 34%, #ffb57c 0%, #ff934d 46%, transparent 47%),
+        radial-gradient(130px 130px at 70% 70%, #ff6e22 0%, #d24a0f 70%);
+      box-shadow:0 18px 36px #000c, inset -12px -12px 22px #0003;
     }
-    .shadow{position:absolute;left:50%;bottom:22px;transform:translateX(-50%);width:120px;height:20px;border-radius:50%;background:#0000005a;filter:blur(6px)}
+    .ball:before, .ball:after{content:"";position:absolute;inset:0;border-radius:50%}
+    .ball:before{border-top:5px solid #00000055;border-left:5px solid #00000055;opacity:.55;filter:blur(.2px)}
+    .ball:after{background:radial-gradient(120px 120px at 30% 30%, transparent 52%, #00000055 53% 56%, transparent 57%)}
+    .shadow{position:absolute;left:50%;bottom:26px;transform:translateX(-50%);width:130px;height:22px;border-radius:50%;background:#00000058;filter:blur(7px)}
 
-    .ball.shootUp{animation:shootUp .58s cubic-bezier(.25,.65,.2,1) forwards}
-    .ball.swish{animation:swish .45s linear forwards}
-    .shadow.shootUp{animation:shShrink .58s linear forwards}
-    .shadow.swish{animation:shGrow .45s linear forwards}
+    /* motion */
+    .ball.up{animation:up .58s cubic-bezier(.25,.65,.2,1) forwards}
+    .ball.down{animation:down .44s linear forwards}
+    .shadow.up{animation:shrink .58s linear forwards}
+    .shadow.down{animation:grow .44s linear forwards}
+    @keyframes up{0%{transform:translateX(-50%) translateY(0) scale(1)}60%{transform:translateX(-50%) translateY(-280px) scale(.96)}100%{transform:translateX(-50%) translateY(-180px) scale(.92)}}
+    @keyframes down{0%{transform:translateX(-50%) translateY(-180px) scale(.92)}100%{transform:translateX(-50%) translateY(46px) scale(.88)}}
+    @keyframes shrink{0%{transform:translateX(-50%) scale(1)}100%{transform:translateX(-50%) scale(.6)}}
+    @keyframes grow{0%{transform:translateX(-50%) scale(.6)}100%{transform:translateX(-50%) scale(1.05)}}
 
-    @keyframes shootUp{0%{transform:translateX(-50%) translateY(0) scale(1)}60%{transform:translateX(-50%) translateY(-260px) scale(.96)}100%{transform:translateX(-50%) translateY(-170px) scale(.92)}}
-    @keyframes swish{0%{transform:translateX(-50%) translateY(-170px) scale(.92)}100%{transform:translateX(-50%) translateY(40px) scale(.88)}}
-    @keyframes shShrink{0%{transform:translateX(-50%) scale(1)}100%{transform:translateX(-50%) scale(.6)}}
-    @keyframes shGrow{0%{transform:translateX(-50%) scale(.6)}100%{transform:translateX(-50%) scale(1.1)}}
-
-    .btn{width:100%;border:0;background:linear-gradient(180deg,#ffd46a,#ffb724);color:#1b1100;font-weight:800;font-size:18px;border-radius:16px;padding:14px 16px;box-shadow:0 10px 20px #0007, inset 0 1px 0 #fff7;cursor:pointer}
+    /* UI */
+    .btn{width:100%;border:0;background:linear-gradient(180deg,var(--gold1),var(--gold2));color:#1b1100;font-weight:800;font-size:18px;border-radius:16px;padding:14px 16px;box-shadow:0 12px 22px #0007, inset 0 1px 0 #fff7;cursor:pointer}
     .hint{color:var(--muted);text-align:center;font-size:12px;margin-top:8px}
 
     .overlay{position:absolute;inset:0;display:none;place-items:center;background:#0007;backdrop-filter:blur(2px)}
@@ -81,26 +88,26 @@
     </div>
 
     <div class="arena" id="arena">
-      <div class="light"></div>
-      <div class="beam"></div>
+      <div class="crowd"></div>
+      <div class="lightbar"></div>
       <div class="hoop">
-        <svg viewBox="0 0 280 220" xmlns="http://www.w3.org/2000/svg">
-          <!-- backboard bar -->
-          <rect x="60" y="16" rx="10" width="160" height="18" fill="#e9eef6"/>
-          <!-- support bars -->
-          <rect x="70" y="34" width="12" height="80" rx="6" fill="#e9eef6"/>
-          <rect x="198" y="34" width="12" height="80" rx="6" fill="#e9eef6"/>
+        <svg viewBox="0 0 300 230" xmlns="http://www.w3.org/2000/svg">
+          <!-- glass backboard -->
+          <rect x="60" y="10" width="180" height="26" rx="13" fill="var(--glass)" />
+          <rect x="78" y="36" width="12" height="92" rx="6" fill="#e9eef6"/>
+          <rect x="210" y="36" width="12" height="92" rx="6" fill="#e9eef6"/>
           <!-- rim -->
-          <path d="M90 124 Q140 146 190 124" stroke="var(--rim)" stroke-width="12" fill="none" stroke-linecap="round"/>
-          <!-- net -->
-          <path id="net" d="M108 126 L172 126 L160 178 L120 178 Z" fill="url(#mesh)" stroke="var(--rim)" stroke-width="7" stroke-linejoin="round"/>
-          <g class="netGlow">
-            <defs><radialGradient id="g" cx="50%" cy="50%" r="60%"><stop offset="0%" stop-color="#ff934e" stop-opacity="1"/><stop offset="100%" stop-color="#ff934e" stop-opacity="0"/></radialGradient></defs>
-            <ellipse cx="140" cy="150" rx="84" ry="36" fill="url(#g)"/>
-          </g>
+          <path d="M96 132 Q150 154 204 132" stroke="var(--rim)" stroke-width="12" fill="none" stroke-linecap="round"/>
+          <!-- net (simple) -->
+          <path id="net" d="M116 134 L184 134 L170 188 L130 188 Z" fill="url(#mesh)" stroke="var(--rim)" stroke-width="7" stroke-linejoin="round"/>
+          <g class="netGlow"><ellipse cx="150" cy="158" rx="92" ry="40" fill="url(#g)"/></g>
           <defs>
+            <radialGradient id="g" cx="50%" cy="50%" r="60%">
+              <stop offset="0%" stop-color="#ff934e" stop-opacity="1"/>
+              <stop offset="100%" stop-color="#ff934e" stop-opacity="0"/>
+            </radialGradient>
             <pattern id="mesh" width="12" height="12" patternUnits="userSpaceOnUse">
-              <path d="M0 12 L12 0 M-2 2 L2 -2 M10 14 L14 10" stroke="#ffffff35" stroke-width="1"/>
+              <path d="M0 12 L12 0 M-2 2 L2 -2 M10 14 L14 10" stroke="#ffffff3a" stroke-width="1"/>
             </pattern>
           </defs>
         </svg>
@@ -111,7 +118,7 @@
 
       <div class="court">
         <div class="planks"></div>
-        <div class="courtMark"></div>
+        <div class="circle"></div>
       </div>
 
       <div class="overlay" id="overlay">
@@ -127,60 +134,46 @@
     </div>
 
     <button class="btn" id="shootBtn">تصويب 🏀</button>
-    <div class="hint">تصويب واقعي مع حركة “Swish”. كل مستوى أصعب من السابق.</div>
+    <div class="hint">تصويب بحركة Swish + ظل ومؤثرات. كل مستوى أصعب.</div>
   </div>
 
 <script>
-  const tg = window.Telegram?.WebApp; if(tg){ tg.ready(); tg.expand(); }
   const $ = id=>document.getElementById(id);
   const levelEl=$('level'), scoreEl=$('score'), livesEl=$('lives');
-  const ball=$('ball'), shadow=$('shadow'), shootBtn=$('shootBtn');
+  const ball=$('ball'), sh=$('shadow'), shootBtn=$('shootBtn');
   const overlay=$('overlay'), continueBtn=$('continueBtn'), restartBtn=$('restartBtn');
   const netGlow=document.querySelector('.netGlow');
 
-  let level=1, score=0, lives=3, target=3, isAnimating=false;
+  let level=1, score=0, lives=3, target=3, anim=false;
+  const rng=()=>Math.random();
+  const RENDER=()=>{ levelEl.textContent=level; scoreEl.textContent=score; livesEl.textContent=lives; };
+  RENDER();
 
-  function render(){ levelEl.textContent=level; scoreEl.textContent=score; livesEl.textContent=lives; }
-  render();
-
-  function nextLevel(){ level++; target+=2; if(window.SAD){ SAD.showInterstitialAd({blockId:'YOUR_INTERSTITIAL_BLOCK_ID'}).catch(()=>{});} render(); }
-  function fail(){ lives--; render(); if(lives<=0){ showOverlay('انتهت المحاولات','شاهد إعلان مكافأة للحصول على محاولة إضافية؟'); } }
-  function rng(){ return Math.random(); }
+  function nextLevel(){ level++; target+=2; RENDER(); }
+  function fail(){ lives--; RENDER(); if(lives<=0) showOverlay('انتهت المحاولات','شاهد إعلان مكافأة للحصول على محاولة إضافية؟'); }
 
   function shoot(){
-    if(isAnimating) return; isAnimating=true;
-    // صعود
-    ball.classList.remove('swish'); shadow.classList.remove('swish');
-    void ball.offsetWidth;
-    ball.classList.add('shootUp'); shadow.classList.add('shootUp');
+    if(anim) return; anim=true;
+    ball.classList.remove('down'); sh.classList.remove('down'); void ball.offsetWidth;
+    ball.classList.add('up'); sh.classList.add('up');
 
-    const success = rng() < Math.max(0.2, 0.78 - (level-1)*0.08);
-
+    const success = rng() < Math.max(0.18, 0.80 - (level-1)*0.08);
     setTimeout(()=>{
-      ball.classList.remove('shootUp'); shadow.classList.remove('shootUp');
+      ball.classList.remove('up'); sh.classList.remove('up');
       if(success){
-        // نزول داخل الشبكة + وهج خفيف
-        netGlow.style.opacity=1; setTimeout(()=>netGlow.style.opacity=0, 180);
-        ball.classList.add('swish'); shadow.classList.add('swish');
-        setTimeout(()=>{ score++; render(); if(score % target === 0) nextLevel(); isAnimating=false; }, 460);
-      }else{
-        // إخفاق بسيط
-        isAnimating=false; fail();
-      }
+        netGlow.style.opacity=1; setTimeout(()=>netGlow.style.opacity=0, 160);
+        ball.classList.add('down'); sh.classList.add('down');
+        setTimeout(()=>{ score++; RENDER(); if(score % target===0) nextLevel(); anim=false; }, 440);
+      } else { anim=false; fail(); }
     }, 580);
   }
-
-  shootBtn.onclick=shoot;
 
   function showOverlay(t,sub){ $('ovTitle').textContent=t; $('ovText').textContent=sub; overlay.style.display='grid'; }
   function hideOverlay(){ overlay.style.display='none'; }
 
-  continueBtn.onclick=()=>{
-    if(window.SAD){
-      SAD.showRewardedAd({blockId:'YOUR_REWARDED_BLOCK_ID'}).then(()=>{ lives=1; hideOverlay(); render(); }).catch(()=>{});
-    } else { lives=1; hideOverlay(); render(); }
-  }
-  restartBtn.onclick=()=>{ level=1; score=0; lives=3; target=3; hideOverlay(); render(); }
+  continueBtn.onclick=()=>{ lives=1; hideOverlay(); RENDER(); };
+  restartBtn.onclick=()=>{ level=1; score=0; lives=3; target=3; hideOverlay(); RENDER(); };
+  shootBtn.onclick=shoot;
 </script>
 </body>
 </html>
