@@ -5,12 +5,8 @@
 <meta name="viewport" content="width=device-width,initial-scale=1"/>
 <title>Number Match — Levels</title>
 <style>
-:root{
-  --bg:#0b0f18;--p1:#11182a;--p2:#0e1423;--ring:#ffffff24;--txt:#ecf1ff;--mut:#9db0d1;
-  --gold1:#ffd46a;--gold2:#ffb724;--green:#34d399
-}
-*{box-sizing:border-box}
-html,body{margin:0;height:100%;background:radial-gradient(1200px 620px at 50% -10%,#1b2540 0,#0b0f18 60%);color:var(--txt);font-family:system-ui,Segoe UI,Arial}
+:root{--bg:#0b0f18;--p1:#11182a;--p2:#0e1423;--ring:#ffffff24;--txt:#ecf1ff;--mut:#9db0d1;--gold1:#ffd46a;--gold2:#ffb724;--green:#34d399}
+*{box-sizing:border-box}html,body{margin:0;height:100%;background:radial-gradient(1200px 620px at 50% -10%,#1b2540 0,#0b0f18 60%);color:var(--txt);font-family:system-ui,Segoe UI,Arial}
 .wrap{max-width:760px;margin:0 auto;padding:14px}
 .hud{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-bottom:10px}
 .badge{background:linear-gradient(180deg,var(--p1),var(--p2));border-radius:16px;padding:10px 12px;text-align:center;box-shadow:0 12px 26px #000a,inset 0 1px 0 var(--ring)}
@@ -18,4 +14,199 @@ html,body{margin:0;height:100%;background:radial-gradient(1200px 620px at 50% -1
 .targets{margin:8px 0;display:flex;gap:8px;flex-wrap:wrap}
 .tg{background:#101828;border:1px solid var(--ring);border-radius:12px;padding:8px 10px;color:#cfe2ff;font-weight:700}
 .ok{color:var(--green)}
-.bar{display
+.bar{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:10px}
+button{border:0;border-radius:12px;padding:10px 12px;font-weight:700;color:#0b0f18;background:linear-gradient(180deg,var(--gold1),var(--gold2));box-shadow:0 10px 22px #0007,inset 0 1px 0 #fff7;cursor:pointer}
+button.secondary{background:#1a2337;color:#cfe2ff;border:1px solid var(--ring)}
+.board{background:linear-gradient(180deg,var(--p1),var(--p2));border-radius:18px;padding:10px;box-shadow:0 22px 60px #000a,inset 0 1px 0 var(--ring)}
+.grid{display:grid;gap:8px}
+.cell{width:56px;height:56px;border-radius:14px;display:flex;align-items:center;justify-content:center;font-weight:900;font-size:22px;user-select:none;transition:.12s transform,.12s box-shadow,.2s background}
+.cell.empty{background:#0d1324;border:1px dashed #2b3756;color:#2b3756}
+.cell.num{box-shadow:0 6px 14px #0006}
+.sel{outline:3px solid #ffee9a}.flash{animation:flash .55s ease}
+@keyframes flash{0%{transform:scale(1)}50%{transform:scale(1.08)}100%{transform:scale(1)}}
+.footer{margin-top:8px;color:#9db0d1;font-size:12px;text-align:center}
+.banner{margin-top:8px;background:#0c1220;border:1px dashed #2b3756;color:#9fb4ff;padding:10px;border-radius:12px}
+.modal{position:fixed;inset:0;background:#0009;display:none;align-items:center;justify-content:center;padding:16px;z-index:10}
+.box{background:#0f1627;border:1px solid var(--ring);border-radius:16px;max-width:420px;width:100%;padding:18px;text-align:center;box-shadow:0 30px 80px #000c}
+.box h3{margin:0 0 8px;font-size:22px}
+@media (max-width:560px){.cell{width:44px;height:44px;font-size:19px}}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="hud">
+    <div class="badge"><div class="k">Level</div><div class="v" id="lvl">1</div></div>
+    <div class="badge"><div class="k">Score</div><div class="v" id="score">0</div></div>
+    <div class="badge"><div class="k">Best</div><div class="v" id="best">0</div></div>
+    <div class="badge"><div class="k">Moves</div><div class="v" id="moves">0</div></div>
+  </div>
+
+  <div id="targets" class="targets"></div>
+
+  <div class="bar">
+    <button id="new">Start from Level 1</button>
+    <button class="secondary" id="prev">◀ Prev</button>
+    <button class="secondary" id="next">Skip ▶</button>
+    <button class="secondary" id="hint">Hint (<span id="hcnt">∞</span>)</button>
+    <button class="secondary" id="shuffle">Shuffle (<span id="scnt">∞</span>)</button>
+    <button class="secondary" id="add">Add Row (<span id="acnt">∞</span>)</button>
+    <button class="secondary" id="undo">Undo (<span id="ucnt">∞</span>)</button>
+  </div>
+
+  <div class="board"><div id="grid" class="grid"></div></div>
+  <div class="banner">[Ad Placeholder] Banner</div>
+  <div class="footer">Rule: remove pairs that sum to 10 or are equal — adjacent (8 dirs) or same row/column with only empty cells between.</div>
+</div>
+
+<!-- Modals -->
+<div class="modal" id="winM">
+  <div class="box">
+    <h3>🎉 You Win!</h3>
+    <p>Level <b id="winL"></b> completed.</p>
+    <div class="banner">[Ad Placeholder] Interstitial on win</div>
+    <div style="margin-top:12px;display:flex;gap:8px;justify-content:center">
+      <button id="goNext">Next Level</button>
+      <button class="secondary" id="replayW">Replay</button>
+    </div>
+  </div>
+</div>
+<div class="modal" id="loseM">
+  <div class="box">
+    <h3>😵 Game Over</h3>
+    <p>No valid pairs and no tools left.</p>
+    <div class="banner">[Ad Placeholder] Interstitial on lose</div>
+    <div style="margin-top:12px;display:flex;gap:8px;justify-content:center">
+      <button id="retry">Try Again</button>
+    </div>
+  </div>
+</div>
+
+<script>
+/* ---------- Config ---------- */
+const COLS=9, START_ROWS=9;
+const COLORS={1:'#67e8f9',2:'#60a5fa',3:'#a78bfa',4:'#34d399',5:'#fbbf24',6:'#fb7185',7:'#f472b6',8:'#22d3ee',9:'#c084fc'};
+const SCORE_PAIR=10;
+
+/* ---------- Levels ---------- */
+const LEVELS=Array.from({length:40},(_,i)=>({
+  title:`Level ${i+1}`,
+  targets:[
+    {type:'digit', value:1+((i*2)%9), need:6+(i%7)},      // remove X of digit D
+    {type:'pairs', need:12+(i%12)}                        // make N pairs
+  ],
+  limits:{ hint:2+(i%3), shuffle:2+(i%2), add:1+(i%3>0?1:0), undo:2 }
+}));
+
+/* ---------- State ---------- */
+let curLevel=Math.min(Math.max(1,Number(localStorage.getItem('nm_level')||1)),LEVELS.length);
+let grid=[],score=0,best=Number(localStorage.getItem('nm_best')||0),moves=0;
+let sel=null,history=[];
+let donePairs=0,digitCount={};
+let hintLeft,shuffleLeft,addLeft,undoLeft;
+
+const gridEl=document.getElementById('grid'),
+  scoreEl=document.getElementById('score'),
+  bestEl=document.getElementById('best'),
+  movesEl=document.getElementById('moves'),
+  lvlEl=document.getElementById('lvl'),
+  tgEl=document.getElementById('targets'),
+  hCnt=document.getElementById('hcnt'),
+  sCnt=document.getElementById('scnt'),
+  aCnt=document.getElementById('acnt'),
+  uCnt=document.getElementById('ucnt');
+bestEl.textContent=best;
+
+/* ---------- UI ---------- */
+document.getElementById('new').onclick=()=>loadLevel(1,true);
+document.getElementById('prev').onclick=()=>loadLevel(Math.max(1,curLevel-1),true);
+document.getElementById('next').onclick=()=>loadLevel(Math.min(LEVELS.length,curLevel+1),true);
+document.getElementById('hint').onclick=hint;
+document.getElementById('shuffle').onclick=shuffleBoard;
+document.getElementById('add').onclick=addRow;
+document.getElementById('undo').onclick=undo;
+document.getElementById('goNext').onclick=()=>{hide('winM');loadLevel(Math.min(LEVELS.length,curLevel+1),true);};
+document.getElementById('replayW').onclick=()=>{hide('winM');loadLevel(curLevel,true);};
+document.getElementById('retry').onclick=()=>{hide('loseM');loadLevel(curLevel,true);};
+function show(id){document.getElementById(id).style.display='flex'}
+function hide(id){document.getElementById(id).style.display='none'}
+
+/* ---------- Helpers ---------- */
+const inside=(r,c)=>r>=0&&c>=0&&r<grid.length&&c<COLS;
+const rand1to9=()=>1+Math.floor(Math.random()*9);
+function snapshot(){history.push({grid:grid.map(r=>r.slice()),score,moves,sel:sel?{...sel}:null,donePairs,digitCount:{...digitCount},hintLeft,shuffleLeft,addLeft,undoLeft});if(history.length>50)history.shift();}
+function restore(st){grid=st.grid.map(r=>r.slice());score=st.score;moves=st.moves;sel=st.sel;donePairs=st.donePairs;digitCount={...st.digitCount};hintLeft=st.hintLeft;shuffleLeft=st.shuffleLeft;addLeft=st.addLeft;undoLeft=st.undoLeft;render();}
+const pathClearRow=(r,c1,c2)=>{const[a,b]=c1<c2?[c1,c2]:[c2,c1];for(let x=a+1;x<b;x++){if(grid[r][x]!==null)return false}return true}
+const pathClearCol=(c,r1,r2)=>{const[a,b]=r1<r2?[r1,r2]:[r2,r1];for(let y=a+1;y<b;y++){if(grid[y][c]!==null)return false}return true}
+const neighbors=(r1,c1,r2,c2)=>Math.max(Math.abs(r1-r2),Math.abs(c1-c2))===1;
+
+/* ---------- Rules ---------- */
+function validPair(a,b){
+  if(!a||!b) return false;
+  if(a.r===b.r&&a.c===b.c) return false;
+  const v1=grid[a.r][a.c];
+  const v2=grid[b.r][b.c];                 // ✅ fixed
+  if(v1===null||v2===null) return false;
+  if(!(v1===v2||v1+v2===10)) return false;
+  if(neighbors(a.r,a.c,b.r,b.c)) return true;
+  if(a.r===b.r && pathClearRow(a.r,a.c,b.c)) return true;
+  if(a.c===b.c && pathClearCol(a.c,a.r,b.r)) return true;
+  return false;
+}
+function removePair(a,b){
+  snapshot();
+  const v1=grid[a.r][a.c], v2=grid[b.r][b.c];
+  grid[a.r][a.c]=null; grid[b.r][b.c]=null;
+  score+=SCORE_PAIR; moves++; donePairs++;
+  digitCount[v1]=(digitCount[v1]||0)+1; digitCount[v2]=(digitCount[v2]||0)+1;
+  if(score>best){best=score;localStorage.setItem('nm_best',best)}
+  sel=null; clearEmptyRows(); render(); checkWinLose();
+}
+function clearEmptyRows(){grid=grid.filter(row=>row.some(v=>v!==null));if(grid.length===0)grid.push(Array.from({length:COLS},()=>null));}
+
+/* ---------- Tools ---------- */
+function addRow(){if(addLeft===0)return pulse('No more Add Row.');if(addLeft!==Infinity)addLeft--;snapshot();const row=[];for(let c=0;c<COLS;c++)row.push(rand1to9());grid.push(row);render();}
+function shuffleBoard(){if(shuffleLeft===0)return pulse('No more Shuffle.');if(shuffleLeft!==Infinity)shuffleLeft--;snapshot();const vals=[];grid.forEach(r=>r.forEach(v=>{if(v!==null)vals.push(v)}));for(let i=vals.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[vals[i],vals[j]]=[vals[j],vals[i]]}grid.forEach(r=>r.forEach((v,i)=>{if(v!==null)r[i]=vals.pop()}));moves++;render();checkWinLose();}
+function undo(){if(undoLeft===0||!history.length)return pulse('No more Undo.');if(undoLeft!==Infinity)undoLeft--;restore(history.pop());}
+function hint(){if(hintLeft===0)return pulse('No more Hints.');const p=findAnyPair();if(!p){pulse('No valid pairs.');checkWinLose();return}if(hintLeft!==Infinity)hintLeft--;flashCells([p.a,p.b]);}
+function findAnyPair(){const coords=[];for(let r=0;r<grid.length;r++)for(let c=0;c<COLS;c++)if(grid[r][c]!==null)coords.push({r,c});for(let i=0;i<coords.length;i++)for(let j=i+1;j<coords.length;j++){const a=coords[i],b=coords[j];if(validPair(a,b))return{a,b}}return null}
+
+/* ---------- Render ---------- */
+function render(){
+  scoreEl.textContent=score;bestEl.textContent=best;movesEl.textContent=moves;lvlEl.textContent=curLevel;
+  hCnt.textContent=hintLeft===Infinity?'∞':hintLeft; sCnt.textContent=shuffleLeft===Infinity?'∞':shuffleLeft; aCnt.textContent=addLeft===Infinity?'∞':addLeft; uCnt.textContent=undoLeft===Infinity?'∞':undoLeft;
+  const L=LEVELS[curLevel-1]; tgEl.innerHTML='';
+  L.targets.forEach(t=>{const d=document.createElement('div');d.className='tg';
+    if(t.type==='digit'){const got=(digitCount[t.value]||0);d.innerHTML=`Target: remove <b>${t.need}</b> of digit <b>${t.value}</b> — <span class="${got>=t.need?'ok':''}">${got}/${t.need}</span>`;}
+    else if(t.type==='pairs'){d.innerHTML=`Target: make <b>${t.need}</b> pairs — <span class="${donePairs>=t.need?'ok':''}">${donePairs}/${t.need}</span>`;}
+    tgEl.appendChild(d);
+  });
+  gridEl.style.gridTemplateColumns=`repeat(${COLS},1fr)`; gridEl.innerHTML='';
+  for(let r=0;r<grid.length;r++)for(let c=0;c<COLS;c++){const v=grid[r][c];const d=document.createElement('div');d.className='cell '+(v===null?'empty':'num');if(v!==null){d.textContent=v;d.style.background=COLORS[v]||'#7dd3fc';d.style.color='#0b0f18'}else{d.textContent='';d.style.border='1px dashed #2b3756'}if(sel&&sel.r===r&&sel.c===c)d.classList.add('sel');d.onclick=()=>onCell(r,c);gridEl.appendChild(d);}
+}
+function onCell(r,c){if(grid[r][c]===null)return;const cur={r,c};if(!sel){sel=cur;render();return}if(sel.r===r&&sel.c===c){sel=null;render();return}if(validPair(sel,cur))removePair(sel,cur);else{sel=cur;render()}}
+function flashCells(list){list.forEach(({r,c})=>{const el=gridEl.children[r*COLS+c];if(el){el.classList.add('flash');setTimeout(()=>el.classList.remove('flash'),600)}})}
+function pulse(msg){const el=document.querySelector('.footer');const old=el.textContent;el.textContent=msg;el.style.color='#ffd46a';setTimeout(()=>{el.textContent=old;el.style.color='';},1500)}
+
+/* ---------- Win/Lose ---------- */
+function checkWinLose(){
+  const L=LEVELS[curLevel-1];
+  const win=L.targets.every(t=>t.type==='digit'?(digitCount[t.value]||0)>=t.need:donePairs>=t.need);
+  if(win){localStorage.setItem('nm_level',Math.min(LEVELS.length,curLevel+1));document.getElementById('winL').textContent=curLevel;show('winM');return}
+  if(!findAnyPair()&&hintLeft===0&&shuffleLeft===0&&addLeft===0)show('loseM');
+}
+
+/* ---------- Level Loading ---------- */
+function loadLevel(n,resetScore=false){
+  curLevel=n;localStorage.setItem('nm_level',curLevel);
+  const L=LEVELS[n-1];
+  hintLeft=L.limits.hint;shuffleLeft=L.limits.shuffle;addLeft=L.limits.add;undoLeft=L.limits.undo;
+  donePairs=0;digitCount={};history.length=0;sel=null;moves=0;if(resetScore)score=0;
+  grid=[];for(let r=0;r<START_ROWS;r++){const row=[];for(let c=0;c<COLS;c++)row.push(rand1to9());grid.push(row)}
+  render();
+}
+
+/* ---------- Start ---------- */
+loadLevel(curLevel);
+</script>
+</body>
+</html>
