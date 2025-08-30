@@ -3,95 +3,273 @@
 <head>
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width,initial-scale=1" />
-<title>Basket — Safe Boot</title>
+<title>Number Match — Simple</title>
 <style>
-  html,body{margin:0;height:100%;background:#0b0f18;color:#eaf0ff;font-family:system-ui,Arial}
-  #root{max-width:560px;margin:0 auto;padding:12px}
-  #err{background:#2b1111;color:#ffdede;border:1px solid #ff6b6b;padding:10px;border-radius:12px;display:none}
-  canvas{width:100%;height:720px;display:block;border-radius:20px;box-shadow:0 20px 60px #000a}
+  :root{
+    --bg:#0b0f18; --panel:#11182a; --panel2:#0e1423; --ring:#ffffff24;
+    --text:#ecf1ff; --muted:#9db0d1; --gold1:#ffd46a; --gold2:#ffb724;
+  }
+  *{box-sizing:border-box}
+  html,body{margin:0;height:100%;background:radial-gradient(1200px 620px at 50% -10%,#1b2540 0,#0b0f18 60%);color:var(--text);font-family:system-ui,Segoe UI,Arial}
+  .wrap{max-width:700px;margin:0 auto;padding:14px}
+  .hud{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-bottom:10px}
+  .badge{background:linear-gradient(180deg,var(--panel),var(--panel2));border-radius:16px;padding:10px 12px;text-align:center;box-shadow:0 12px 26px #000a,inset 0 1px 0 var(--ring)}
+  .k{font-size:12px;color:var(--muted)} .v{font-weight:800;font-size:20px}
+  .bar{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:10px}
+  button{border:0;border-radius:12px;padding:10px 12px;font-weight:700;color:#0b0f18;background:linear-gradient(180deg,var(--gold1),var(--gold2));box-shadow:0 10px 22px #0007,inset 0 1px 0 #fff7;cursor:pointer}
+  button.secondary{background:#1a2337;color:#cfe2ff;border:1px solid var(--ring)}
+  .board{background:linear-gradient(180deg,var(--panel),var(--panel2));border-radius:18px;padding:10px;box-shadow:0 22px 60px #000a,inset 0 1px 0 var(--ring)}
+  .grid{display:grid;gap:8px}
+  .cell{width:56px;height:56px;border-radius:14px;display:flex;align-items:center;justify-content:center;font-weight:900;font-size:22px;user-select:none;transition:.12s transform, .12s box-shadow, .2s background}
+  .cell.empty{background:#0d1324;border:1px dashed #2b3756;color:#2b3756}
+  .cell.num{box-shadow:0 6px 14px #0006}
+  .sel{outline:3px solid #ffee9a}
+  .flash{animation:flash .55s ease}
+  @keyframes flash{0%{transform:scale(1)}50%{transform:scale(1.08)}100%{transform:scale(1)}}
+  .footer{margin-top:8px;color:var(--muted);font-size:12px;text-align:center}
+  .rules{margin-top:10px;background:#101828;border:1px solid var(--ring);border-radius:12px;padding:10px;color:#cfe2ff}
+  @media (max-width:560px){ .cell{width:44px;height:44px;font-size:19px} }
 </style>
 </head>
 <body>
-<div id="root">
-  <div id="err"></div>
-  <canvas id="game" width="560" height="720"></canvas>
+<div class="wrap">
+  <div class="hud">
+    <div class="badge"><div class="k">السكور</div><div class="v" id="score">0</div></div>
+    <div class="badge"><div class="k">هاي سكور</div><div class="v" id="best">0</div></div>
+    <div class="badge"><div class="k">صفوف</div><div class="v" id="rows">9</div></div>
+    <div class="badge"><div class="k">عُمر الجولة</div><div class="v" id="moves">0</div></div>
+  </div>
+
+  <div class="bar">
+    <button id="new">جولة جديدة</button>
+    <button class="secondary" id="hint">Hint</button>
+    <button class="secondary" id="shuffle">Shuffle</button>
+    <button class="secondary" id="add">Add Row</button>
+    <button class="secondary" id="undo">Undo</button>
+  </div>
+
+  <div class="board">
+    <div id="grid" class="grid"></div>
+  </div>
+
+  <div class="rules">
+    <b>القواعد المبسّطة:</b>
+    <ul>
+      <li>امسح زوجين مجموعهم <b>10</b> أو رقمين <b>متساويين</b>.</li>
+      <li>لازم يكونوا <b>ملاصقين</b> (أفقي/رأسي/قطري) أو على <b>نفس الصف/العمود</b> وبينهم <b>فراغات فقط</b> (من غير أرقام).</li>
+      <li>تقدر تستخدم Hint / Shuffle / Add Row / Undo.</li>
+      <li>الصفوف الفارغة بتتشال تلقائياً.</li>
+    </ul>
+  </div>
+
+  <div class="footer">Number Match – نسخة خفيفة تصلح لـ GitHub Pages وTelegram WebApp</div>
 </div>
 
 <script>
-/* ---- حارس أخطاء عام ---- */
-window.addEventListener('error', (e)=>{
-  const box=document.getElementById('err');
-  box.style.display='block';
-  box.textContent='JS Error: '+(e.message||e.error);
-});
+/* ==== Config ==== */
+const COLS = 9;
+const START_ROWS = 9;
+const COLORS = {
+  1:'#67e8f9', 2:'#60a5fa', 3:'#a78bfa', 4:'#34d399',
+  5:'#fbbf24', 6:'#fb7185', 7:'#f472b6', 8:'#22d3ee', 9:'#c084fc'
+};
+const SCORE_PAIR = 10;
 
-/* ---- رسومات مدمجة (SVG -> Image) ---- */
-const svgCourt=`<svg width="560" height="720" viewBox="0 0 560 720" xmlns="http://www.w3.org/2000/svg">
-  <defs>
-    <linearGradient id="sky" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#4da0ff"/><stop offset="1" stop-color="#74e1ff"/></linearGradient>
-    <radialGradient id="spot" cx="50%" cy="16%" r="30%"><stop offset="0" stop-color="#fff" stop-opacity=".35"/><stop offset="1" stop-color="#fff" stop-opacity="0"/></radialGradient>
-    <linearGradient id="wood" x1="0" x2="1"><stop offset="0" stop-color="#a86c3a"/><stop offset="1" stop-color="#d79a5f"/></linearGradient>
-  </defs>
-  <rect width="560" height="720" fill="#0b0f18"/><rect x="40" y="80" width="480" height="560" rx="24" fill="url(#sky)"/>
-  <ellipse cx="280" cy="160" rx="180" ry="30" fill="url(#spot)"/>
-  <g transform="translate(40,80)"><ellipse cx="240" cy="420" rx="220" ry="90" fill="#000" opacity=".22"/>
-    <clipPath id="cut"><ellipse cx="240" cy="410" rx="220" ry="90"/></clipPath>
-    <g clip-path="url(#cut)"><rect x="20" y="320" width="440" height="180" fill="url(#wood)"/>
-      <g opacity=".35">${Array.from({length:25},(_,i)=>`<rect x="${20+i*16}" y="320" width="2" height="180" fill="#000"/>`).join('')}</g>
-    </g>
-    <ellipse cx="240" cy="400" rx="120" ry="48" fill="none" stroke="#ffffff66" stroke-width="6"/>
-  </g></svg>`.trim();
+/* ==== State ==== */
+let grid = []; // 2D rows x cols; values: 1..9 or null
+let sel = null;
+let score = 0, best = Number(localStorage.getItem('nm_best')||0);
+let moves = 0;
+let history = []; // for undo: push snapshots
 
-const svgHoop=`<svg width="420" height="300" viewBox="0 0 420 300" xmlns="http://www.w3.org/2000/svg">
-  <rect x="95" y="30" width="230" height="26" rx="12" fill="#eaf0ff"/>
-  <rect x="120" y="56" width="14" height="110" rx="7" fill="#eaf0ff"/>
-  <rect x="286" y="56" width="14" height="110" rx="7" fill="#eaf0ff"/>
-  <path d="M140 170 Q210 196 280 170" stroke="#ff6a2e" stroke-width="18" fill="none" stroke-linecap="round"/>
-  <g id="net" stroke="#fff" stroke-width="3" opacity=".95">
-    <path d="M154 170 L210 250"/><path d="M168 170 L224 250"/><path d="M182 170 L238 250"/>
-    <path d="M196 170 L252 246"/><path d="M210 170 L266 238"/><path d="M224 170 L254 228"/><path d="M238 170 L242 220"/>
-  </g></svg>`.trim();
+/* ==== DOM ==== */
+const gridEl = document.getElementById('grid');
+const scoreEl = document.getElementById('score');
+const bestEl = document.getElementById('best');
+const rowsEl = document.getElementById('rows');
+const movesEl = document.getElementById('moves');
+bestEl.textContent = best;
 
-const svgBall=`<svg width="160" height="160" viewBox="0 0 160 160" xmlns="http://www.w3.org/2000/svg">
-  <defs><radialGradient id="g1" cx="35%" cy="35%" r="30%"><stop offset="0" stop-color="#ffbe8a"/><stop offset="1" stop-color="#ff9247"/></radialGradient>
-  <radialGradient id="g2" cx="68%" cy="72%" r="60%"><stop offset="0" stop-color="#ff6e22"/><stop offset="1" stop-color="#c94a10"/></radialGradient></defs>
-  <circle cx="80" cy="80" r="78" fill="url(#g2)"/><circle cx="56" cy="56" r="32" fill="url(#g1)"/>
-  <g stroke="rgba(0,0,0,.45)" stroke-width="6" fill="none"><path d="M20,78 a60,60 0 0 0 120,0"/><path d="M20,78 a60,60 0 0 1 120,0"/></g>
-</svg>`.trim();
+document.getElementById('new').onclick = newGame;
+document.getElementById('hint').onclick = hint;
+document.getElementById('shuffle').onclick = shuffleBoard;
+document.getElementById('add').onclick = addRow;
+document.getElementById('undo').onclick = undo;
 
-/* ---- رسم Canvas بسيط (من غير Phaser) لضمان الاشتغال) ---- */
-const cv = document.getElementById('game');
-const ctx = cv.getContext('2d');
-
-function loadSVG(str){
-  return new Promise((res,rej)=>{
-    const img = new Image();
-    img.onload = ()=>res(img);
-    img.onerror = e=>rej(e);
-    img.src = 'data:image/svg+xml;utf8,'+encodeURIComponent(str);
+/* ==== Helpers ==== */
+const inside = (r,c)=> r>=0 && c>=0 && r<grid.length && c<COLS;
+function snapshot(){
+  // shallow-copy rows
+  history.push({
+    grid: grid.map(row=>row.slice()),
+    score, moves, sel: sel? {...sel}:null
   });
+  if(history.length>40) history.shift();
+}
+function restore(state){
+  grid = state.grid.map(r=>r.slice());
+  score = state.score; moves = state.moves; sel = state.sel;
+  render();
+}
+function rand1to9(){ return 1 + Math.floor(Math.random()*9); }
+function pathClearSameRow(r,c1,c2){
+  const [a,b] = c1<c2 ? [c1,c2] : [c2,c1];
+  for(let x=a+1;x<b;x++){ if(grid[r][x]!==null) return false; }
+  return true;
+}
+function pathClearSameCol(c,r1,r2){
+  const [a,b] = r1<r2 ? [r1,r2] : [r2,r1];
+  for(let y=a+1;y<b;y++){ if(grid[y][c]!==null) return false; }
+  return true;
+}
+function neighbors(r1,c1,r2,c2){
+  return Math.max(Math.abs(r1-r2),Math.abs(c1-c2))===1;
 }
 
-(async function boot(){
-  try{
-    const [court,hoop,ballImg] = await Promise.all([loadSVG(svgCourt), loadSVG(svgHoop), loadSVG(svgBall)]);
-    // رسم خلفية
-    ctx.drawImage(court,0,0,cv.width,cv.height);
-    // سلة
-    const hoopX=cv.width/2, hoopY=230;
-    ctx.drawImage(hoop, hoopX-210, hoopY-150, 420, 300);
-    // كرة (ثابتة كاختبار)
-    ctx.drawImage(ballImg, cv.width/2-40, 560, 80,80);
+function validPair(a,b){
+  if(!a||!b) return false;
+  if(a.r===b.r && a.c===b.c) return false;
+  const v1 = grid[a.r][a.c], v2 = grid[b.r][b.c];
+  if(v1===null || v2===null) return false;
+  if(!(v1===v2 || v1+v2===10)) return false;
 
-    // مسج نجاح صغير
-    ctx.fillStyle='#a7ffcf'; ctx.font='bold 14px system-ui';
-    ctx.fillText('OK: Canvas drew court/hoop/ball — الشغل شغّال', 14, 24);
-  }catch(err){
-    const box=document.getElementById('err');
-    box.style.display='block';
-    box.textContent='Asset load failed: '+err;
+  // adjacency OR straight line path with only empty cells between
+  if(neighbors(a.r,a.c,b.r,b.c)) return true;
+  if(a.r===b.r && pathClearSameRow(a.r,a.c,b.c)) return true;
+  if(a.c===b.c && pathClearSameCol(a.c,a.r,b.r)) return true;
+
+  return false;
+}
+
+/* ==== Game logic ==== */
+function newGame(){
+  score=0; moves=0; history.length=0; sel=null;
+  grid = [];
+  for(let r=0;r<START_ROWS;r++){
+    const row=[];
+    for(let c=0;c<COLS;c++) row.push(rand1to9());
+    grid.push(row);
   }
-})();
+  render(true);
+}
+function addRow(){
+  snapshot();
+  const row=[];
+  for(let c=0;c<COLS;c++) row.push(rand1to9());
+  grid.push(row);
+  render();
+}
+function clearEmptyRows(){
+  const before = grid.length;
+  grid = grid.filter(row=> row.some(v=>v!==null));
+  if(grid.length===0){ grid.push(Array.from({length:COLS},()=>null)); }
+  if(before!==grid.length) render();
+}
+function removePair(a,b){
+  snapshot();
+  grid[a.r][a.c]=null; grid[b.r][b.c]=null;
+  score += SCORE_PAIR; moves++;
+  if(score>best){ best=score; localStorage.setItem('nm_best',best); }
+  sel=null;
+  clearEmptyRows();
+  render();
+}
+function hint(){
+  const p=findAnyPair();
+  if(!p){ pulseBar('ملهاش أزواج… جرّب Shuffle أو Add Row'); return; }
+  pulseCells([p.a,p.b]);
+}
+function shuffleBoard(){
+  snapshot();
+  const vals=[];
+  grid.forEach(row=>row.forEach(v=>{ if(v!==null) vals.push(v); }));
+  // Fisher–Yates
+  for(let i=vals.length-1;i>0;i--){ const j= Math.floor(Math.random()*(i+1)); [vals[i],vals[j]]=[vals[j],vals[i]]; }
+  grid.forEach(row=>row.forEach((v,idx)=>{ if(v!==null) row[idx]=vals.pop(); }));
+  moves++;
+  render();
+}
+function undo(){
+  const last=history.pop();
+  if(last) restore(last);
+}
+
+function findAnyPair(){
+  const coords=[];
+  for(let r=0;r<grid.length;r++)
+    for(let c=0;c<COLS;c++)
+      if(grid[r][c]!==null) coords.push({r,c});
+  for(let i=0;i<coords.length;i++){
+    for(let j=i+1;j<coords.length;j++){
+      const a=coords[i], b=coords[j];
+      if(validPair(a,b)) return {a,b};
+    }
+  }
+  return null;
+}
+
+/* ==== Rendering ==== */
+function render(resetGridSize){
+  scoreEl.textContent=score; bestEl.textContent=best; rowsEl.textContent=grid.length; movesEl.textContent=moves;
+  // grid CSS
+  gridEl.style.gridTemplateColumns=`repeat(${COLS}, 1fr)`;
+  if(resetGridSize){ gridEl.innerHTML=''; }
+
+  // rebuild DOM each render (بسيطة وسهلة)
+  gridEl.innerHTML='';
+  for(let r=0;r<grid.length;r++){
+    for(let c=0;c<COLS;c++){
+      const v=grid[r][c];
+      const div=document.createElement('div');
+      div.className='cell '+(v===null?'empty':'num');
+      div.dataset.r=r; div.dataset.c=c;
+      if(v!==null){
+        div.textContent=v;
+        div.style.background=COLORS[v]||'#7dd3fc';
+        div.style.color='#0b0f18';
+      }else{
+        div.textContent='';
+        div.style.border='1px dashed #2b3756';
+        div.style.color='#2b3756';
+      }
+      if(sel && sel.r===r && sel.c===c) div.classList.add('sel');
+      div.onclick=()=>onCellClick(r,c);
+      gridEl.appendChild(div);
+    }
+  }
+}
+function onCellClick(r,c){
+  if(grid[r][c]===null) return;
+  const cur={r,c};
+  if(!sel){ sel=cur; render(); return; }
+
+  if(sel.r===r && sel.c===c){ sel=null; render(); return; }
+
+  if(validPair(sel,cur)){
+    removePair(sel,cur);
+  }else{
+    // بدّل الاختيار
+    sel=cur; render();
+  }
+}
+function pulseCells(list){
+  list.forEach(({r,c})=>{
+    const idx=r*COLS+c;
+    const cell = gridEl.children[idx];
+    cell.classList.add('flash');
+    setTimeout(()=>cell.classList.remove('flash'),600);
+  });
+}
+function pulseBar(msg){
+  const el=document.querySelector('.footer');
+  const old=el.textContent;
+  el.textContent=msg;
+  el.style.color='#ffd46a';
+  setTimeout(()=>{el.textContent=old; el.style.color='';},1600);
+}
+
+/* ==== Start ==== */
+newGame();
 </script>
 </body>
 </html>
