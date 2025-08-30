@@ -277,4 +277,24 @@ function collideRim(ball, p){
 function goal(swish){
   const base = swish? 3:2;
   score += base*combo;
-  combo = Math.min
+  combo = Math.min(9, combo + (swish?2:1));
+  if(score % 10 === 0) level++;
+
+  // هزة بسيطة للشبكة (بلف السبرايت كله)
+  game.scene.scenes[0].tweens.add({
+    targets: hoop, angle: {from:-6, to:6}, duration:160, yoyo:true, repeat:2, ease:'sine.out'
+  });
+
+  swishArmed=false; hitRim=false;
+  resetBall();
+}
+
+function resetBall(){
+  ball.setVelocity(0,0);
+  ball.setPosition(GAME_W/2, 560);
+}
+
+/* ------------------ END ------------------ */
+</script>
+</body>
+</html>
