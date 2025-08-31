@@ -17,38 +17,45 @@
 .bar{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:10px}
 button{border:0;border-radius:12px;padding:10px 12px;font-weight:700;color:#0b0f18;background:linear-gradient(180deg,var(--gold1),var(--gold2));box-shadow:0 10px 22px #0007,inset 0 1px 0 #fff7;cursor:pointer}
 button.secondary{background:#1a2337;color:#cfe2ff;border:1px solid var(--ring)}
-.board {
-  width: 100vw;
-  height: 100vh;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  padding: 0;
-  margin: 0;
-  background: linear-gradient(180deg, var(--p1), var(--p2));
+/* يمنع السكرول ويخلي الصفحة كلها متاحة للعبة */
+html,body{height:100%;margin:0;overflow:hidden}
+
+/* الحاوية العامة: الهيدر/الأزرار فوق – اللوحة تاخد باقي المساحة */
+.wrap{height:100%;display:flex;flex-direction:column;padding:10px;max-width:780px;margin:0 auto}
+.hud,.targets,.bar{flex:0 0 auto}
+.board{
+  flex:1 1 auto;min-height:0;
+  display:flex;align-items:center;justify-content:center;
+  padding:0;margin:0;
+  background:linear-gradient(180deg,var(--p1),var(--p2));
+  border-radius:18px;box-shadow:0 22px 60px #000a,inset 0 1px 0 var(--ring)
 }
 
-.grid {
-  display: grid;
-  grid-template-columns: repeat(9, 1fr);
-  grid-template-rows: repeat(9, 1fr);
-  width: 100vmin;   /* يخلي المربع بحجم أصغر بُعد من الشاشة */
-  height: 100vmin;
-  gap: 4px;
+/* هنعمل الجريد مربع بحجم أكبر بعد متاح داخل .board */
+.grid{
+  display:grid;
+  grid-template-columns:repeat(9,1fr);
+  grid-template-rows:repeat(9,1fr);
+  gap:6px;
+  width:min(96vmin,100%);   /* احتياطي لو الجافاسكربت ما اشتغلتش */
+  height:min(96vmin,100%);
 }
 
-.cell {
-  width: 100%;
-  aspect-ratio: 1/1;
-  border-radius: 20%;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-weight: 900;
-  font-size: clamp(14px, 3vw, 28px);
-  user-select: none;
-  transition: .12s transform, .12s box-shadow, .2s background;
+/* هنعتمد على متغير --cellSize اللي هنحسبه بالجافاسكربت */
+:root{ --cellSize:56px; }
+.cell{
+  width:100%;
+  aspect-ratio:1/1;
+  border-radius:20%;
+  display:flex;align-items:center;justify-content:center;
+  font-weight:900;font-size:calc(var(--cellSize)*0.45);
+  user-select:none;
+  transition:.12s transform,.12s box-shadow,.2s background;
 }
+
+.cell.empty{background:#0d1324;border:1px dashed #2b3756;color:#2b3756}
+.cell.blocker{background:#141c2e;border:1px solid #2b3756;box-shadow:none}
+.cell.num{box-shadow:0 6px 14px #0006}
 
 
 </style>
@@ -80,27 +87,6 @@ button.secondary{background:#1a2337;color:#cfe2ff;border:1px solid var(--ring)}
 </div>
 
 <!-- Modals -->
-<div class="modal" id="winM">
-  <div class="box">
-    <h3>🎉 You Win!</h3>
-    <p>Level <b id="winL"></b> completed.</p>
-    <div class="banner">[Ad Placeholder] Interstitial on win</div>
-    <div style="margin-top:12px;display:flex;gap:8px;justify-content:center">
-      <button id="goNext">Next Level</button>
-      <button class="secondary" id="replayW">Replay</button>
-    </div>
-  </div>
-</div>
-<div class="modal" id="loseM">
-  <div class="box">
-    <h3>😵 Game Over</h3>
-    <p>No valid pairs and no tools left.</p>
-    <div class="banner">[Ad Placeholder] Interstitial on lose</div>
-    <div style="margin-top:12px;display:flex;gap:8px;justify-content:center">
-      <button id="retry">Try Again</button>
-    </div>
-  </div>
-</div>
 
 <script>
 /* ---------- Config ---------- */
@@ -180,12 +166,7 @@ document.getElementById('hint').onclick=hint;
 document.getElementById('shuffle').onclick=shuffleBoard;
 document.getElementById('add').onclick=addRow;
 document.getElementById('undo').onclick=undo;
-document.getElementById('goNext').onclick=()=>{hide('winM');loadLevel(Math.min(LEVELS.length,curLevel+1),true);};
-document.getElementById('replayW').onclick=()=>{hide('winM');loadLevel(curLevel,true);};
-document.getElementById('retry').onclick=()=>{hide('loseM');loadLevel(curLevel,true);};
-function show(id){document.getElementById(id).style.display='flex'}
-function hide(id){document.getElementById(id).style.display='none'}
-
+  
 /* ---------- Helpers ---------- */
 const inside=(r,c)=>r>=0&&c>=0&&r<grid.length&&c<COLS;
 const rand1to9=()=>1+Math.floor(Math.random()*9);
@@ -245,6 +226,28 @@ function undo(){if(undoLeft===0||!history.length)return pulse('No more Undo.');i
 function hint(){if(hintLeft===0)return pulse('No more Hints.');const p=findAnyPair();if(!p){pulse('No valid pairs.');checkWinLose();return}if(hintLeft!==Infinity)hintLeft--;flashCells([p.a,p.b]);}
 function findAnyPair(){const coords=[];for(let r=0;r<grid.length;r++)for(let c=0;c<COLS;c++)if(grid[r][c]!==null)coords.push({r,c});for(let i=0;i<coords.length;i++)for(let j=i+1;j<coords.length;j++){const a=coords[i],b=coords[j];if(validPair(a,b))return{a,b}}return null}
 
+// === auto fit board to available space ===
+function resizeGrid(){
+  const board = document.querySelector('.board');
+  const grid  = document.getElementById('grid');
+  if(!board || !grid) return;
+
+  // أكبر مربع ممكن جوّه اللوحة
+  const size = Math.min(board.clientWidth, board.clientHeight);
+
+  // اضبط أبعاد الجريد لمربع كامل
+  grid.style.width  = size + 'px';
+  grid.style.height = size + 'px';
+
+  // مقاس الخلية الواحدة
+  const cell = size / 9;
+  document.documentElement.style.setProperty('--cellSize', cell + 'px');
+}
+
+// نفّذ عند تغيير حجم الشاشة
+window.addEventListener('resize', resizeGrid);
+
+
 /* ---------- Render ---------- */
 function render(){
   scoreEl.textContent=score;bestEl.textContent=best;movesEl.textContent=moves;lvlEl.textContent=curLevel;
@@ -300,23 +303,45 @@ function onCell(r,c){
   if(!sel){ sel=cur; render(); return }
   if(sel.r===r && sel.c===c){ sel=null; render(); return }
   if(validPair(sel,cur)) removePair(sel,cur); else { sel=cur; render() }
-}
-
 function flashCells(list){list.forEach(({r,c})=>{const el=gridEl.children[r*COLS+c];if(el){el.classList.add('flash');setTimeout(()=>el.classList.remove('flash'),600)}})}
 function pulse(msg){const el=document.querySelector('.footer');const old=el.textContent;el.textContent=msg;el.style.color='#ffd46a';setTimeout(()=>{el.textContent=old;el.style.color='';},1500)}
+  // بعد ما تخلص بناء العناصر والحلقات:
+  // for (let r = 0; r < grid.length; r++) { ... }
 
-/* ---------- Win/Lose ---------- */
-function checkWinLose(){
-  // lose by moves cap
-if (moves >= maxMoves){
-  show('loseM');
-  return;
+  resizeGrid();   // ← السطر الأخير داخل render()
 }
 
-  const L=LEVELS[curLevel-1];
-  const win=L.targets.every(t=>t.type==='digit'?(digitCount[t.value]||0)>=t.need:donePairs>=t.need);
-  if(win){localStorage.setItem('nm_level',Math.min(LEVELS.length,curLevel+1));document.getElementById('winL').textContent=curLevel;show('winM');return}
-  if(!findAnyPair()&&hintLeft===0&&shuffleLeft===0&&addLeft===0)show('loseM');
+  
+/* ---------- Win/Lose (no modals) ---------- */
+function checkWinLose() {
+  const L = LEVELS[curLevel - 1];
+
+  // فوز؟
+  const win = L.targets.every(t =>
+    t.type === 'digit'
+      ? (digitCount[t.value] || 0) >= t.need
+      : donePairs >= t.need
+  );
+
+  if (win) {
+    localStorage.setItem('nm_level', Math.min(LEVELS.length, curLevel + 1));
+    pulse(`🎉 Level ${curLevel} completed!`);
+    loadLevel(Math.min(LEVELS.length, curLevel + 1), false);
+    return;
+  }
+
+  // خسارة بسبب نفاد الحركات
+  if (moves >= maxMoves) {
+    pulse('😵 Out of moves. Restarting level…');
+    loadLevel(curLevel, true);
+    return;
+  }
+
+  // خسارة: مفيش أزواج صالحة وكمان الأدوات خلصت
+  if (!findAnyPair() && hintLeft === 0 && shuffleLeft === 0 && addLeft === 0) {
+    pulse('😵 No valid pairs & no tools. Restarting…');
+    loadLevel(curLevel, true);
+  }
 }
 
 /* ---------- Level Loading ---------- */
@@ -351,6 +376,8 @@ render();
 
 /* ---------- Start ---------- */
 loadLevel(curLevel);
+resizeGrid();        // أول ضبط مبدئي
+
 </script>
 
 
@@ -367,10 +394,3 @@ loadLevel(curLevel);
 </body>
 </html>
   
-
-
-
-
-
-
-
