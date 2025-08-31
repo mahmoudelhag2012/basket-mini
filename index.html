@@ -6,56 +6,56 @@
 <title>Number Match — Levels</title>
 <style>
 :root{--bg:#0b0f18;--p1:#11182a;--p2:#0e1423;--ring:#ffffff24;--txt:#ecf1ff;--mut:#9db0d1;--gold1:#ffd46a;--gold2:#ffb724;--green:#34d399}
-*{box-sizing:border-box}html,body{margin:0;height:100%;background:radial-gradient(1200px 620px at 50% -10%,#1b2540 0,#0b0f18 60%);color:var(--txt);font-family:system-ui,Segoe UI,Arial}
-html,body{height:100%;margin:0;overflow:hidden}
+*{box-sizing:border-box}
+html,body{margin:0;height:100%;background:radial-gradient(1200px 620px at 50% -10%,#1b2540 0,#0b0f18 60%);color:var(--txt);font-family:system-ui,Segoe UI,Arial;overflow:hidden}
 
+/* ===== Layout ===== */
 .wrap{
   height:100%;
   display:flex;
   flex-direction:column;
   padding:12px;
-  padding-top:calc(14px + env(safe-area-inset-top)); /* نزّل الهيدر لتحت */
-  max-width:780px;
-  margin:0 auto
+  padding-top:calc(22px + env(safe-area-inset-top)); /* ينزّل الهيدر */
+  max-width:780px;margin:0 auto;
 }
-.hud{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-bottom:10px}
-.badge{background:linear-gradient(180deg,var(--p1),var(--p2));border-radius:16px;padding:10px 12px;text-align:center;box-shadow:0 12px 26px #000a,inset 0 1px 0 var(--ring)}
+.hud{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-bottom:8px}
+.badge{background:linear-gradient(180deg,var(--p1),var(--p2));border-radius:16px;padding:8px 10px;text-align:center;box-shadow:0 12px 26px #000a,inset 0 1px 0 var(--ring)}
 .k{font-size:12px;color:var(--mut)} .v{font-weight:800;font-size:20px}
 
-.targets{margin:8px 0;display:flex;gap:8px;flex-wrap:wrap}
+.targets{margin:6px 0;display:flex;gap:6px;flex-wrap:wrap}
 .tg{background:#101828;border:1px solid var(--ring);border-radius:12px;padding:6px 10px;color:#cfe2ff;font-weight:700}
 .ok{color:var(--green)}
 
-.bar{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:10px}
-button{border:0;border-radius:12px;padding:10px 12px;font-weight:700;color:#0b0f18;background:linear-gradient(180deg,var(--gold1),var(--gold2));box-shadow:0 10px 22px #0007,inset 0 1px 0 #fff7;cursor:pointer}
+.bar{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:8px}
+button{border:0;border-radius:12px;padding:8px 10px;font-weight:700;color:#0b0f18;background:linear-gradient(180deg,var(--gold1),var(--gold2));box-shadow:0 10px 22px #0007,inset 0 1px 0 #fff7;cursor:pointer}
 button.secondary{background:#1a2337;color:#cfe2ff;border:1px solid var(--ring)}
 
 .board{
   flex:1 1 auto;min-height:0;
   display:flex;align-items:center;justify-content:center;
-  padding:0;margin:0;
   background:linear-gradient(180deg,var(--p1),var(--p2));
   border-radius:18px;box-shadow:0 22px 60px #000a,inset 0 1px 0 var(--ring)
 }
 
+/* ===== Grid ===== */
 .grid{
   display:grid;
   grid-template-columns:repeat(9,1fr);
   grid-template-rows:repeat(9,1fr);
-  gap:6px;
+  gap:5px;
   width:min(99vmin,100%);
   height:min(99vmin,100%);
 }
 
+/* الخلية وحجم الرقم */
 :root{ --cellSize:64px; }
-
 .cell{
   width:100%;
   aspect-ratio:1/1;
-  border-radius:24%;
+  border-radius:22%;
   display:flex;align-items:center;justify-content:center;
   font-weight:900;
-  font-size:calc(var(--cellSize)*0.6);
+  font-size:calc(var(--cellSize)*0.62);
   user-select:none;
   transition:.12s transform,.12s box-shadow,.2s background;
 }
@@ -63,6 +63,7 @@ button.secondary{background:#1a2337;color:#cfe2ff;border:1px solid var(--ring)}
 .cell.blocker{background:#141c2e;border:1px solid #2b3756;box-shadow:none}
 .cell.num{box-shadow:0 6px 14px #0006}
 
+/* Footer/Ad */
 .banner{ margin-top:8px; }
 .footer{ font-size:12px;color:#9db0d1;text-align:center;margin-top:6px; }
 </style>
@@ -88,10 +89,11 @@ button.secondary{background:#1a2337;color:#cfe2ff;border:1px solid var(--ring)}
 
   <div class="board"><div id="grid" class="grid"></div></div>
   <div class="banner">[Ad Placeholder] Banner</div>
-  <div class="footer">Rule: remove pairs that sum to 10 or are equal — adjacent (8 dirs) or same row/column with only empty cells between.</div>
+  <div class="footer" id="foot">Rule: remove pairs that sum to 10 or are equal — adjacent (8 dirs) or same row/column with only empty cells between.</div>
 </div>
 
 <script>
+/* ===== Config & Levels ===== */
 const COLS=9, START_ROWS=9;
 const COLORS={1:'#67e8f9',2:'#60a5fa',3:'#a78bfa',4:'#34d399',5:'#fbbf24',6:'#fb7185',7:'#f472b6',8:'#22d3ee',9:'#c084fc'};
 const SCORE_PAIR=10;
@@ -116,12 +118,14 @@ const LEVELS = Array.from({length:40}, (_, i) => {
   };
 });
 
+/* ===== State ===== */
 let curLevel=Math.min(Math.max(1,Number(localStorage.getItem('nm_level')||1)),LEVELS.length);
 let grid=[],score=0,best=Number(localStorage.getItem('nm_best')||0),moves=0;
 let sel=null,history=[],donePairs=0,digitCount={};
 let hintLeft,shuffleLeft,addLeft,undoLeft;
 let maxMoves=Infinity,wrapAllowed=true,blockerRate=0;
 
+/* ===== Elements ===== */
 const gridEl=document.getElementById('grid'),
 scoreEl=document.getElementById('score'),
 bestEl=document.getElementById('best'),
@@ -131,15 +135,19 @@ tgEl=document.getElementById('targets'),
 hCnt=document.getElementById('hcnt'),
 sCnt=document.getElementById('scnt'),
 aCnt=document.getElementById('acnt'),
-uCnt=document.getElementById('ucnt');
+uCnt=document.getElementById('ucnt'),
+foot=document.getElementById('foot');
+
 bestEl.textContent=best;
 
+/* ===== UI Actions ===== */
 document.getElementById('new').onclick=()=>loadLevel(1,true);
 document.getElementById('hint').onclick=hint;
 document.getElementById('shuffle').onclick=shuffleBoard;
 document.getElementById('add').onclick=addRow;
 document.getElementById('undo').onclick=undo;
 
+/* ===== Helpers ===== */
 const rand1to9=()=>1+Math.floor(Math.random()*9);
 function snapshot(){history.push({grid:grid.map(r=>r.slice()),score,moves,sel:sel?{...sel}:null,donePairs,digitCount:{...digitCount},hintLeft,shuffleLeft,addLeft,undoLeft});if(history.length>40)history.shift();}
 function restore(st){grid=st.grid.map(r=>r.slice());score=st.score;moves=st.moves;sel=st.sel;donePairs=st.donePairs;digitCount={...st.digitCount};hintLeft=st.hintLeft;shuffleLeft=st.shuffleLeft;addLeft=st.addLeft;undoLeft=st.undoLeft;render();}
@@ -147,6 +155,7 @@ const neighbors=(r1,c1,r2,c2)=>Math.max(Math.abs(r1-r2),Math.abs(c1-c2))===1;
 const pathClearRow=(r,c1,c2)=>{const[a,b]=c1<c2?[c1,c2]:[c2,c1];for(let x=a+1;x<b;x++){if(grid[r][x]!==null)return false}return true}
 const pathClearCol=(c,r1,r2)=>{const[a,b]=r1<r2?[r1,r2]:[r2,r1];for(let y=a+1;y<b;y++){if(grid[y][c]!==null)return false}return true}
 
+/* ===== Rules ===== */
 function validPair(a,b){
   if(!a||!b||a.r===b.r&&a.c===b.c)return false;
   const v1=grid[a.r][a.c], v2=grid[b.r][b.c];
@@ -173,15 +182,18 @@ function removePair(a,b){
 }
 function clearEmptyRows(){grid=grid.filter(row=>row.some(v=>v!==null));if(grid.length===0)grid.push(Array.from({length:COLS},()=>null));}
 
+/* ===== Tools ===== */
 function addRow(){if(addLeft===0)return;pulse('Add Row');if(addLeft!==Infinity)addLeft--;snapshot();const row=[];for(let c=0;c<COLS;c++)row.push(rand1to9());grid.push(row);render();}
 function shuffleBoard(){if(shuffleLeft===0)return;pulse('Shuffle');if(shuffleLeft!==Infinity)shuffleLeft--;snapshot();const vals=[];grid.forEach(r=>r.forEach(v=>{if(v!==null)vals.push(v)}));for(let i=vals.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[vals[i],vals[j]]=[vals[j],vals[i]]}grid.forEach(r=>r.forEach((v,i)=>{if(v!==null)r[i]=vals.pop()}));moves++;render();checkWinLose();}
 function undo(){if(undoLeft===0||!history.length)return;pulse('Undo');if(undoLeft!==Infinity)undoLeft--;restore(history.pop());}
 function hint(){if(hintLeft===0)return;pulse('Hint');const p=findAnyPair();if(!p){pulse('No pairs');checkWinLose();return}if(hintLeft!==Infinity)hintLeft--;flashCells([p.a,p.b]);}
 function findAnyPair(){const coords=[];for(let r=0;r<grid.length;r++)for(let c=0;c<COLS;c++)if(grid[r][c]!==null)coords.push({r,c});for(let i=0;i<coords.length;i++)for(let j=i+1;j<coords.length;j++){const a=coords[i],b=coords[j];if(validPair(a,b))return{a,b}}return null}
 
+/* ===== Feedback ===== */
 function flashCells(list){list.forEach(({r,c})=>{const el=gridEl.children[r*COLS+c];if(el){el.classList.add('flash');setTimeout(()=>el.classList.remove('flash'),600)}})}
-function pulse(msg){const el=document.querySelector('.footer');if(!el)return;el.textContent=msg;el.style.color='#ffd46a';setTimeout(()=>{el.textContent='Rule: remove pairs that sum to 10 or are equal — adjacent (8 dirs) or same row/column with only empty cells between.';el.style.color='';},1500)}
+function pulse(msg){if(!foot)return;foot.textContent=msg;foot.style.color='#ffd46a';setTimeout(()=>{foot.textContent='Rule: remove pairs that sum to 10 or are equal — adjacent (8 dirs) or same row/column with only empty cells between.';foot.style.color='';},1500)}
 
+/* ===== Sizing ===== */
 function resizeGrid(){
   const board=document.querySelector('.board');
   const grid=document.getElementById('grid');
@@ -189,25 +201,40 @@ function resizeGrid(){
   const size=Math.min(board.clientWidth,board.clientHeight)-2;
   grid.style.width=size+'px';
   grid.style.height=size+'px';
-  const cell=Math.max(size/9,52);
+  const cell=Math.max(size/9,54); /* تكبير آمن للمسة */
   document.documentElement.style.setProperty('--cellSize',cell+'px');
 }
 window.addEventListener('resize',resizeGrid);
 
+/* ===== Render ===== */
 function render(){
   scoreEl.textContent=score;bestEl.textContent=best;movesEl.textContent=moves;lvlEl.textContent=curLevel;
-  hCnt.textContent=hintLeft===Infinity?'∞':hintLeft;sCnt.textContent=shuffleLeft===Infinity?'∞':shuffleLeft;aCnt.textContent=addLeft===Infinity?'∞':addLeft;uCnt.textContent=undoLeft===Infinity?'∞':undoLeft;
-  const L=LEVELS[curLevel-1];tgEl.innerHTML='';
-  L.targets.forEach(t=>{const d=document.createElement('div');d.className='tg';
-    if(t.type==='digit'){const got=(digitCount[t.value]||0);d.innerHTML=`Remove <b>${t.need}</b> of digit <b>${t.value}</b> — <span class="${got>=t.need?'ok':''}">${got}/${t.need}</span>`;}
-    else{d.innerHTML=`Make <b>${t.need}</b> pairs — <span class="${donePairs>=t.need?'ok':''}">${donePairs}/${t.need}</span>`;}
+
+  hCnt.textContent=hintLeft===Infinity?'∞':hintLeft;
+  sCnt.textContent=shuffleLeft===Infinity?'∞':shuffleLeft;
+  aCnt.textContent=addLeft===Infinity?'∞':addLeft;
+  uCnt.textContent=undoLeft===Infinity?'∞':undoLeft;
+
+  // Targets UI
+  const L=LEVELS[curLevel-1];
+  tgEl.innerHTML='';
+  L.targets.forEach(t=>{
+    const d=document.createElement('div');d.className='tg';
+    if(t.type==='digit'){
+      const got=(digitCount[t.value]||0);
+      d.innerHTML=`Remove <b>${t.need}</b> of digit <b>${t.value}</b> — <span class="${got>=t.need?'ok':''}">${got}/${t.need}</span>`;
+    }else{
+      d.innerHTML=`Make <b>${t.need}</b> pairs — <span class="${donePairs>=t.need?'ok':''}">${donePairs}/${t.need}</span>`;
+    }
     tgEl.appendChild(d);
   });
 
+  // Build grid
   gridEl.innerHTML='';
   for(let r=0;r<grid.length;r++){
     for(let c=0;c<COLS;c++){
-      const v=grid[r][c],d=document.createElement('div');
+      const v=grid[r][c];
+      const d=document.createElement('div');
       if(v===null){d.className='cell empty';}
       else if(v==='X'){d.className='cell blocker';d.textContent='X';d.style.color='#9fb4ff';}
       else{d.className='cell num';d.textContent=v;d.style.background=COLORS[v]||'#7dd3fc';d.style.color='#0b0f18';}
@@ -216,9 +243,10 @@ function render(){
       gridEl.appendChild(d);
     }
   }
-  resizeGrid();
+  resizeGrid(); // لازم بعد البناء
 }
 
+/* ===== Interaction ===== */
 function onCell(r,c){
   const v=grid[r][c];
   if(v===null||v==='X')return;
@@ -228,28 +256,58 @@ function onCell(r,c){
   if(validPair(sel,cur))removePair(sel,cur);else{sel=cur;render()}
 }
 
+/* ===== Win/Lose ===== */
 function checkWinLose(){
   const L=LEVELS[curLevel-1];
   const win=L.targets.every(t=>t.type==='digit'?(digitCount[t.value]||0)>=t.need:donePairs>=t.need);
-  if(win){localStorage.setItem('nm_level',Math.min(LEVELS.length,curLevel+1));pulse(`🎉 Level ${curLevel} done`);loadLevel(Math.min(LEVELS.length,curLevel+1),false);return;}
-  if(moves>=maxMoves){pulse('😵 Out of moves');loadLevel(curLevel,true);return;}
-  if(!findAnyPair()&&hintLeft===0&&shuffleLeft===0&&addLeft===0){pulse('😵 No pairs & no tools');loadLevel(curLevel,true);}
+  if(win){
+    localStorage.setItem('nm_level',Math.min(LEVELS.length,curLevel+1));
+    pulse(`🎉 Level ${curLevel} completed!`);
+    loadLevel(Math.min(LEVELS.length,curLevel+1),false);
+    return;
+  }
+  if(moves>=maxMoves){pulse('😵 Out of moves. Restarting level…');loadLevel(curLevel,true);return;}
+  if(!findAnyPair()&&hintLeft===0&&shuffleLeft===0&&addLeft===0){pulse('😵 No valid pairs & no tools. Restarting…');loadLevel(curLevel,true);}
 }
 
+/* ===== Level Loading ===== */
 function loadLevel(n,resetScore=false){
   curLevel=n;localStorage.setItem('nm_level',curLevel);
   const L=LEVELS[n-1];
-  hintLeft=L.limits.hint;shuffleLeft=L.limits.shuffle;addLeft=L.limits.add;undoLeft=L.limits.undo;
-  maxMoves=L.maxMoves;wrapAllowed=L.wrapRule;blockerRate=L.blockerRate||0;
-  donePairs=0;digitCount={};history.length=0;sel=null;moves=0;
-  if(resetScore)score=0;
+
+  hintLeft=L.limits.hint;
+  shuffleLeft=L.limits.shuffle;
+  addLeft=L.limits.add;
+  undoLeft=L.limits.undo;
+
+  maxMoves=L.maxMoves;
+  wrapAllowed=L.wrapRule;
+  blockerRate=L.blockerRate||0;
+
+  donePairs=0; digitCount={}; history.length=0; sel=null; moves=0;
+  if(resetScore) score=0;
+
   grid=[];
-  for(let r=0;r<START_ROWS;r++){const row=[];for(let c=0;c<COLS;c++){if(Math.random()<blockerRate)row.push('X');else row.push(rand1to9());}grid.push(row);}
+  for(let r=0;r<START_ROWS;r++){
+    const row=[];
+    for(let c=0;c<COLS;c++){
+      if(Math.random()<blockerRate) row.push('X');
+      else row.push(rand1to9());
+    }
+    grid.push(row);
+  }
   render();
 }
 
+/* ===== Start ===== */
 loadLevel(curLevel);
 resizeGrid();
+</script>
+
+<!-- Telegram WebApp (اختياري) -->
+<script src="https://telegram.org/js/telegram-web-app.js"></script>
+<script>
+  const tg=window.Telegram?.WebApp; if(tg){tg.expand(); tg.ready();}
 </script>
 </body>
 </html>
