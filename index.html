@@ -261,7 +261,36 @@ mv.innerHTML = `Moves: <b>${moves}</b>/<b>${maxMoves===Infinity?'∞':maxMoves}<
 tgEl.appendChild(mv);
 
   gridEl.style.gridTemplateColumns=`repeat(${COLS},1fr)`; gridEl.innerHTML='';
-  for(let r=0;r<grid.length;r++)for(let c=0;c<COLS;c++){const v=grid[r][c];const d=document.createElement('div');d.className='cell '+(v===null?'empty':'num');if(v!==null){d.textContent=v;d.style.background=COLORS[v]||'#7dd3fc';d.style.color='#0b0f18'}else{d.textContent='';d.style.border='1px dashed #2b3756'}if(sel&&sel.r===r&&sel.c===c)d.classList.add('sel');d.onclick=()=>onCell(r,c);gridEl.appendChild(d);}
+ for (let r = 0; r < grid.length; r++) {
+  for (let c = 0; c < COLS; c++) {
+    const v = grid[r][c];
+    const d = document.createElement('div');
+
+    if (v === null) {
+      // خلية فاضية
+      d.className = 'cell empty';
+    } else if (v === 'X') {
+      // خلية بلوكر
+      d.className = 'cell blocker';
+      d.textContent = 'X';
+      d.style.color = '#9fb4ff';   // لون يميزها
+    } else {
+      // رقم عادي
+      d.className = 'cell num';
+      d.textContent = v;
+      d.style.background = COLORS[v] || '#7dd3fc';
+      d.style.color = '#0b0f18';
+    }
+
+    if (sel && sel.r === r && sel.c === c && v !== 'X' && v !== null) {
+      d.classList.add('sel'); // ما يحددش X
+    }
+
+    d.onclick = () => onCell(r, c);
+    gridEl.appendChild(d);
+  }
+}
+
 }
 function onCell(r,c){
   const v = grid[r][c];
@@ -322,9 +351,7 @@ render();
 /* ---------- Start ---------- */
 loadLevel(curLevel);
 </script>
-/* ---------- Start ---------- */
-loadLevel(curLevel);
-</script>
+
 
 <!-- سكريبت تيليجرام -->
 <script src="https://telegram.org/js/telegram-web-app.js"></script>
@@ -339,8 +366,7 @@ loadLevel(curLevel);
 </body>
 </html>
   
-</body>
-</html>
+
 
 
 
