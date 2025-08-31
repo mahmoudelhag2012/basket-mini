@@ -201,16 +201,30 @@ function pulse(msg){if(!foot)return;foot.textContent=msg;foot.style.color='#ffd4
 
 /* ===== Sizing ===== */
 function resizeGrid(){
-  const board=document.querySelector('.board');
-  const grid=document.getElementById('grid');
-  if(!board||!grid)return;
-  const size=Math.min(board.clientWidth,board.clientHeight)-2;
-  grid.style.width=size+'px';
-  grid.style.height=size+'px';
-  const cell=Math.max(size/9,54); /* تكبير آمن للمسة */
-  document.documentElement.style.setProperty('--cellSize',cell+'px');
+  const wrap  = document.querySelector('.wrap');
+  const board = document.querySelector('.board');
+  const grid  = document.getElementById('grid');
+  const banner = document.querySelector('.banner');
+  if(!wrap || !board || !grid) return;
+
+  const bannerH = banner ? banner.getBoundingClientRect().height : 0;
+
+  // المساحة المتاحة من أعلى اللوحة لحد قبل البنر
+  const topY   = board.getBoundingClientRect().top;
+  const availH = Math.max(0, window.innerHeight - topY - bannerH - 16);
+  const availW = wrap.clientWidth - 12;
+
+  const size = Math.floor(Math.min(availW, availH));
+  grid.style.width  = size + 'px';
+  grid.style.height = size + 'px';
+
+  const cell = Math.max(size / 9, 50);   // حد أدنى للمسة مريحة
+  document.documentElement.style.setProperty('--cellSize', cell + 'px');
+
+  // خلّي ارتفاع اللوحة مطابق للجريد تقريبًا
+  board.style.height = (size + 12) + 'px';
 }
-window.addEventListener('resize',resizeGrid);
+
 
 /* ===== Render ===== */
 function render(){
@@ -317,6 +331,7 @@ resizeGrid();
 </script>
 </body>
 </html>
+
 
 
 
