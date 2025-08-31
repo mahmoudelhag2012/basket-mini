@@ -87,20 +87,55 @@ const COLS=9, START_ROWS=9;
 const COLORS={1:'#67e8f9',2:'#60a5fa',3:'#a78bfa',4:'#34d399',5:'#fbbf24',6:'#fb7185',7:'#f472b6',8:'#22d3ee',9:'#c084fc'};
 const SCORE_PAIR=10;
 
-/* ---------- Levels ---------- */
-const LEVELS=Array.from({length:40},(_,i)=>({
-  title:`Level ${i+1}`,
-  targets:[
-    {type:'digit', value:1+((i*2)%9), need:6+(i%7)},      // remove X of digit D
-    {type:'pairs', need:12+(i%12)}                        // make N pairs
-  ],
-  limits:{ hint:2+(i%3), shuffle:2+(i%2), add:1+(i%3>0?1:0), undo:2 }
-}));
+/* ---------- Levels (gentle ramp) ---------- */
+const LEVELS = Array.from({length:40}, (_, i) => {
+  const n = i + 1;
+
+  // أهداف بتزيد بهدوء
+  const needDigit = 6 + Math.floor(i/6);    // 6 → 12 عبر 40 مستوى
+  const needPairs = 12 + Math.floor(i/4);   // 12 → 22 بهدوء
+
+  // أدوات تقل تدريجيًا بلطف
+  const limits = {
+    hint:    n <= 10 ? 3 : (n <= 25 ? 2 : 1),
+    shuffle: n <= 12 ? 2 : 1,
+    add:     n <= 8  ? 2 : 1,
+    undo:    2
+  };
+
+  // سقف الحركات: واسع في الأول، لا ينخفض عن 28
+  const maxMoves = Math.max(28, 48 - Math.floor(i * 0.6));
+
+  // تفعيل الـ wrap من Level 13
+  const wrapRule = n >= 13;
+
+  // (اختياري) عوائق خفيفة 0% → 8%
+  const blockerRate = Math.min(0.08, 0.01 * Math.floor(i/5));
+
+  return {
+    title: `Level ${n}`,
+    targets: [
+      { type: 'digit', value: 1 + ((i*2) % 9), need: needDigit },
+      { type: 'pairs', need: needPairs }
+    ],
+    limits,
+    maxMoves,
+    wrapRule,
+    blockerRate
+  };
+});
+
 
 /* ---------- State ---------- */
 let curLevel=Math.min(Math.max(1,Number(localStorage.getItem('nm_level')||1)),LEVELS.length);
 let grid=[],score=0,best=Number(localStorage.getItem('nm_best')||0),moves=0;
 let sel=null,history=[];
+
+// ✅ New globals
+let maxMoves = Infinity;   // أقصى عدد خطوات (بيتغير مع كل level)
+let wrapAllowed = true;    // هل مسموح ربط آخر الصف بأول الصف اللي بعده
+let blockerRate = 0;       // نسبة عوائق عشوائية (X)
+
 let donePairs=0,digitCount={};
 let hintLeft,shuffleLeft,addLeft,undoLeft;
 
@@ -143,22 +178,33 @@ const neighbors=(r1,c1,r2,c2)=>Math.max(Math.abs(r1-r2),Math.abs(c1-c2))===1;
 function validPair(a,b){
   if(!a||!b) return false;
   if(a.r===b.r&&a.c===b.c) return false;
-  const v1=grid[a.r][a.c];
-  const v2=grid[b.r][b.c];
-  if(v1===null||v2===null) return false;
-  if(!(v1===v2||v1+v2===10)) return false;
 
-  // ✅ حالات الصلاحية
-  if(neighbors(a.r,a.c,b.r,b.c)) return true;                         // متجاورين
-  if(a.r===b.r && pathClearRow(a.r,a.c,b.c)) return true;             // نفس الصف
-  if(a.c===b.c && pathClearCol(a.c,a.r,b.r)) return true;             // نفس العمود
+  const v1 = grid[a.r][a.c];
+  const v2 = grid[b.r][b.c];
 
-  // ✨ الجديد: آخر خلية في الصف + أول اللي بعده
-  if(a.c===COLS-1 && b.c===0 && b.r===a.r+1) return true;
-  if(b.c===COLS-1 && a.c===0 && a.r===b.r+1) return true;
+  // لا نطابق فراغ أو بلوكر
+  if (v1===null || v2===null) return false;
+  if (v1==='X' || v2==='X')   return false;
+
+  // شروط القيم
+  if (!(v1===v2 || v1+v2===10)) return false;
+
+  // مجاورين
+  if (neighbors(a.r,a.c,b.r,b.c)) return true;
+
+  // نفس الصف/العمود مع مسار فارغ
+  if (a.r===b.r && pathClearRow(a.r,a.c,b.c)) return true;
+  if (a.c===b.c && pathClearCol(a.c,a.r,b.r)) return true;
+
+  // ربط آخر خلية في الصف بأول اللي بعده "فقط لو wrapAllowed مفعّل"
+  if (wrapAllowed){
+    if (a.c===COLS-1 && b.c===0 && b.r===a.r+1) return true;
+    if (b.c===COLS-1 && a.c===0 && a.r===b.r+1) return true;
+  }
 
   return false;
 }
+
 
 function removePair(a,b){
   snapshot();
@@ -188,15 +234,35 @@ function render(){
     else if(t.type==='pairs'){d.innerHTML=`Target: make <b>${t.need}</b> pairs — <span class="${donePairs>=t.need?'ok':''}">${donePairs}/${t.need}</span>`;}
     tgEl.appendChild(d);
   });
+  // ✅ Add Moves info
+const mv = document.createElement('div');
+mv.className='tg';
+mv.innerHTML = `Moves: <b>${moves}</b>/<b>${maxMoves===Infinity?'∞':maxMoves}</b>`;
+tgEl.appendChild(mv);
+
   gridEl.style.gridTemplateColumns=`repeat(${COLS},1fr)`; gridEl.innerHTML='';
   for(let r=0;r<grid.length;r++)for(let c=0;c<COLS;c++){const v=grid[r][c];const d=document.createElement('div');d.className='cell '+(v===null?'empty':'num');if(v!==null){d.textContent=v;d.style.background=COLORS[v]||'#7dd3fc';d.style.color='#0b0f18'}else{d.textContent='';d.style.border='1px dashed #2b3756'}if(sel&&sel.r===r&&sel.c===c)d.classList.add('sel');d.onclick=()=>onCell(r,c);gridEl.appendChild(d);}
 }
-function onCell(r,c){if(grid[r][c]===null)return;const cur={r,c};if(!sel){sel=cur;render();return}if(sel.r===r&&sel.c===c){sel=null;render();return}if(validPair(sel,cur))removePair(sel,cur);else{sel=cur;render()}}
+function onCell(r,c){
+  const v = grid[r][c];
+  if (v===null || v==='X') return;   // منع اختيار X
+  const cur = {r,c};
+  if(!sel){ sel=cur; render(); return }
+  if(sel.r===r && sel.c===c){ sel=null; render(); return }
+  if(validPair(sel,cur)) removePair(sel,cur); else { sel=cur; render() }
+}
+
 function flashCells(list){list.forEach(({r,c})=>{const el=gridEl.children[r*COLS+c];if(el){el.classList.add('flash');setTimeout(()=>el.classList.remove('flash'),600)}})}
 function pulse(msg){const el=document.querySelector('.footer');const old=el.textContent;el.textContent=msg;el.style.color='#ffd46a';setTimeout(()=>{el.textContent=old;el.style.color='';},1500)}
 
 /* ---------- Win/Lose ---------- */
 function checkWinLose(){
+  // lose by moves cap
+if (moves >= maxMoves){
+  show('loseM');
+  return;
+}
+
   const L=LEVELS[curLevel-1];
   const win=L.targets.every(t=>t.type==='digit'?(digitCount[t.value]||0)>=t.need:donePairs>=t.need);
   if(win){localStorage.setItem('nm_level',Math.min(LEVELS.length,curLevel+1));document.getElementById('winL').textContent=curLevel;show('winM');return}
@@ -206,11 +272,31 @@ function checkWinLose(){
 /* ---------- Level Loading ---------- */
 function loadLevel(n,resetScore=false){
   curLevel=n;localStorage.setItem('nm_level',curLevel);
-  const L=LEVELS[n-1];
-  hintLeft=L.limits.hint;shuffleLeft=L.limits.shuffle;addLeft=L.limits.add;undoLeft=L.limits.undo;
-  donePairs=0;digitCount={};history.length=0;sel=null;moves=0;if(resetScore)score=0;
-  grid=[];for(let r=0;r<START_ROWS;r++){const row=[];for(let c=0;c<COLS;c++)row.push(rand1to9());grid.push(row)}
-  render();
+  const L = LEVELS[n-1];
+hintLeft   = L.limits.hint;
+shuffleLeft= L.limits.shuffle;
+addLeft    = L.limits.add;
+undoLeft   = L.limits.undo;
+
+maxMoves    = L.maxMoves;
+wrapAllowed = L.wrapRule;
+blockerRate = L.blockerRate || 0;
+
+donePairs=0; digitCount={}; history.length=0; sel=null; moves=0;
+if(resetScore) score=0;
+
+// توليد الجريد مع blockers اختياريًا
+grid=[];
+for(let r=0;r<START_ROWS;r++){
+  const row=[];
+  for(let c=0;c<COLS;c++){
+    if (Math.random() < blockerRate) row.push('X'); // عائق
+    else row.push(rand1to9());
+  }
+  grid.push(row);
+}
+render();
+
 }
 
 /* ---------- Start ---------- */
@@ -218,4 +304,5 @@ loadLevel(curLevel);
 </script>
 </body>
 </html>
+
 
