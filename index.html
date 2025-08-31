@@ -17,31 +17,38 @@
 .bar{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:10px}
 button{border:0;border-radius:12px;padding:10px 12px;font-weight:700;color:#0b0f18;background:linear-gradient(180deg,var(--gold1),var(--gold2));box-shadow:0 10px 22px #0007,inset 0 1px 0 #fff7;cursor:pointer}
 button.secondary{background:#1a2337;color:#cfe2ff;border:1px solid var(--ring)}
-.board{background:linear-gradient(180deg,var(--p1),var(--p2));border-radius:18px;padding:10px;box-shadow:0 22px 60px #000a,inset 0 1px 0 var(--ring)}
-.grid{
-  display:grid;
-  gap:6px;
-  width:100%;
-  max-width:100vw;
+.board {
+  width: 100vw;
+  height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+  margin: 0;
+  background: linear-gradient(180deg, var(--p1), var(--p2));
+}
+
+.grid {
+  display: grid;
   grid-template-columns: repeat(9, 1fr);
+  grid-template-rows: repeat(9, 1fr);
+  width: 100vmin;   /* يخلي المربع بحجم أصغر بُعد من الشاشة */
+  height: 100vmin;
+  gap: 4px;
 }
 
-.cell{
-  width:100%;
-  aspect-ratio:1/1;                 /* خلية مربعة تلقائياً */
-  border-radius:20%;
-  display:flex;align-items:center;justify-content:center;
-  font-weight:900;
-  font-size:clamp(14px, 4.2vw, 22px);/* خط متكيّف */
-  user-select:none;
-  transition:.12s transform,.12s box-shadow,.2s background;
+.cell {
+  width: 100%;
+  aspect-ratio: 1/1;
+  border-radius: 20%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 900;
+  font-size: clamp(14px, 3vw, 28px);
+  user-select: none;
+  transition: .12s transform, .12s box-shadow, .2s background;
 }
-
-.cell.empty{background:#0d1324;border:1px dashed #2b3756;color:#2b3756}
-.cell.blocker{background:#141c2e;border:1px solid #2b3756;box-shadow:none}
-.cell.num{box-shadow:0 6px 14px #0006}
-
-/* مفيش @media للخلية هنا */
 
 
 </style>
@@ -360,6 +367,7 @@ loadLevel(curLevel);
 </body>
 </html>
   
+
 
 
 
