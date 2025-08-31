@@ -245,62 +245,63 @@ window.addEventListener('resize', resizeGrid);
 
 /* ---------- Render ---------- */
 function render(){
-  scoreEl.textContent=score;bestEl.textContent=best;movesEl.textContent=moves;lvlEl.textContent=curLevel;
-  hCnt.textContent=hintLeft===Infinity?'∞':hintLeft; sCnt.textContent=shuffleLeft===Infinity?'∞':shuffleLeft; aCnt.textContent=addLeft===Infinity?'∞':addLeft; uCnt.textContent=undoLeft===Infinity?'∞':undoLeft;
-  gridEl.style.gridTemplateColumns=`repeat(${COLS},1fr)`; gridEl.innerHTML='';
- for (let r = 0; r < grid.length; r++) {
-  for (let c = 0; c < COLS; c++) {
-    const v = grid[r][c];
-    const d = document.createElement('div');
+  // HUD
+  scoreEl.textContent = score;
+  bestEl.textContent  = best;
+  movesEl.textContent = moves;
+  lvlEl.textContent   = curLevel;
 
-    if (v === null) {
-      // خلية فاضية
-      d.className = 'cell empty';
-    } else if (v === 'X') {
-      // خلية بلوكر
-      d.className = 'cell blocker';
-      d.textContent = 'X';
-      d.style.color = '#9fb4ff';   // لون يميزها
-    } else {
-      // رقم عادي
-      d.className = 'cell num';
-      d.textContent = v;
-      d.style.background = COLORS[v] || '#7dd3fc';
-      d.style.color = '#0b0f18';
+  hCnt.textContent = hintLeft===Infinity ? '∞' : hintLeft;
+  sCnt.textContent = shuffleLeft===Infinity ? '∞' : shuffleLeft;
+  aCnt.textContent = addLeft===Infinity ? '∞' : addLeft;
+  uCnt.textContent = undoLeft===Infinity ? '∞' : undoLeft;
+
+  // Grid
+  gridEl.style.gridTemplateColumns = `repeat(${COLS}, 1fr)`;
+  gridEl.innerHTML = '';
+
+  for (let r = 0; r < grid.length; r++) {
+    for (let c = 0; c < COLS; c++) {
+      const v = grid[r][c];
+      const d = document.createElement('div');
+
+      if (v === null) {
+        d.className = 'cell empty';
+      } else if (v === 'X') {
+        d.className = 'cell blocker';
+        d.textContent = 'X';
+        d.style.color = '#9fb4ff';
+      } else {
+        d.className = 'cell num';
+        d.textContent = v;
+        d.style.background = COLORS[v] || '#7dd3fc';
+        d.style.color = '#0b0f18';
+      }
+
+      if (sel && sel.r === r && sel.c === c && v !== 'X' && v !== null) {
+        d.classList.add('sel');
+      }
+
+      d.onclick = () => onCell(r, c);
+      gridEl.appendChild(d);
     }
-
-    if (sel && sel.r === r && sel.c === c && v !== 'X' && v !== null) {
-      d.classList.add('sel'); // ما يحددش X
-    }
-
-    d.onclick = () => onCell(r, c);
-    // ... بعد ما تخلّص بناء عناصر الجريد
-    gridEl.appendChild(d);
   }
+
+  // مهم: تسقيط المقاس بعد ما نكمل بناء العناصر
+  resizeGrid();
 }
-
-// ضيفه هنا ↓
-resizeGrid();
-
-} // نهاية دالة render
-
 
 function onCell(r,c){
   const v = grid[r][c];
-  if (v===null || v==='X') return;   // منع اختيار X
+  if (v===null || v==='X') return;      // منع اختيار X
   const cur = {r,c};
-  if(!sel){ sel=cur; render(); return }
-  if(sel.r===r && sel.c===c){ sel=null; render(); return }
-  if(validPair(sel,cur)) removePair(sel,cur); else { sel=cur; render() }
-} // ← اقفل onCell هنا
 
-function flashCells(list){ /* ... */ }
-function pulse(msg){ /* ... (لو خليت .footer مخفية مش هتشوف الرسالة) */ }
+  if(!sel){ sel = cur; render(); return; }
+  if(sel.r===r && sel.c===c){ sel=null; render(); return; }
 
-
-  resizeGrid();   // ← السطر الأخير داخل render()
+  if (validPair(sel,cur)) removePair(sel,cur);
+  else { sel = cur; render(); }
 }
-
   
 /* ---------- Win/Lose (no modals) ---------- */
 function checkWinLose() {
@@ -384,4 +385,5 @@ resizeGrid();        // أول ضبط مبدئي
 </body>
 </html>
   
+
 
