@@ -19,8 +19,25 @@ button{border:0;border-radius:12px;padding:10px 12px;font-weight:700;color:#0b0f
 button.secondary{background:#1a2337;color:#cfe2ff;border:1px solid var(--ring)}
 .board{background:linear-gradient(180deg,var(--p1),var(--p2));border-radius:18px;padding:10px;box-shadow:0 22px 60px #000a,inset 0 1px 0 var(--ring)}
 .grid{display:grid;gap:8px}
-.cell{width:56px;height:56px;border-radius:14px;display:flex;align-items:center;justify-content:center;font-weight:900;font-size:22px;user-select:none;transition:.12s transform,.12s box-shadow,.2s background}
+.cell{
+  width:10vw;
+  height:10vw;
+  max-width:56px;
+  max-height:56px;
+  border-radius:20%;
+  display:flex;align-items:center;justify-content:center;
+  font-weight:900;font-size:4vw;
+  user-select:none;
+  transition:.12s transform,.12s box-shadow,.2s background;
+}
+
 .cell.empty{background:#0d1324;border:1px dashed #2b3756;color:#2b3756}
+  .cell.blocker{
+  background:#141c2e;
+  border:1px solid #2b3756;
+  box-shadow:none;
+}
+
 .cell.num{box-shadow:0 6px 14px #0006}
 .sel{outline:3px solid #ffee9a}.flash{animation:flash .55s ease}
 @keyframes flash{0%{transform:scale(1)}50%{transform:scale(1.08)}100%{transform:scale(1)}}
@@ -29,7 +46,10 @@ button.secondary{background:#1a2337;color:#cfe2ff;border:1px solid var(--ring)}
 .modal{position:fixed;inset:0;background:#0009;display:none;align-items:center;justify-content:center;padding:16px;z-index:10}
 .box{background:#0f1627;border:1px solid var(--ring);border-radius:16px;max-width:420px;width:100%;padding:18px;text-align:center;box-shadow:0 30px 80px #000c}
 .box h3{margin:0 0 8px;font-size:22px}
-@media (max-width:560px){.cell{width:44px;height:44px;font-size:19px}}
+@media (max-width:560px){
+  .cell{width:12vw;height:12vw;font-size:5vw}
+}
+
 </style>
 </head>
 <body>
@@ -321,6 +341,7 @@ loadLevel(curLevel);
   
 </body>
 </html>
+
 
 
 
