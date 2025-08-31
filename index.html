@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
 <meta charset="utf-8"/>
-<meta name="viewport" content="width=device-width,initial-scale=1"/>
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover"/>
 <title>Number Match — Levels</title>
 <style>
 :root{--bg:#0b0f18;--p1:#11182a;--p2:#0e1423;--ring:#ffffff24;--txt:#ecf1ff;--mut:#9db0d1;--gold1:#ffd46a;--gold2:#ffb724;--green:#34d399}
@@ -12,7 +12,15 @@
 html,body{height:100%;margin:0;overflow:hidden}
 
 /* الحاوية العامة: الهيدر/الأزرار فوق – اللوحة تاخد باقي المساحة */
-.wrap{height:100%;display:flex;flex-direction:column;padding:10px;max-width:780px;margin:0 auto}
+.wrap{
+  height:100%;
+  display:flex;
+  flex-direction:column;
+  padding:10px;
+  padding-top:calc(10px + env(safe-area-inset-top)); /* ينزّل الهيدر تحت شريط الحالة */
+  max-width:780px;
+  margin:0 auto
+}
 .hud{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-bottom:10px}
 .badge{background:linear-gradient(180deg,var(--p1),var(--p2));border-radius:16px;padding:10px 12px;text-align:center;box-shadow:0 12px 26px #000a,inset 0 1px 0 var(--ring)}
 .k{font-size:12px;color:var(--mut)} .v{font-weight:800;font-size:20px}
@@ -34,21 +42,21 @@ button.secondary{background:#1a2337;color:#cfe2ff;border:1px solid var(--ring)}
   display:grid;
   grid-template-columns:repeat(9,1fr);
   grid-template-rows:repeat(9,1fr);
-  gap:8px;                 /* كان 6px */
-  width:min(98vmin,100%);  /* كان 96vmin */
-  height:min(98vmin,100%);
+  gap:6px;                 /* أصغر شوية علشان الخلايا تكبر */
+  width:min(99vmin,100%);  /* مساحة أكبر داخل اللوحة */
+  height:min(99vmin,100%);
 }
 
 /* حجم افتراضي أكبر – يُحدّث من JS */
-:root{ --cellSize:64px; }  /* كان 56px */
+:root{ --cellSize:64px; }
 
 .cell{
   width:100%;
   aspect-ratio:1/1;
-  border-radius:24%;       /* كان 20% */
+  border-radius:24%;
   display:flex;align-items:center;justify-content:center;
   font-weight:900;
-  font-size:calc(var(--cellSize)*0.58); /* كان 0.45 */
+  font-size:calc(var(--cellSize)*0.60); /* تكبير الرقم */
   user-select:none;
   transition:.12s transform,.12s box-shadow,.2s background;
 }
@@ -217,11 +225,14 @@ function resizeGrid(){
   const grid  = document.getElementById('grid');
   if(!board || !grid) return;
 
-  const size = Math.min(board.clientWidth, board.clientHeight) - 8;
+  // أكبر مربع ممكن داخل اللوحة مع هامش بسيط جداً
+  const size = Math.min(board.clientWidth, board.clientHeight) - 2;
+
   grid.style.width  = size + 'px';
   grid.style.height = size + 'px';
 
-  const cell = Math.max(size / 9, 46);    // أقل مقاس مريح للمس
+  // حد أدنى أكبر للمسة مريحة
+  const cell = Math.max(size / 9, 54);
   document.documentElement.style.setProperty('--cellSize', cell + 'px');
 }
 window.addEventListener('resize', resizeGrid);
