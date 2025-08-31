@@ -36,27 +36,27 @@ html,body{height:100%;margin:0;overflow:hidden}
   display:grid;
   grid-template-columns:repeat(9,1fr);
   grid-template-rows:repeat(9,1fr);
-  gap:6px;
-  width:min(96vmin,100%);   /* احتياطي لو الجافاسكربت ما اشتغلتش */
-  height:min(96vmin,100%);
+  gap:8px;                       /* كان 6px */
+  width:min(98vmin,100%);        /* كان 96vmin */
+  height:min(98vmin,100%);
 }
 
-/* هنعتمد على متغير --cellSize اللي هنحسبه بالجافاسكربت */
-:root{ --cellSize:56px; }
+/* حجم افتراضي أكبر – بيتحدث من JS */
+:root{ --cellSize:64px; }        /* كان 56px */
+
 .cell{
   width:100%;
   aspect-ratio:1/1;
-  border-radius:20%;
+  border-radius:24%;             /* كان 20% */
   display:flex;align-items:center;justify-content:center;
-  font-weight:900;font-size:calc(var(--cellSize)*0.45);
+  font-weight:900;
+  font-size:calc(var(--cellSize)*0.58);  /* كان 0.45 */
   user-select:none;
   transition:.12s transform,.12s box-shadow,.2s background;
 }
-
-.cell.empty{background:#0d1324;border:1px dashed #2b3756;color:#2b3756}
-.cell.blocker{background:#141c2e;border:1px solid #2b3756;box-shadow:none}
-.cell.num{box-shadow:0 6px 14px #0006}
-
+.targets{ display:none !important; }
+.footer{ display:none !important; }
+.banner{ margin-top:12px; }
 
 </style>
 </head>
@@ -73,8 +73,6 @@ html,body{height:100%;margin:0;overflow:hidden}
 
   <div class="bar">
     <button id="new">Start from Level 1</button>
-    <button class="secondary" id="prev">◀ Prev</button>
-    <button class="secondary" id="next">Skip ▶</button>
     <button class="secondary" id="hint">Hint (<span id="hcnt">∞</span>)</button>
     <button class="secondary" id="shuffle">Shuffle (<span id="scnt">∞</span>)</button>
     <button class="secondary" id="add">Add Row (<span id="acnt">∞</span>)</button>
@@ -160,8 +158,6 @@ bestEl.textContent=best;
 
 /* ---------- UI ---------- */
 document.getElementById('new').onclick=()=>loadLevel(1,true);
-document.getElementById('prev').onclick=()=>loadLevel(Math.max(1,curLevel-1),true);
-document.getElementById('next').onclick=()=>loadLevel(Math.min(LEVELS.length,curLevel+1),true);
 document.getElementById('hint').onclick=hint;
 document.getElementById('shuffle').onclick=shuffleBoard;
 document.getElementById('add').onclick=addRow;
@@ -232,15 +228,14 @@ function resizeGrid(){
   const grid  = document.getElementById('grid');
   if(!board || !grid) return;
 
-  // أكبر مربع ممكن جوّه اللوحة
-  const size = Math.min(board.clientWidth, board.clientHeight);
+  // أكبر مربع ممكن داخل اللوحة + هامش بسيط
+  const size = Math.min(board.clientWidth, board.clientHeight) - 8;
 
-  // اضبط أبعاد الجريد لمربع كامل
   grid.style.width  = size + 'px';
   grid.style.height = size + 'px';
 
-  // مقاس الخلية الواحدة
-  const cell = size / 9;
+  // نضمن حد أدنى للمسة (مثلاً 46px)
+  const cell = Math.max(size / 9, 46);
   document.documentElement.style.setProperty('--cellSize', cell + 'px');
 }
 
@@ -252,18 +247,6 @@ window.addEventListener('resize', resizeGrid);
 function render(){
   scoreEl.textContent=score;bestEl.textContent=best;movesEl.textContent=moves;lvlEl.textContent=curLevel;
   hCnt.textContent=hintLeft===Infinity?'∞':hintLeft; sCnt.textContent=shuffleLeft===Infinity?'∞':shuffleLeft; aCnt.textContent=addLeft===Infinity?'∞':addLeft; uCnt.textContent=undoLeft===Infinity?'∞':undoLeft;
-  const L=LEVELS[curLevel-1]; tgEl.innerHTML='';
-  L.targets.forEach(t=>{const d=document.createElement('div');d.className='tg';
-    if(t.type==='digit'){const got=(digitCount[t.value]||0);d.innerHTML=`Target: remove <b>${t.need}</b> of digit <b>${t.value}</b> — <span class="${got>=t.need?'ok':''}">${got}/${t.need}</span>`;}
-    else if(t.type==='pairs'){d.innerHTML=`Target: make <b>${t.need}</b> pairs — <span class="${donePairs>=t.need?'ok':''}">${donePairs}/${t.need}</span>`;}
-    tgEl.appendChild(d);
-  });
-  // ✅ Add Moves info
-const mv = document.createElement('div');
-mv.className='tg';
-mv.innerHTML = `Moves: <b>${moves}</b>/<b>${maxMoves===Infinity?'∞':maxMoves}</b>`;
-tgEl.appendChild(mv);
-
   gridEl.style.gridTemplateColumns=`repeat(${COLS},1fr)`; gridEl.innerHTML='';
  for (let r = 0; r < grid.length; r++) {
   for (let c = 0; c < COLS; c++) {
@@ -291,11 +274,17 @@ tgEl.appendChild(mv);
     }
 
     d.onclick = () => onCell(r, c);
+    // ... بعد ما تخلّص بناء عناصر الجريد
     gridEl.appendChild(d);
   }
 }
 
-}
+// ضيفه هنا ↓
+resizeGrid();
+
+} // نهاية دالة render
+
+
 function onCell(r,c){
   const v = grid[r][c];
   if (v===null || v==='X') return;   // منع اختيار X
@@ -303,10 +292,11 @@ function onCell(r,c){
   if(!sel){ sel=cur; render(); return }
   if(sel.r===r && sel.c===c){ sel=null; render(); return }
   if(validPair(sel,cur)) removePair(sel,cur); else { sel=cur; render() }
-function flashCells(list){list.forEach(({r,c})=>{const el=gridEl.children[r*COLS+c];if(el){el.classList.add('flash');setTimeout(()=>el.classList.remove('flash'),600)}})}
-function pulse(msg){const el=document.querySelector('.footer');const old=el.textContent;el.textContent=msg;el.style.color='#ffd46a';setTimeout(()=>{el.textContent=old;el.style.color='';},1500)}
-  // بعد ما تخلص بناء العناصر والحلقات:
-  // for (let r = 0; r < grid.length; r++) { ... }
+} // ← اقفل onCell هنا
+
+function flashCells(list){ /* ... */ }
+function pulse(msg){ /* ... (لو خليت .footer مخفية مش هتشوف الرسالة) */ }
+
 
   resizeGrid();   // ← السطر الأخير داخل render()
 }
@@ -394,3 +384,4 @@ resizeGrid();        // أول ضبط مبدئي
 </body>
 </html>
   
+
