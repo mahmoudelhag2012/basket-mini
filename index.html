@@ -11,24 +11,25 @@
 /* يمنع السكرول ويخلي الصفحة كلها متاحة للعبة */
 html,body{height:100%;margin:0;overflow:hidden}
 
-/* الحاوية العامة: الهيدر/الأزرار فوق – اللوحة تاخد باقي المساحة */
+/* الحاوية العامة */
 .wrap{
   height:100%;
   display:flex;
   flex-direction:column;
   padding:10px;
-  padding-top:calc(10px + env(safe-area-inset-top)); /* ينزّل الهيدر تحت شريط الحالة */
+  padding-top:calc(12px + env(safe-area-inset-top)); /* ينزّل الهيدر بعيد عن الحافة */
   max-width:780px;
-  margin:0 auto
+  margin:0 auto;
 }
-.hud{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-bottom:10px}
+.hud{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-bottom:8px}
 .badge{background:linear-gradient(180deg,var(--p1),var(--p2));border-radius:16px;padding:10px 12px;text-align:center;box-shadow:0 12px 26px #000a,inset 0 1px 0 var(--ring)}
 .k{font-size:12px;color:var(--mut)} .v{font-weight:800;font-size:20px}
 
-.bar{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:10px}
+.bar{display:flex;gap:8px;flex-wrap:wrap;margin-top:6px;margin-bottom:10px}
 button{border:0;border-radius:12px;padding:10px 12px;font-weight:700;color:#0b0f18;background:linear-gradient(180deg,var(--gold1),var(--gold2));box-shadow:0 10px 22px #0007,inset 0 1px 0 #fff7;cursor:pointer}
 button.secondary{background:#1a2337;color:#cfe2ff;border:1px solid var(--ring)}
 
+/* اللوحة */
 .board{
   flex:1 1 auto;min-height:0;
   display:flex;align-items:center;justify-content:center;
@@ -37,13 +38,13 @@ button.secondary{background:#1a2337;color:#cfe2ff;border:1px solid var(--ring)}
   border-radius:18px;box-shadow:0 22px 60px #000a,inset 0 1px 0 var(--ring)
 }
 
-/* الجريد أكبر ومربع */
+/* الجريد */
 .grid{
   display:grid;
   grid-template-columns:repeat(9,1fr);
   grid-template-rows:repeat(9,1fr);
-  gap:6px;                 /* أصغر شوية علشان الخلايا تكبر */
-  width:min(99vmin,100%);  /* مساحة أكبر داخل اللوحة */
+  gap:6px;                 /* مسافة صغيرة عشان الخلايا تكبر */
+  width:min(99vmin,100%);
   height:min(99vmin,100%);
 }
 
@@ -56,7 +57,7 @@ button.secondary{background:#1a2337;color:#cfe2ff;border:1px solid var(--ring)}
   border-radius:24%;
   display:flex;align-items:center;justify-content:center;
   font-weight:900;
-  font-size:calc(var(--cellSize)*0.60); /* تكبير الرقم */
+  font-size:calc(var(--cellSize)*0.62); /* تكبير الرقم */
   user-select:none;
   transition:.12s transform,.12s box-shadow,.2s background;
 }
@@ -65,7 +66,7 @@ button.secondary{background:#1a2337;color:#cfe2ff;border:1px solid var(--ring)}
 .cell.blocker{background:#141c2e;border:1px solid #2b3756;box-shadow:none}
 .cell.num{box-shadow:0 6px 14px #0006}
 
-/* تفريغ مساحة: إخفاء التارجتس والقاعدة، والبنر في الآخر */
+/* تفريغ مساحة: إخفاء التارجتس والقاعدة، والبنر آخر الصفحة */
 .targets{ display:none !important; }
 .footer{ display:none !important; }
 .banner{ margin-top:12px; }
@@ -101,12 +102,11 @@ const COLS=9, START_ROWS=9;
 const COLORS={1:'#67e8f9',2:'#60a5fa',3:'#a78bfa',4:'#34d399',5:'#fbbf24',6:'#fb7185',7:'#f472b6',8:'#22d3ee',9:'#c084fc'};
 const SCORE_PAIR=10;
 
-/* ---------- Levels (gentle ramp) ---------- */
+/* ---------- Levels ---------- */
 const LEVELS = Array.from({length:40}, (_, i) => {
   const n = i + 1;
-
-  const needDigit = 6 + Math.floor(i/6);   // 6 → 12
-  const needPairs = 12 + Math.floor(i/4);  // 12 → 22
+  const needDigit = 6 + Math.floor(i/6);
+  const needPairs = 12 + Math.floor(i/4);
 
   const limits = {
     hint:    n <= 10 ? 3 : (n <= 25 ? 2 : 1),
@@ -225,14 +225,14 @@ function resizeGrid(){
   const grid  = document.getElementById('grid');
   if(!board || !grid) return;
 
-  // أكبر مربع ممكن داخل اللوحة مع هامش بسيط جداً
-  const size = Math.min(board.clientWidth, board.clientHeight) - 2;
+  // أكبر مربع ممكن داخل اللوحة
+  const size = Math.min(board.clientWidth, board.clientHeight);
 
   grid.style.width  = size + 'px';
   grid.style.height = size + 'px';
 
-  // حد أدنى أكبر للمسة مريحة
-  const cell = Math.max(size / 9, 54);
+  // حد أدنى مريح للمسة — أكبر شوية
+  const cell = Math.max(size / 9, 60);
   document.documentElement.style.setProperty('--cellSize', cell + 'px');
 }
 window.addEventListener('resize', resizeGrid);
@@ -279,7 +279,7 @@ function render(){
     }
   }
 
-  resizeGrid(); // لازم بعد البناء
+  resizeGrid(); // بعد البناء
 }
 
 function onCell(r,c){
@@ -354,7 +354,7 @@ function loadLevel(n,resetScore=false){
 
 /* ---------- Start ---------- */
 loadLevel(curLevel);
-resizeGrid(); // أول ضبط مبدئي
+resizeGrid();
 </script>
 
 <!-- سكريبت تيليجرام -->
