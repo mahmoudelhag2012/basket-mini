@@ -147,6 +147,7 @@ let grid=[],score=0,best=Number(localStorage.getItem('nm_best')||0),moves=0;
 let sel=null,history=[],donePairs=0,digitCount={};
 let hintLeft,shuffleLeft,addLeft,undoLeft;
 let maxMoves=Infinity,wrapAllowed=true,blockerRate=0;
+let justLoaded = false; // يمنع الحكم بالخسارة أول ما الليفل يفتح
 
 /* ===== Elements ===== */
 const gridEl=document.getElementById('grid'),
@@ -163,13 +164,23 @@ foot=document.getElementById('foot');
 
 bestEl.textContent = best;
 
-const overlayEl = document.getElementById('overlay');
-function showOverlay(msg, ms = 1200){
-  if(!overlayEl) return;
-  overlayEl.textContent = msg;
-  overlayEl.hidden = false;
-  setTimeout(() => overlayEl.hidden = true, ms);
+let ovl;
+window.addEventListener('DOMContentLoaded', ()=>{
+  const board = document.querySelector('.board');
+  ovl = document.createElement('div');
+  ovl.style.cssText = 'position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-size:44px;font-weight:900;letter-spacing:2px;background:#0009;color:#fff;backdrop-filter:blur(2px)';
+  ovl.hidden = true;
+  board.style.position = 'relative';
+  board.appendChild(ovl);
+});
+
+function showOverlay(txt, ms=1200){
+  if(!ovl) return;
+  ovl.textContent = txt;
+  ovl.hidden = false;
+  if(ms) setTimeout(()=> ovl.hidden = true, ms);
 }
+
 
 
 /* ===== UI Actions ===== */
@@ -298,11 +309,14 @@ function onCell(r,c){
 
 /* ===== Win/Lose ===== */
 function checkWinLose(){
-  const L = LEVELS[curLevel-1];
+  const L=LEVELS[curLevel-1];
 
-  const win = L.targets.every(t =>
-    t.type==='digit' ? (digitCount[t.value]||0) >= t.need
-                     : donePairs >= t.need
+  // امنع الحكم بالخسارة أول ما اللعبة تفتح
+  if (justLoaded) return;
+
+  const win = L.targets.every(t => t.type==='digit'
+    ? (digitCount[t.value]||0) >= t.need
+    : donePairs >= t.need
   );
 
   if (win){
@@ -318,23 +332,21 @@ function checkWinLose(){
     return;
   }
 
-  // ← مهم: ما تحكمش بالخسارة قبل أول حركة
-  if (moves === 0) return;
-
   if (!findAnyPair() && hintLeft===0 && shuffleLeft===0 && addLeft===0){
     showOverlay('GAME OVER', 1200);
-    setTimeout(() => loadLevel(curLevel, true), 1200);
-    return;
+    setTimeout(()=> loadLevel(curLevel, true), 1200);
   }
 }
 
 
+
 /* ===== Level Loading ===== */
-function loadLevel(n, resetScore = false){
-  if (overlayEl) overlayEl.hidden = true;   // ← إخفاء أي Overlay قديم
-  curLevel = n;
-  localStorage.setItem('nm_level', curLevel);
-  const L = LEVELS[n-1];
+function loadLevel(n, resetScore=false){
+  justLoaded = true;                    // ← الليفل لسه محمّل
+  if (typeof ovl !== 'undefined' && ovl) ovl.hidden = true;  // اخفي الأوفرلاي
+
+  curLevel=n; localStorage.setItem('nm_level',curLevel);
+  const L=LEVELS[n-1];
 
   hintLeft=L.limits.hint;
   shuffleLeft=L.limits.shuffle;
@@ -360,6 +372,7 @@ function loadLevel(n, resetScore = false){
   render();
 }
 
+
 /* ===== Start ===== */
 loadLevel(curLevel);
 resizeGrid();
@@ -381,5 +394,6 @@ resizeGrid();
 
 </body>
 </html>
+
 
 
