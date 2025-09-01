@@ -31,21 +31,17 @@ button{border:0;border-radius:12px;padding:8px 10px;font-weight:700;color:#0b0f1
 button.secondary{background:#1a2337;color:#cfe2ff;border:1px solid var(--ring)}
 
 .board{
-  flex:1 1 auto;              /* ترجع تملى المساحة المتاحة */
+  flex:1 1 auto;
   min-height:0;
   display:flex;
-  align-items:flex-start;      /* الجريد يلتصق من أعلى اللوحة */
-  justify-content:center;      /* يتوسّط أفقياً */
-  padding:12px 0 12px;         /* ننزّل الأرقام «سِنة» لتحت */
-  overflow:hidden;             /* يمنع أي نزيف تحت البنر */
+  align-items:flex-start;
+  justify-content:center;
+  padding:12px 0 12px;
+  overflow:hidden;
   background:linear-gradient(180deg,var(--p1),var(--p2));
   border-radius:18px;
   box-shadow:0 22px 60px #000a,inset 0 1px 0 var(--ring);
-  .board{
-  /* ... نفس اللى عندك ... */
-  position: relative;   /* مهم علشان الـ overlay يتمركز فوقها */
-}
-
+  position:relative;           /* ← مهم للـ overlay */
 }
 
 
@@ -165,16 +161,14 @@ aCnt=document.getElementById('acnt'),
 uCnt=document.getElementById('ucnt'),
 foot=document.getElementById('foot');
 
-bestEl.textContent=best;
-  bestEl.textContent=best;
+bestEl.textContent = best;
 
-// overlay element & helper
 const overlayEl = document.getElementById('overlay');
-function showOverlay(msg, ms=1200){
+function showOverlay(msg, ms = 1200){
   if(!overlayEl) return;
   overlayEl.textContent = msg;
   overlayEl.hidden = false;
-  setTimeout(()=> overlayEl.hidden = true, ms);
+  setTimeout(() => overlayEl.hidden = true, ms);
 }
 
 
@@ -304,25 +298,43 @@ function onCell(r,c){
 
 /* ===== Win/Lose ===== */
 function checkWinLose(){
-  const L=LEVELS[curLevel-1];
-  const win=L.targets.every(t=>t.type==='digit'?(digitCount[t.value]||0)>=t.need:donePairs>=t.need);
-  if(win){
-    localStorage.setItem('nm_level',Math.min(LEVELS.length,curLevel+1));
+  const L = LEVELS[curLevel-1];
+
+  const win = L.targets.every(t =>
+    t.type==='digit' ? (digitCount[t.value]||0) >= t.need
+                     : donePairs >= t.need
+  );
+
+  if (win){
+    localStorage.setItem('nm_level', Math.min(LEVELS.length, curLevel+1));
     pulse(`🎉 Level ${curLevel} completed!`);
-    loadLevel(Math.min(LEVELS.length,curLevel+1),false);
+    loadLevel(Math.min(LEVELS.length, curLevel+1), false);
     return;
   }
-  if(moves>=maxMoves){pulse('😵 Out of moves. Restarting level…');loadLevel(curLevel,true);return;}
-  if(!findAnyPair() && hintLeft===0 && shuffleLeft===0 && addLeft===0){
-  showOverlay('GAME OVER', 1200);
-  setTimeout(()=> loadLevel(curLevel, true), 1200);
-  return;
+
+  if (moves >= maxMoves){
+    pulse('😵 Out of moves. Restarting level…');
+    loadLevel(curLevel, true);
+    return;
+  }
+
+  // ← مهم: ما تحكمش بالخسارة قبل أول حركة
+  if (moves === 0) return;
+
+  if (!findAnyPair() && hintLeft===0 && shuffleLeft===0 && addLeft===0){
+    showOverlay('GAME OVER', 1200);
+    setTimeout(() => loadLevel(curLevel, true), 1200);
+    return;
+  }
 }
 
+
 /* ===== Level Loading ===== */
-function loadLevel(n,resetScore=false){
-  curLevel=n;localStorage.setItem('nm_level',curLevel);
-  const L=LEVELS[n-1];
+function loadLevel(n, resetScore = false){
+  if (overlayEl) overlayEl.hidden = true;   // ← إخفاء أي Overlay قديم
+  curLevel = n;
+  localStorage.setItem('nm_level', curLevel);
+  const L = LEVELS[n-1];
 
   hintLeft=L.limits.hint;
   shuffleLeft=L.limits.shuffle;
@@ -369,4 +381,5 @@ resizeGrid();
 
 </body>
 </html>
+
 
