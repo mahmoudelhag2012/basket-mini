@@ -259,7 +259,10 @@ function resizeGrid(){
 
 /* ===== Render ===== */
 function render(){
-  scoreEl.textContent=score;bestEl.textContent=best;movesEl.textContent=moves;lvlEl.textContent=curLevel;
+  scoreEl.textContent=score;
+  bestEl.textContent=best;
+  movesEl.textContent=moves;
+  lvlEl.textContent=curLevel;
 
   hCnt.textContent=hintLeft===Infinity?'∞':hintLeft;
   sCnt.textContent=shuffleLeft===Infinity?'∞':shuffleLeft;
@@ -294,8 +297,15 @@ function render(){
       gridEl.appendChild(d);
     }
   }
-  resizeGrid(); // لازم بعد البناء
+
+  resizeGrid(); 
+
+  // 👇 ده الجديد: بعد أول رسم، نشيل الفلاج
+  if (justLoaded) {
+    justLoaded = false;
+  }
 }
+
 
 /* ===== Interaction ===== */
 function onCell(r,c){
@@ -394,6 +404,7 @@ resizeGrid();
 
 </body>
 </html>
+
 
 
 
