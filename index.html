@@ -41,6 +41,11 @@ button.secondary{background:#1a2337;color:#cfe2ff;border:1px solid var(--ring)}
   background:linear-gradient(180deg,var(--p1),var(--p2));
   border-radius:18px;
   box-shadow:0 22px 60px #000a,inset 0 1px 0 var(--ring);
+  .board{
+  /* ... نفس اللى عندك ... */
+  position: relative;   /* مهم علشان الـ overlay يتمركز فوقها */
+}
+
 }
 
 
@@ -70,6 +75,17 @@ button.secondary{background:#1a2337;color:#cfe2ff;border:1px solid var(--ring)}
 .cell.empty{background:#0d1324;border:1px dashed #2b3756;color:#2b3756}
 .cell.blocker{background:#141c2e;border:1px solid #2b3756;box-shadow:none}
 .cell.num{box-shadow:0 6px 14px #0006}
+  /* Overlay (Game Over / Level Up) */
+.overlay{
+  position:absolute; inset:0;
+  display:flex; align-items:center; justify-content:center;
+  font-weight:900; font-size:42px; letter-spacing:2px;
+  color:#fff; text-shadow:0 6px 22px #000a;
+  background:rgba(0,0,0,.35);
+  border-radius:18px; backdrop-filter:blur(1px);
+  z-index:5;
+}
+
 
 /* Footer/Ad */
 .banner{ margin-top:8px; }
@@ -95,7 +111,10 @@ button.secondary{background:#1a2337;color:#cfe2ff;border:1px solid var(--ring)}
     <button class="secondary" id="undo">Undo (<span id="ucnt"></span>)</button>
   </div>
 
-  <div class="board"><div id="grid" class="grid"></div></div>
+  <div class="board">
+  <div id="grid" class="grid"></div>
+  <div id="overlay" class="overlay" hidden>GAME OVER</div>
+</div>
   <div class="banner">[Ad Placeholder] Banner</div>
   <div class="footer" id="foot">Rule: remove pairs that sum to 10 or are equal — adjacent (8 dirs) or same row/column with only empty cells between.</div>
 </div>
@@ -147,6 +166,17 @@ uCnt=document.getElementById('ucnt'),
 foot=document.getElementById('foot');
 
 bestEl.textContent=best;
+  bestEl.textContent=best;
+
+// overlay element & helper
+const overlayEl = document.getElementById('overlay');
+function showOverlay(msg, ms=1200){
+  if(!overlayEl) return;
+  overlayEl.textContent = msg;
+  overlayEl.hidden = false;
+  setTimeout(()=> overlayEl.hidden = true, ms);
+}
+
 
 /* ===== UI Actions ===== */
 document.getElementById('new').onclick=()=>loadLevel(1,true);
@@ -219,6 +249,7 @@ function resizeGrid(){
   // حجم خلية مريح للمس
   const cell = Math.max(size / 9, 50);
   document.documentElement.style.setProperty('--cellSize', cell + 'px');
+  window.addEventListener('resize', resizeGrid);
 }
 
 /* ===== Render ===== */
@@ -282,7 +313,10 @@ function checkWinLose(){
     return;
   }
   if(moves>=maxMoves){pulse('😵 Out of moves. Restarting level…');loadLevel(curLevel,true);return;}
-  if(!findAnyPair()&&hintLeft===0&&shuffleLeft===0&&addLeft===0){pulse('😵 No valid pairs & no tools. Restarting…');loadLevel(curLevel,true);}
+  if(!findAnyPair() && hintLeft===0 && shuffleLeft===0 && addLeft===0){
+  showOverlay('GAME OVER', 1200);
+  setTimeout(()=> loadLevel(curLevel, true), 1200);
+  return;
 }
 
 /* ===== Level Loading ===== */
@@ -335,5 +369,4 @@ resizeGrid();
 
 </body>
 </html>
-
 
