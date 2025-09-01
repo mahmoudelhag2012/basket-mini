@@ -31,26 +31,30 @@ button{border:0;border-radius:12px;padding:8px 10px;font-weight:700;color:#0b0f1
 button.secondary{background:#1a2337;color:#cfe2ff;border:1px solid var(--ring)}
 
 .board{
-  flex:1 1 auto;            /* خليه زي ما هو */
+  /* خليه ارتفاع تلقائي حوالي الجريد بدل ما يملأ كله */
+  flex:0 0 auto;
+
   display:flex;
-  align-items:flex-start;    /* ← بدل center إلى flex-start علشان الجريد يتركن فوق */
-  justify-content:center;
-  padding:6px 0;            /* مسافة لطيفة من فوق وتحت */
+  align-items:flex-start;     /* يخلي الجريد يتثبت من فوق */
+  justify-content:center;     /* يوسّط أفقياً */
+
+  /* ننزّل الجريد سِنة لتحت */
+  padding:12px 0 8px;
+
   background:linear-gradient(180deg,var(--p1),var(--p2));
   border-radius:18px;
   box-shadow:0 22px 60px #000a,inset 0 1px 0 var(--ring);
 }
 
-
-
-/* ===== Grid ===== */
+/* يضمن التوسيط أفقياً حتى لو الحسابات مختلفة بالبكسل */
 .grid{
   display:grid;
   grid-template-columns:repeat(9,1fr);
   grid-template-rows:repeat(9,1fr);
-  gap:5px;
+  gap:6px;
   width:min(99vmin,100%);
   height:min(99vmin,100%);
+  margin:0 auto;             /* ← مهم للتوسيط */
 }
 
 /* الخلية وحجم الرقم */
@@ -201,30 +205,32 @@ function pulse(msg){if(!foot)return;foot.textContent=msg;foot.style.color='#ffd4
 
 /* ===== Sizing ===== */
 function resizeGrid(){
-  const wrap  = document.querySelector('.wrap');
-  const board = document.querySelector('.board');
-  const grid  = document.getElementById('grid');
+  const board  = document.querySelector('.board');
+  const grid   = document.getElementById('grid');
   const banner = document.querySelector('.banner');
-  if(!wrap || !board || !grid) return;
+  if(!board || !grid) return;
 
+  // مساحة طولاً: من أعلى اللوحة لحد قبل البنر بهامش بسيط
   const bannerH = banner ? banner.getBoundingClientRect().height : 0;
+  const topY    = board.getBoundingClientRect().top;
+  const availH  = Math.max(0, window.innerHeight - topY - bannerH - 16);
 
-  // المساحة المتاحة من أعلى اللوحة لحد قبل البنر
-  const topY   = board.getBoundingClientRect().top;
-  const availH = Math.max(0, window.innerHeight - topY - bannerH - 16);
-  const availW = wrap.clientWidth - 12;
+  // مساحة عرضاً: عرض اللوحة الفعلي (الأدق من wrap)
+  const availW  = board.clientWidth - 12;
 
+  // المربع الأقصى الممكن
   const size = Math.floor(Math.min(availW, availH));
+
   grid.style.width  = size + 'px';
   grid.style.height = size + 'px';
 
-  const cell = Math.max(size / 9, 50);   // حد أدنى للمسة مريحة
+  // خلية كبيرة ومريحة للمس
+  const cell = Math.max(size / 9, 50);
   document.documentElement.style.setProperty('--cellSize', cell + 'px');
 
-  // خلّي ارتفاع اللوحة مطابق للجريد تقريبًا
+  // ارتفاع اللوحة يلف حوالين الجريد (مع padding بسيط)
   board.style.height = (size + 12) + 'px';
 }
-
 
 /* ===== Render ===== */
 function render(){
@@ -331,16 +337,3 @@ resizeGrid();
 </script>
 </body>
 </html>
-
-
-
-
-
-
-
-
-
-
-
-
-
