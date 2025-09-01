@@ -8,6 +8,8 @@
 :root{--bg:#0b0f18;--p1:#11182a;--p2:#0e1423;--ring:#ffffff24;--txt:#ecf1ff;--mut:#9db0d1;--gold1:#ffd46a;--gold2:#ffb724;--green:#34d399}
 *{box-sizing:border-box}
 html,body{margin:0;height:100%;background:radial-gradient(1200px 620px at 50% -10%,#1b2540 0,#0b0f18 60%);color:var(--txt);font-family:system-ui,Segoe UI,Arial;overflow:hidden}
+/* ضمان إخفاء أي عنصر عليه hidden */
+[hidden]{display:none !important}
 
 /* ===== Layout ===== */
 .wrap{
@@ -15,7 +17,7 @@ html,body{margin:0;height:100%;background:radial-gradient(1200px 620px at 50% -1
   display:flex;
   flex-direction:column;
   padding:12px;
-  padding-top: calc(54px + env(safe-area-inset-top));  /* كان 22px */
+  padding-top: calc(54px + env(safe-area-inset-top));
   max-width:780px;margin:0 auto;
 }
 .hud{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-bottom:8px}
@@ -41,11 +43,10 @@ button.secondary{background:#1a2337;color:#cfe2ff;border:1px solid var(--ring)}
   background:linear-gradient(180deg,var(--p1),var(--p2));
   border-radius:18px;
   box-shadow:0 22px 60px #000a,inset 0 1px 0 var(--ring);
-  position:relative;           /* ← مهم للـ overlay */
+  position:relative;
 }
 
-
-/* يضمن التوسيط أفقياً حتى لو الحسابات مختلفة بالبكسل */
+/* Grid */
 .grid{
   display:grid;
   grid-template-columns:repeat(9,1fr);
@@ -53,10 +54,10 @@ button.secondary{background:#1a2337;color:#cfe2ff;border:1px solid var(--ring)}
   gap:6px;
   width:min(99vmin,100%);
   height:min(99vmin,100%);
-  margin:0 auto;             /* ← مهم للتوسيط */
+  margin:0 auto;
 }
 
-/* الخلية وحجم الرقم */
+/* Cell */
 :root{ --cellSize:64px; }
 .cell{
   width:100%;
@@ -71,7 +72,8 @@ button.secondary{background:#1a2337;color:#cfe2ff;border:1px solid var(--ring)}
 .cell.empty{background:#0d1324;border:1px dashed #2b3756;color:#2b3756}
 .cell.blocker{background:#141c2e;border:1px solid #2b3756;box-shadow:none}
 .cell.num{box-shadow:0 6px 14px #0006}
-  /* Overlay (Game Over / Level Up) */
+
+/* Overlay (Game Over / Level Up) */
 .overlay{
   position:absolute; inset:0;
   display:flex; align-items:center; justify-content:center;
@@ -81,7 +83,6 @@ button.secondary{background:#1a2337;color:#cfe2ff;border:1px solid var(--ring)}
   border-radius:18px; backdrop-filter:blur(1px);
   z-index:5;
 }
-
 
 /* Footer/Ad */
 .banner{ margin-top:8px; }
@@ -108,9 +109,11 @@ button.secondary{background:#1a2337;color:#cfe2ff;border:1px solid var(--ring)}
   </div>
 
   <div class="board">
-  <div id="grid" class="grid"></div>
-  <div id="overlay" class="overlay" hidden>GAME OVER</div>
-</div>
+    <div id="grid" class="grid"></div>
+    <!-- هنستخدم Overlay واحد فقط -->
+    <div id="overlay" class="overlay" hidden></div>
+  </div>
+
   <div class="banner">[Ad Placeholder] Banner</div>
   <div class="footer" id="foot">Rule: remove pairs that sum to 10 or are equal — adjacent (8 dirs) or same row/column with only empty cells between.</div>
 </div>
@@ -147,41 +150,23 @@ let grid=[],score=0,best=Number(localStorage.getItem('nm_best')||0),moves=0;
 let sel=null,history=[],donePairs=0,digitCount={};
 let hintLeft,shuffleLeft,addLeft,undoLeft;
 let maxMoves=Infinity,wrapAllowed=true,blockerRate=0;
-let justLoaded = false; // يمنع الحكم بالخسارة أول ما الليفل يفتح
+let justLoaded=false; // يمنع الحكم بالخسارة أول ما الليفل يفتح
 
 /* ===== Elements ===== */
 const gridEl=document.getElementById('grid'),
-scoreEl=document.getElementById('score'),
-bestEl=document.getElementById('best'),
-movesEl=document.getElementById('moves'),
-lvlEl=document.getElementById('lvl'),
-tgEl=document.getElementById('targets'),
-hCnt=document.getElementById('hcnt'),
-sCnt=document.getElementById('scnt'),
-aCnt=document.getElementById('acnt'),
-uCnt=document.getElementById('ucnt'),
-foot=document.getElementById('foot');
+      scoreEl=document.getElementById('score'),
+      bestEl=document.getElementById('best'),
+      movesEl=document.getElementById('moves'),
+      lvlEl=document.getElementById('lvl'),
+      tgEl=document.getElementById('targets'),
+      hCnt=document.getElementById('hcnt'),
+      sCnt=document.getElementById('scnt'),
+      aCnt=document.getElementById('acnt'),
+      uCnt=document.getElementById('ucnt'),
+      foot=document.getElementById('foot'),
+      ovl = document.getElementById('overlay');
 
 bestEl.textContent = best;
-
-let ovl;
-window.addEventListener('DOMContentLoaded', ()=>{
-  const board = document.querySelector('.board');
-  ovl = document.createElement('div');
-  ovl.style.cssText = 'position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-size:44px;font-weight:900;letter-spacing:2px;background:#0009;color:#fff;backdrop-filter:blur(2px)';
-  ovl.hidden = true;
-  board.style.position = 'relative';
-  board.appendChild(ovl);
-});
-
-function showOverlay(txt, ms=1200){
-  if(!ovl) return;
-  ovl.textContent = txt;
-  ovl.hidden = false;
-  if(ms) setTimeout(()=> ovl.hidden = true, ms);
-}
-
-
 
 /* ===== UI Actions ===== */
 document.getElementById('new').onclick=()=>loadLevel(1,true);
@@ -241,28 +226,17 @@ function resizeGrid(){
   const board = document.querySelector('.board');
   const grid  = document.getElementById('grid');
   if(!board || !grid) return;
-
-  // طرح padding الرأسي للّوحة (12 + 12)
   const padV = 24;
-  const size = Math.floor(
-    Math.min(board.clientWidth, board.clientHeight - padV)
-  );
-
+  const size = Math.floor(Math.min(board.clientWidth, board.clientHeight - padV));
   grid.style.width  = size + 'px';
   grid.style.height = size + 'px';
-
-  // حجم خلية مريح للمس
   const cell = Math.max(size / 9, 50);
   document.documentElement.style.setProperty('--cellSize', cell + 'px');
-  window.addEventListener('resize', resizeGrid);
 }
 
 /* ===== Render ===== */
 function render(){
-  scoreEl.textContent=score;
-  bestEl.textContent=best;
-  movesEl.textContent=moves;
-  lvlEl.textContent=curLevel;
+  scoreEl.textContent=score; bestEl.textContent=best; movesEl.textContent=moves; lvlEl.textContent=curLevel;
 
   hCnt.textContent=hintLeft===Infinity?'∞':hintLeft;
   sCnt.textContent=shuffleLeft===Infinity?'∞':shuffleLeft;
@@ -298,14 +272,11 @@ function render(){
     }
   }
 
-  resizeGrid(); 
+  resizeGrid();
 
-  // 👇 ده الجديد: بعد أول رسم، نشيل الفلاج
-  if (justLoaded) {
-    justLoaded = false;
-  }
+  // بعد أول رسم، شيل الفلاج عشان checkWinLose يشتغل بعد أي تفاعل
+  if (justLoaded) justLoaded = false;
 }
-
 
 /* ===== Interaction ===== */
 function onCell(r,c){
@@ -318,6 +289,13 @@ function onCell(r,c){
 }
 
 /* ===== Win/Lose ===== */
+function showOverlay(txt, ms=1200){
+  if(!ovl) return;
+  ovl.textContent = txt;
+  ovl.hidden = false;
+  if(ms) setTimeout(()=> ovl.hidden = true, ms);
+}
+
 function checkWinLose(){
   const L=LEVELS[curLevel-1];
 
@@ -348,12 +326,10 @@ function checkWinLose(){
   }
 }
 
-
-
 /* ===== Level Loading ===== */
 function loadLevel(n, resetScore=false){
-  justLoaded = true;                    // ← الليفل لسه محمّل
-  if (typeof ovl !== 'undefined' && ovl) ovl.hidden = true;  // اخفي الأوفرلاي
+  justLoaded = true;                // الليفل لسه محمّل
+  if (ovl){ ovl.hidden = true; ovl.textContent=''; } // اخفي أي Overlay
 
   curLevel=n; localStorage.setItem('nm_level',curLevel);
   const L=LEVELS[n-1];
@@ -382,10 +358,10 @@ function loadLevel(n, resetScore=false){
   render();
 }
 
-
 /* ===== Start ===== */
 loadLevel(curLevel);
 resizeGrid();
+window.addEventListener('resize', resizeGrid);
 </script>
 
 <!-- Telegram WebApp (اختياري) -->
@@ -401,10 +377,5 @@ resizeGrid();
     setTimeout(() => tg.expand(), 1000);
   });
 </script>
-
 </body>
 </html>
-
-
-
-
