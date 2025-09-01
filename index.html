@@ -4,89 +4,45 @@
 <meta charset="utf-8"/>
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover"/>
 <title>Number Match — Levels</title>
+
+<!-- AdsGram SDK -->
+<script src="https://sad.adsgram.ai/js/sad.min.js"></script>
+
 <style>
 :root{--bg:#0b0f18;--p1:#11182a;--p2:#0e1423;--ring:#ffffff24;--txt:#ecf1ff;--mut:#9db0d1;--gold1:#ffd46a;--gold2:#ffb724;--green:#34d399}
 *{box-sizing:border-box}
 html,body{margin:0;height:100%;background:radial-gradient(1200px 620px at 50% -10%,#1b2540 0,#0b0f18 60%);color:var(--txt);font-family:system-ui,Segoe UI,Arial;overflow:hidden}
-/* ضمان إخفاء أي عنصر عليه hidden */
 [hidden]{display:none !important}
 
 /* ===== Layout ===== */
-.wrap{
-  height:100%;
-  display:flex;
-  flex-direction:column;
-  padding:12px;
-  padding-top: calc(54px + env(safe-area-inset-top));
-  max-width:780px;margin:0 auto;
-}
+.wrap{height:100%;display:flex;flex-direction:column;padding:12px;padding-top:calc(54px + env(safe-area-inset-top));max-width:780px;margin:0 auto}
 .hud{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-bottom:8px}
 .badge{background:linear-gradient(180deg,var(--p1),var(--p2));border-radius:16px;padding:8px 10px;text-align:center;box-shadow:0 12px 26px #000a,inset 0 1px 0 var(--ring)}
 .k{font-size:12px;color:var(--mut)} .v{font-weight:800;font-size:20px}
-
 .targets{margin:6px 0;display:flex;gap:6px;flex-wrap:wrap}
 .tg{background:#101828;border:1px solid var(--ring);border-radius:12px;padding:6px 10px;color:#cfe2ff;font-weight:700}
 .ok{color:var(--green)}
-
 .bar{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:8px}
 button{border:0;border-radius:12px;padding:8px 10px;font-weight:700;color:#0b0f18;background:linear-gradient(180deg,var(--gold1),var(--gold2));box-shadow:0 10px 22px #0007,inset 0 1px 0 #fff7;cursor:pointer}
 button.secondary{background:#1a2337;color:#cfe2ff;border:1px solid var(--ring)}
-
-.board{
-  flex:1 1 auto;
-  min-height:0;
-  display:flex;
-  align-items:flex-start;
-  justify-content:center;
-  padding:12px 0 12px;
-  overflow:hidden;
-  background:linear-gradient(180deg,var(--p1),var(--p2));
-  border-radius:18px;
-  box-shadow:0 22px 60px #000a,inset 0 1px 0 var(--ring);
-  position:relative;
-}
+.board{flex:1 1 auto;min-height:0;display:flex;align-items:flex-start;justify-content:center;padding:12px 0 12px;overflow:hidden;background:linear-gradient(180deg,var(--p1),var(--p2));border-radius:18px;box-shadow:0 22px 60px #000a,inset 0 1px 0 var(--ring);position:relative}
 
 /* Grid */
-.grid{
-  display:grid;
-  grid-template-columns:repeat(9,1fr);
-  grid-template-rows:repeat(9,1fr);
-  gap:6px;
-  width:min(99vmin,100%);
-  height:min(99vmin,100%);
-  margin:0 auto;
-}
+.grid{display:grid;grid-template-columns:repeat(9,1fr);grid-template-rows:repeat(9,1fr);gap:6px;width:min(99vmin,100%);height:min(99vmin,100%);margin:0 auto}
 
 /* Cell */
 :root{ --cellSize:64px; }
-.cell{
-  width:100%;
-  aspect-ratio:1/1;
-  border-radius:22%;
-  display:flex;align-items:center;justify-content:center;
-  font-weight:900;
-  font-size:calc(var(--cellSize)*0.62);
-  user-select:none;
-  transition:.12s transform,.12s box-shadow,.2s background;
-}
+.cell{width:100%;aspect-ratio:1/1;border-radius:22%;display:flex;align-items:center;justify-content:center;font-weight:900;font-size:calc(var(--cellSize)*0.62);user-select:none;transition:.12s transform,.12s box-shadow,.2s background}
 .cell.empty{background:#0d1324;border:1px dashed #2b3756;color:#2b3756}
 .cell.blocker{background:#141c2e;border:1px solid #2b3756;box-shadow:none}
 .cell.num{box-shadow:0 6px 14px #0006}
 
-/* Overlay (Game Over / Level Up) */
-.overlay{
-  position:absolute; inset:0;
-  display:flex; align-items:center; justify-content:center;
-  font-weight:900; font-size:42px; letter-spacing:2px;
-  color:#fff; text-shadow:0 6px 22px #000a;
-  background:rgba(0,0,0,.35);
-  border-radius:18px; backdrop-filter:blur(1px);
-  z-index:5;
-}
+/* Overlay */
+.overlay{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-weight:900;font-size:42px;letter-spacing:2px;color:#fff;text-shadow:0 6px 22px #000a;background:rgba(0,0,0,.35);border-radius:18px;backdrop-filter:blur(1px);z-index:5}
 
 /* Footer/Ad */
-.banner{ margin-top:8px; }
-.footer{ font-size:12px;color:#9db0d1;text-align:center;margin-top:6px; }
+.banner{margin-top:8px}
+.footer{font-size:12px;color:#9db0d1;text-align:center;margin-top:6px}
 </style>
 </head>
 <body>
@@ -110,7 +66,6 @@ button.secondary{background:#1a2337;color:#cfe2ff;border:1px solid var(--ring)}
 
   <div class="board">
     <div id="grid" class="grid"></div>
-    <!-- هنستخدم Overlay واحد فقط -->
     <div id="overlay" class="overlay" hidden></div>
   </div>
 
@@ -119,6 +74,37 @@ button.secondary{background:#1a2337;color:#cfe2ff;border:1px solid var(--ring)}
 </div>
 
 <script>
+/* ===== AdsGram glue (لا يمس منطق اللعب) ===== */
+const REWARD_BLOCK_ID = "14421";
+const INTER_BLOCK_ID  = "int-14422";
+
+// تهيئة الكنترولرز (لو الـ SDK مش موجود نكمل من غير كراش)
+const RewardController = window.Adsgram?.init?.({ blockId: REWARD_BLOCK_ID });
+const InterController  = window.Adsgram?.init?.({ blockId: INTER_BLOCK_ID });
+
+function showRewardAd(){
+  return new Promise((resolve, reject)=>{
+    if(!RewardController || !RewardController.show){ return reject(new Error("Ads SDK not ready")); }
+    RewardController.show()
+      .then(res => {
+        // في الـ Reward لازم يكون res.done=true علشان ندي المكافأة
+        if(res && res.done) resolve(true);
+        else reject(res||new Error("not done"));
+      })
+      .catch(err => reject(err));
+  });
+}
+
+function showInterAd(){
+  return new Promise((resolve)=>{
+    if(!InterController || !InterController.show){ return resolve(); }
+    // في الـ Interstitial نكمّل عند الإغلاق أو أي نتيجة
+    InterController.show()
+      .then(()=>resolve())
+      .catch(()=>resolve());
+  });
+}
+
 /* ===== Config & Levels ===== */
 const COLS=9, START_ROWS=9;
 const COLORS={1:'#67e8f9',2:'#60a5fa',3:'#a78bfa',4:'#34d399',5:'#fbbf24',6:'#fb7185',7:'#f472b6',8:'#22d3ee',9:'#c084fc'};
@@ -132,12 +118,7 @@ const LEVELS = Array.from({length:40}, (_, i) => {
       {type:'digit',value:1+((i*2)%9),need:6+Math.floor(i/6)},
       {type:'pairs',need:12+Math.floor(i/4)}
     ],
-    limits:{
-      hint:n<=10?3:(n<=25?2:1),
-      shuffle:n<=12?2:1,
-      add:n<=8?2:1,
-      undo:2
-    },
+    limits:{ hint:n<=10?3:(n<=25?2:1), shuffle:n<=12?2:1, add:n<=8?2:1, undo:2 },
     maxMoves:Math.max(28,48-Math.floor(i*0.6)),
     wrapRule:n>=13,
     blockerRate:Math.min(0.08,0.01*Math.floor(i/5))
@@ -150,7 +131,7 @@ let grid=[],score=0,best=Number(localStorage.getItem('nm_best')||0),moves=0;
 let sel=null,history=[],donePairs=0,digitCount={};
 let hintLeft,shuffleLeft,addLeft,undoLeft;
 let maxMoves=Infinity,wrapAllowed=true,blockerRate=0;
-let justLoaded=false; // يمنع الحكم بالخسارة أول ما الليفل يفتح
+let justLoaded=false;
 
 /* ===== Elements ===== */
 const gridEl=document.getElementById('grid'),
@@ -168,12 +149,38 @@ const gridEl=document.getElementById('grid'),
 
 bestEl.textContent = best;
 
-/* ===== UI Actions ===== */
+/* ===== UI Actions (نربطها بالـ Reward) ===== */
 document.getElementById('new').onclick=()=>loadLevel(1,true);
-document.getElementById('hint').onclick=hint;
-document.getElementById('shuffle').onclick=shuffleBoard;
-document.getElementById('add').onclick=addRow;
-document.getElementById('undo').onclick=undo;
+
+// الغلاف: تشغيل الإعلان ثم تنفيذ الفعل. لو الرصيد صفر نزود +1 مرة واحدة
+async function useRewardedAction(counterName, actionFn, label){
+  const ok = true; // مفيش popup مزعج – كله بإعلان
+  if(!ok) return;
+
+  try{
+    await showRewardAd();
+  }catch(e){
+    pulse('Ad was skipped or failed');
+    return;
+  }
+
+  let left = (counterName==='hint'? hintLeft :
+              counterName==='shuffle'? shuffleLeft :
+              counterName==='add'? addLeft : undoLeft);
+
+  if(left===0){
+    if(counterName==='hint') hintLeft=1;
+    else if(counterName==='shuffle') shuffleLeft=1;
+    else if(counterName==='add') addLeft=1;
+    else if(counterName==='undo') undoLeft=1;
+  }
+  actionFn(); // الدوال نفسها هي اللي بتنقص العدّاد
+}
+
+document.getElementById('hint').onclick    = ()=>useRewardedAction('hint',   hint,         'Hint');
+document.getElementById('shuffle').onclick = ()=>useRewardedAction('shuffle',shuffleBoard,'Shuffle');
+document.getElementById('add').onclick     = ()=>useRewardedAction('add',    addRow,       'Add Row');
+document.getElementById('undo').onclick    = ()=>useRewardedAction('undo',   undo,         'Undo');
 
 /* ===== Helpers ===== */
 const rand1to9=()=>1+Math.floor(Math.random()*9);
@@ -243,7 +250,6 @@ function render(){
   aCnt.textContent=addLeft===Infinity?'∞':addLeft;
   uCnt.textContent=undoLeft===Infinity?'∞':undoLeft;
 
-  // Targets UI
   const L=LEVELS[curLevel-1];
   tgEl.innerHTML='';
   L.targets.forEach(t=>{
@@ -257,7 +263,6 @@ function render(){
     tgEl.appendChild(d);
   });
 
-  // Build grid
   gridEl.innerHTML='';
   for(let r=0;r<grid.length;r++){
     for(let c=0;c<COLS;c++){
@@ -273,8 +278,6 @@ function render(){
   }
 
   resizeGrid();
-
-  // بعد أول رسم، شيل الفلاج عشان checkWinLose يشتغل بعد أي تفاعل
   if (justLoaded) justLoaded = false;
 }
 
@@ -296,10 +299,8 @@ function showOverlay(txt, ms=1200){
   if(ms) setTimeout(()=> ovl.hidden = true, ms);
 }
 
-function checkWinLose(){
+async function checkWinLose(){
   const L=LEVELS[curLevel-1];
-
-  // امنع الحكم بالخسارة أول ما اللعبة تفتح
   if (justLoaded) return;
 
   const win = L.targets.every(t => t.type==='digit'
@@ -310,26 +311,31 @@ function checkWinLose(){
   if (win){
     localStorage.setItem('nm_level', Math.min(LEVELS.length, curLevel+1));
     pulse(`🎉 Level ${curLevel} completed!`);
+    await showInterAd(); // إعلان بيني بين الليفلات
     loadLevel(Math.min(LEVELS.length, curLevel+1), false);
     return;
   }
 
   if (moves >= maxMoves){
     pulse('😵 Out of moves. Restarting level…');
+    await showInterAd(); // إعلان بيني قبل إعادة الليفل
     loadLevel(curLevel, true);
     return;
   }
 
   if (!findAnyPair() && hintLeft===0 && shuffleLeft===0 && addLeft===0){
     showOverlay('GAME OVER', 1200);
-    setTimeout(()=> loadLevel(curLevel, true), 1200);
+    setTimeout(async () => {
+      await showInterAd();         // إعلان بيني عند الجيم أوفر
+      loadLevel(curLevel, true);
+    }, 1200);
   }
 }
 
 /* ===== Level Loading ===== */
 function loadLevel(n, resetScore=false){
-  justLoaded = true;                // الليفل لسه محمّل
-  if (ovl){ ovl.hidden = true; ovl.textContent=''; } // اخفي أي Overlay
+  justLoaded = true;
+  if (ovl){ ovl.hidden = true; ovl.textContent=''; }
 
   curLevel=n; localStorage.setItem('nm_level',curLevel);
   const L=LEVELS[n-1];
