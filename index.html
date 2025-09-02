@@ -3,19 +3,19 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Pizza Factory — 2D Tycoon (Mini App)</title>
+  <title>Pizza Factory — Isometric + Conveyor + Levels</title>
   <script src="https://telegram.org/js/telegram-web-app.js"></script>
   <style>
-    :root{ --bg:#eef3fa; --card:#fff; --ink:#0f172a; --muted:#667085; --accent:#22c55e; --accent2:#3b82f6; --danger:#ef4444; --shadow:0 10px 24px rgba(0,0,0,.08); }
+    :root{ --bg:#eaf2ff; --card:#fff; --ink:#0f172a; --muted:#6b7280; --accent:#22c55e; --accent2:#3b82f6; --danger:#ef4444; --shadow:0 10px 28px rgba(0,0,0,.08); }
     *{box-sizing:border-box}
     html,body{height:100%}
-    body{margin:0; font-family:system-ui,-apple-system,Segoe UI,Roboto,"Cairo",sans-serif; background:radial-gradient(1100px 520px at 50% -10%, #ffffff, var(--bg)); color:var(--ink); -webkit-tap-highlight-color:transparent; display:flex; justify-content:center}
-    .app{width:min(1020px,100%); padding:12px}
+    body{margin:0; font-family:system-ui,-apple-system,Segoe UI,Roboto,"Cairo",sans-serif; background:radial-gradient(1000px 540px at 50% -10%, #ffffff, var(--bg)); color:var(--ink); display:flex; justify-content:center}
+    .app{width:min(1040px,100%); padding:12px}
     .frame{background:var(--card); border-radius:24px; box-shadow:var(--shadow); overflow:hidden; border:1px solid #e8eef5}
     .top{display:flex; justify-content:space-between; align-items:center; gap:10px; padding:10px 14px; background:linear-gradient(90deg,var(--accent),var(--accent2)); color:#fff}
     .stats{display:flex; gap:10px; flex-wrap:wrap}
-    .pill{display:inline-flex; align-items:center; gap:8px; padding:8px 12px; border-radius:999px; background:rgba(255,255,255,.16)}
-    .grid{display:grid; grid-template-columns:1.15fr .85fr; gap:10px; padding:10px}
+    .pill{display:inline-flex; align-items:center; gap:8px; padding:8px 12px; border-radius:999px; background:rgba(255,255,255,.16); font-weight:700}
+    .grid{display:grid; grid-template-columns:1.2fr .8fr; gap:10px; padding:10px}
     .panel{background:#f8fafc; border:1px solid #eef2f7; border-radius:18px; padding:10px}
     canvas{width:100%; aspect-ratio:16/9; background:linear-gradient(#f5fbff,#fff)}
     .row{display:flex; align-items:center; justify-content:space-between; gap:8px; padding:8px 0}
@@ -23,7 +23,12 @@
     .btn:active{transform:translateY(1px)}
     .meter{height:10px; border-radius:999px; background:#eef2f7; overflow:hidden}
     .meter>span{display:block; height:100%; background:linear-gradient(90deg,var(--accent),var(--accent2))}
-    .note{color:var(--muted)}
+    .toolbar{display:flex; gap:8px; flex-wrap:wrap; padding:8px}
+    .iconbtn{display:inline-flex; align-items:center; gap:8px; padding:8px 10px; background:#fff; border:1px solid #e5e7eb; border-radius:12px; box-shadow:var(--shadow); font-weight:700}
+    .hud{display:flex; justify-content:space-between; align-items:center; color:var(--muted); padding:6px 10px}
+    .overlay{position:fixed; inset:0; background:rgba(15,23,42,.66); display:none; place-items:center; z-index:50}
+    .card{background:#fff; border-radius:18px; padding:16px; width:min(520px,90%); box-shadow:var(--shadow); text-align:center}
+    .card h2{margin:8px 0}
     @media (max-width:780px){ .grid{grid-template-columns:1fr} }
   </style>
 </head>
@@ -31,225 +36,264 @@
   <div class="app">
     <div class="frame">
       <div class="top">
-        <b>Pizza Factory — شاشة واحدة مع عُمّال ومشتريين 👥🍕</b>
+        <b>Pizza Factory — إيزومتريك + سيور + مراحل</b>
         <div class="stats">
           <div class="pill">💰 <b id="cash">0</b></div>
-          <div class="pill">⚙️ سعة العامل <b id="cap">3</b></div>
-          <div class="pill">🏃‍♂️ سرعة <b id="spd">1</b></div>
-          <div class="pill">🔥 كومبو <b id="combo">x1.0</b></div>
+          <div class="pill">⭐ المستوى <b id="level">1</b></div>
+          <div class="pill">🎯 الهدف <b id="goal">0</b></div>
+          <div class="pill">⏳ الوقت <b id="time">00:00</b></div>
         </div>
       </div>
 
       <div class="grid">
         <div class="panel">
-          <h3>المصنع المصغّر (فرن واحد + مخزن بيتزا + كاونتر تقديم + طابور زبائن)</h3>
-          <canvas id="cv" width="1000" height="562"></canvas>
-          <div class="note" style="padding-top:6px">العامل يتحرك تلقائيًا: من الفرن → يلتقط حتى سعة الحمل → يسلّم على الكاونتر → يخدم أوتوماتيك الزبون الأول.</div>
+          <h3>الملعب (إيزومتريك بسيط + Conveyor متحرك + Sprites)</h3>
+          <canvas id="cv"></canvas>
+          <div class="toolbar">
+            <button class="iconbtn" id="btnTut">📘 شرح سريع</button>
+            <button class="iconbtn" id="btnMute">🔊 صوت</button>
+            <button class="iconbtn" id="btnRestart">🔁 إعادة</button>
+          </div>
         </div>
         <div class="panel">
-          <h3>ترقيات (تأثير فوري على اللعب)</h3>
+          <h3>ترقيات (تؤثر على الجرافيك والحركة فورًا)</h3>
           <div class="row"><div>⏱️ سرعة الفرن</div><div><div class="meter" style="width:160px"><span id="ovenBar" style="width:20%"></span></div> <button class="btn" id="upOven">+ (120💰)</button></div></div>
           <div class="row"><div>🏃‍♂️ سرعة العامل</div><div><div class="meter" style="width:160px"><span id="speedBar" style="width:20%"></span></div> <button class="btn" id="upSpeed">+ (100💰)</button></div></div>
           <div class="row"><div>🧺 سعة الحمل</div><div><div class="meter" style="width:160px"><span id="capBar" style="width:20%"></span></div> <button class="btn" id="upCap">+ (150💰)</button></div></div>
           <div class="row"><div>📣 تسويق (يزود الزبائن)</div><div><div class="meter" style="width:160px"><span id="mkBar" style="width:0%"></span></div> <button class="btn" id="upMk">+ (130💰)</button></div></div>
           <div class="row"><div>حفظ</div><div><button class="btn" id="save">حفظ</button> <button class="btn" id="reset">بداية جديدة</button></div></div>
-          <div class="note">فقاعات فوق الزبون تبين الطلب (🍕 × العدد) وشريط الصبر. الدفع يزيد مع الكومبو.</div>
         </div>
+      </div>
+
+      <div class="hud">
+        <div>🚚 السير ينقل العجين — العامل يحمل من المخزن ويسلّم على الكاونتر</div>
+        <div>🎵 أصوات خفيفة عند الإنتاج والتسليم</div>
       </div>
     </div>
   </div>
 
+  <div class="overlay" id="overlay">
+    <div class="card">
+      <h2 id="ovTitle">شرح سريع</h2>
+      <p id="ovBody">اضغط على الزبون لبدء الطلب. السيور تنقل العجين → الفرن ينتج → العامل يحمل ويسلّم. حقّق الهدف قبل نهاية الوقت!</p>
+      <button class="btn" id="ovBtn">حسناً</button>
+    </div>
+  </div>
+
 <script>
+// Telegram
 const tg = window.Telegram?.WebApp; if(tg){ try{ tg.ready(); tg.expand(); }catch(e){} }
-const cv = document.getElementById('cv'); const ctx = cv.getContext('2d'); const W=cv.width, H=cv.height;
 
-// ====== STATE ======
-const S = JSON.parse(localStorage.getItem('pizza_factory_2d')||'null') || {
-  cash: 200,
-  ovenLvl: 2,       // سرعة انتاج الفرن
-  workerSpeed: 1,   // 1..10
-  carryCap: 3,      // 1..10
-  marketing: 0,     // 0..10
-  combo: 1,
-  dayRev: 0
-};
-
-const $=id=>document.getElementById(id);
-function renderUI(){
-  $('cash').textContent = S.cash.toFixed(0);
-  $('cap').textContent = S.carryCap; $('spd').textContent=S.workerSpeed; $('combo').textContent='x'+S.combo.toFixed(1);
-  $('ovenBar').style.width = (S.ovenLvl*10)+'%';
-  $('speedBar').style.width = (S.workerSpeed*10)+'%';
-  $('capBar').style.width = (S.carryCap*10)+'%';
-  $('mkBar').style.width = (S.marketing*10)+'%';
+// Canvas + HiDPI scaling
+const cv = document.getElementById('cv');
+const ctx = cv.getContext('2d');
+function scaleCanvas(){
+  const dpr = Math.max(1, window.devicePixelRatio || 1);
+  const rect = cv.getBoundingClientRect();
+  const cssW = Math.max(640, Math.floor(rect.width || 960));
+  const cssH = Math.max(360, Math.floor(rect.height || 540));
+  cv.width  = Math.floor(cssW * dpr);
+  cv.height = Math.floor(cssH * dpr);
+  ctx.setTransform(dpr,0,0,dpr,0,0);
 }
-function save(){ localStorage.setItem('pizza_factory_2d', JSON.stringify(S)); }
-function reset(){ localStorage.removeItem('pizza_factory_2d'); location.reload(); }
+new ResizeObserver(scaleCanvas).observe(cv);
+scaleCanvas();
+const W = () => (cv.getBoundingClientRect().width  || 960);
+const H = () => (cv.getBoundingClientRect().height || 540);
 
-// ====== WORLD POSITIONS (شبه إيزومتريك مبسّط) ======
-const POS = {
-  oven:{x:W*0.22, y:H-220},
-  stack:{x:W*0.36, y:H-170},
-  counter:{x:W*0.70, y:H-180},
-  queueStart:{x:W*0.78, y:H-100}
+// Helpers
+function shadow(f){ ctx.save(); ctx.shadowColor='rgba(0,0,0,.18)'; ctx.shadowBlur=12; ctx.shadowOffsetY=6; f(); ctx.restore(); }
+function grad(x0,y0,x1,y1,c0,c1){ const g=ctx.createLinearGradient(x0,y0,x1,y1); g.addColorStop(0,c0); g.addColorStop(1,c1); return g; }
+
+// Simple Sprites (SVG -> Bitmap) + fallback
+const SPRITES = {
+  worker:`<svg xmlns='http://www.w3.org/2000/svg' width='64' height='64' viewBox='0 0 64 64'>
+    <defs><linearGradient id='b' x1='0' x2='1'><stop offset='0' stop-color='#60a5fa'/><stop offset='1' stop-color='#2563eb'/></linearGradient></defs>
+    <circle cx='32' cy='22' r='12' fill='#f97316'/>
+    <rect x='18' y='28' width='28' height='24' rx='6' fill='url(#b)'/>
+    <rect x='16' y='16' width='18' height='6' rx='3' fill='#1d4ed8'/><rect x='34' y='18' width='10' height='4' fill='#1d4ed8'/>
+  </svg>`,
+  customer:`<svg xmlns='http://www.w3.org/2000/svg' width='56' height='56' viewBox='0 0 56 56'>
+    <circle cx='28' cy='18' r='10' fill='#94a3b8'/><rect x='16' y='24' width='24' height='20' rx='6' fill='#1f2937'/>
+  </svg>`,
+  oven:`<svg xmlns='http://www.w3.org/2000/svg' width='96' height='64' viewBox='0 0 96 64'>
+    <defs><linearGradient id='o' x1='0' x2='1'><stop offset='0' stop-color='#60a5fa'/><stop offset='1' stop-color='#2563eb'/></linearGradient></defs>
+    <rect x='2' y='8' width='92' height='48' rx='10' fill='url(#o)'/><rect x='12' y='22' width='72' height='20' rx='6' fill='#1d4ed8'/>
+  </svg>`,
+  pizza:`<svg xmlns='http://www.w3.org/2000/svg' width='40' height='40' viewBox='0 0 40 40'>
+    <ellipse cx='20' cy='24' rx='16' ry='6' fill='#f59e0b' stroke='#b45309' stroke-width='2'/><text x='12' y='28' font-size='16'>🍕</text>
+  </svg>`
 };
+let spritesReady=false; const GFX={};
+async function svgToBitmap(svg){ try{ const blob=new Blob([svg],{type:'image/svg+xml'}); const url=URL.createObjectURL(blob); const img=new Image(); img.decoding='async'; img.src=url; await img.decode(); const bmp=await createImageBitmap(img); URL.revokeObjectURL(url); return bmp; }catch{ return null; } }
+(async()=>{ for(const k in SPRITES){ GFX[k]=await svgToBitmap(SPRITES[k]); } spritesReady=true; })();
 
-// ====== ENTITIES ======
-const oven = {timer:0, stock:0, limit:99};
-const customers=[]; // {x,y,order,pat,served,leaving}
-const worker = {x:POS.counter.x, y:POS.counter.y+20, carrying:0, target:null, state:'toOven'};
+// Sound (bleeps)
+let audioCtx=null, muted=false;
+function beep(freq=880,dur=0.06,type='triangle',gain=0.03){
+  if(muted) return; if(!audioCtx) audioCtx=new (window.AudioContext||window.webkitAudioContext)();
+  const o=audioCtx.createOscillator(), g=audioCtx.createGain(); o.type=type; o.frequency.value=freq; g.gain.value=gain;
+  o.connect(g).connect(audioCtx.destination); o.start(); o.stop(audioCtx.currentTime+dur);
+}
 
+// Levels
+const LEVELS=[
+  {goal:200,time:60, spawn:0.5, order:[1,2], oven:2, speed:1, cap:3, mk:0},
+  {goal:350,time:70, spawn:0.65, order:[1,3], oven:3, speed:1, cap:3, mk:1},
+  {goal:500,time:80, spawn:0.8, order:[2,3], oven:3, speed:2, cap:4, mk:1},
+  {goal:700,time:90, spawn:1.0, order:[2,3], oven:4, speed:2, cap:5, mk:2},
+];
+
+// State
+const S = JSON.parse(localStorage.getItem('pf_iso_levels')||'null') || {level:1, cash:200, ovenLvl:2, workerSpeed:1, carryCap:3, marketing:0};
+let timeLeft=LEVELS[S.level-1].time, goal=LEVELS[S.level-1].goal;
+
+// Isometric coords
+const iso = (x,y)=>({ X: x - y + W()*0.35, Y: (x + y) * 0.5 + H()*0.40 });
+
+// Entities
+const oven={timer:0, stock:0, limit:99};
+const counter={stock:0, limit:40};
+const worker={x:iso(240,160).X, y:iso(240,160).Y, carrying:0, target:null, state:'toStack'};
+const customers=[]; // {isoX,isoY,scrX,scrY,order,pat,served,leaving,clicked}
+
+// Rates
 function ovenInterval(){ return Math.max(0.6, 2.2 - S.ovenLvl*0.18); }
-function spawnRate(){ return 0.45 + S.marketing*0.08 + S.combo*0.02; } // per second
+function spawnRate(){ return LEVELS[S.level-1].spawn + S.marketing*0.05; }
 function patienceMax(){ return 6.5 + S.marketing*0.2; }
+let spawnT=1/spawnRate(); let last=performance.now();
 
-let spawnT=0, t=0;
+// HUD & overlay
+const $=id=>document.getElementById(id);
+function renderHUD(){ $('cash').textContent=S.cash.toFixed(0); $('level').textContent=S.level; $('goal').textContent=goal; const m=Math.floor(timeLeft/60), s=(timeLeft%60|0).toString().padStart(2,'0'); $('time').textContent=`${m}:${s}`; $('ovenBar').style.width=(S.ovenLvl*10)+'%'; $('speedBar').style.width=(S.workerSpeed*10)+'%'; $('capBar').style.width=(S.carryCap*10)+'%'; $('mkBar').style.width=(S.marketing*10)+'%'; }
+function save(){ localStorage.setItem('pf_iso_levels', JSON.stringify(S)); }
 
-function spawnCustomer(){
-  const n = 1 + Math.floor(Math.random()*3); // 1..3
-  customers.push({x:W+40,y:POS.queueStart.y-30-Math.random()*40, order:n, pat:patienceMax(), served:false, leaving:false});
+const overlay=$('overlay'); const ovTitle=$('ovTitle'), ovBody=$('ovBody'), ovBtn=$('ovBtn');
+$('btnTut').onclick=()=>{ ovTitle.textContent='شرح سريع'; ovBody.textContent='اضغط على الزبون لبدء الطلب. السير ينقل العجين للفرن. العامل يحمل من المخزن ويسلّم. حقّق الهدف قبل الوقت.'; overlay.style.display='grid'; };
+$('btnMute').onclick=()=>{ muted=!muted; $('btnMute').textContent = muted?'🔇 صامت':'🔊 صوت'; };
+$('btnRestart').onclick=()=>{ startLevel(S.level,true); };
+
+$('upOven').onclick=()=>{ if(S.cash>=120){ S.cash-=120; S.ovenLvl++; beep(900); renderHUD(); save(); } };
+$('upSpeed').onclick=()=>{ if(S.cash>=100){ S.cash-=100; S.workerSpeed++; beep(760); renderHUD(); save(); } };
+$('upCap').onclick=()=>{ if(S.cash>=150){ S.cash-=150; S.carryCap++; beep(640); renderHUD(); save(); } };
+$('upMk').onclick=()=>{ if(S.cash>=130){ S.cash-=130; S.marketing++; beep(520); renderHUD(); save(); } };
+$('save').onclick=save; $('reset').onclick=()=>{ localStorage.removeItem('pf_iso_levels'); location.reload(); };
+
+// Levels control
+function startLevel(n, resetCash=false){
+  const L=LEVELS[n-1];
+  timeLeft=L.time; goal=L.goal;
+  S.ovenLvl=L.oven; S.workerSpeed=L.speed; S.carryCap=L.cap; S.marketing=L.mk;
+  oven.stock=0; counter.stock=0; customers.length=0; spawnT=1/spawnRate();
+  renderHUD();
+  overlay.style.display='grid'; ovTitle.textContent=`المستوى ${n}`; ovBody.textContent=`الهدف ${goal} خلال ${L.time} ثانية`; ovBtn.textContent='ابدأ';
 }
+startLevel(S.level,true);
+ovBtn.onclick=()=>{ overlay.style.display='none'; };
 
-function serveFromCounter(){
-  // خدم الزبون الأول طالما فيه مخزون على الكاونتر
-  const c = customers.find(c=>!c.served && !c.leaving);
-  if(!c) return;
-  const available = counter.stock||0;
-  const give = Math.min(available, c.order);
-  if(give>0){
-    c.order -= give; counter.stock -= give; S.cash += give*10; S.dayRev += give*10; if(c.order===0){ c.served=true; S.combo=Math.min(5, S.combo+0.15); }
-  }
-}
+// Click: select customer to serve
+cv.addEventListener('click', (e)=>{
+  const r=cv.getBoundingClientRect(); const x=(e.clientX-r.left); const y=(e.clientY-r.top);
+  for(let i=customers.length-1;i>=0;i--){ const c=customers[i]; const dx=x-c.scrX, dy=y-c.scrY; if(dx*dx+dy*dy<22*22 && !c.served){ c.clicked=true; break; } }
+});
 
-const counter = {stock:0, limit:40};
+// Spawn & serve
+function spawnCustomer(){ const range=LEVELS[S.level-1].order; const n = range[0] + Math.floor(Math.random()*(range[1]-range[0]+1)); const p=iso(420, 160+Math.random()*80); customers.push({isoX:420, isoY:160+Math.random()*80, scrX:p.X, scrY:p.Y, order:n, pat:patienceMax(), served:false, leaving:false}); }
+function serveFromCounter(){ const c=customers.find(z=>z.clicked && !z.served && !z.leaving); if(!c) return; const give=Math.min(counter.stock,c.order); if(give>0){ c.order-=give; counter.stock-=give; const pay=give*10; S.cash+=pay; if(c.order===0){ c.served=true; beep(880,0.07,'sine',0.04); } renderHUD(); save(); } }
 
-// ====== AI: worker state machine ======
-function workerSpeedPx(){ return (80 + S.workerSpeed*24); } // px/sec
-function goTo(p){ worker.target={x:p.x, y:p.y}; }
-function dist(ax,ay,bx,by){ const dx=ax-bx, dy=ay-by; return Math.hypot(dx,dy); }
-
-function workerLogic(dt){
-  // حدد هدف الحركة حسب الحالة
-  if(worker.state==='toOven'){ goTo(POS.stack); if(dist(worker.x,worker.y,POS.stack.x,POS.stack.y)<10){ worker.state='pickup'; }}
-  if(worker.state==='pickup'){
-    // خُد من مخزون الفرن (stack)
-    if(oven.stock>0 && worker.carrying < S.carryCap){ oven.stock--; worker.carrying++; }
+// Worker FSM
+const P_STACK=iso(210,150), P_COUNTER=iso(320,150);
+function workerSpeedPx(){ return (90 + S.workerSpeed*26); }
+function moveTo(o,tx,ty,dt){ const dx=tx-o.x, dy=ty-o.y; const d=Math.hypot(dx,dy); if(d>1){ o.x+=dx/d*workerSpeedPx()*dt; o.y+=dy/d*workerSpeedPx()*dt; } }
+function closeTo(o,tx,ty,eps){ return Math.hypot(o.x-tx,o.y-ty)<=eps; }
+function stepWorker(dt){
+  if(worker.state==='toStack'){ moveTo(worker,P_STACK.X,P_STACK.Y,dt); if(closeTo(worker,P_STACK.X,P_STACK.Y,10)) worker.state='pickup'; }
+  else if(worker.state==='pickup'){
+    if(oven.stock>0 && worker.carrying<S.carryCap){ oven.stock--; worker.carrying++; }
     if(worker.carrying>=S.carryCap || oven.stock===0){ worker.state='toCounter'; }
-  }
-  if(worker.state==='toCounter'){ goTo(POS.counter); if(dist(worker.x,worker.y,POS.counter.x,POS.counter.y)<10){ worker.state='drop'; }}
-  if(worker.state==='drop'){
+  } else if(worker.state==='toCounter'){ moveTo(worker,P_COUNTER.X,P_COUNTER.Y,dt); if(closeTo(worker,P_COUNTER.X,P_COUNTER.Y,10)) worker.state='drop'; }
+  else if(worker.state==='drop'){
     if(worker.carrying>0 && counter.stock<counter.limit){ counter.stock++; worker.carrying--; }
-    if(worker.carrying===0){ worker.state='toOven'; }
-  }
-
-  // حركة فعلية
-  if(worker.target){
-    const d = dist(worker.x,worker.y,worker.target.x,worker.target.y);
-    if(d>1){ const vx=(worker.target.x-worker.x)/d, vy=(worker.target.y-worker.y)/d; worker.x += vx*workerSpeedPx()*dt; worker.y += vy*workerSpeedPx()*dt; }
+    if(worker.carrying===0){ worker.state='toStack'; }
   }
 }
 
-// ====== LOOP ======
-function step(dt){
-  t+=dt; spawnT -= dt; if(spawnT<=0){ spawnT = 1/spawnRate(); spawnCustomer(); }
-
-  // oven produce
-  oven.timer -= dt; if(oven.timer<=0){ oven.timer = ovenInterval(); if(oven.stock<oven.limit) oven.stock++; }
-
-  // customers move & patience
-  customers.forEach((c,i)=>{
-    // move toward queue spots left of counter
-    const idx = customers.filter(z=>!z.served && !z.leaving && customers.indexOf(z)<=i).length-1;
-    const targetX = POS.queueStart.x - idx*40;
-    if(!c.served && !c.leaving && c.x>targetX){ c.x -= 90*dt; }
-
-    if(!c.served){ c.pat -= dt; if(c.pat<=0){ c.leaving=true; S.combo=Math.max(1, S.combo-0.5); } }
-    if(c.served){ c.x += 160*dt; }
-    if(c.leaving){ c.x += 120*dt; }
-  });
-
-  // serve customers if stock exists
-  serveFromCounter();
-
-  // worker logic
-  workerLogic(dt);
-
-  // cleanup
-  for(let i=customers.length-1;i>=0;i--){ const c=customers[i]; if(c.x<-60 || c.x>W+60){ customers.splice(i,1); } }
-
-  // === UPDATE HUD EACH TICK ===
-  renderUI();
-  save();
+// Conveyor (animated)
+let beltPhase=0;
+function drawBelt(x1,y1,x2,y2){
+  const dx=x2-x1, dy=y2-y1, len=Math.hypot(dx,dy), ang=Math.atan2(dy,dx);
+  ctx.save(); ctx.translate(x1,y1); ctx.rotate(ang);
+  ctx.fillStyle='#334155'; ctx.fillRect(0,-10,len,20);
+  const step=20, phase=(beltPhase%step);
+  ctx.fillStyle='#94a3b8'; for(let x=-phase; x<len; x+=step){ ctx.fillRect(x-4,-6,8,12); }
+  ctx.restore();
 }
 
-function draw(){
-  ctx.clearRect(0,0,W,H);
-  // floor grid
-  ctx.strokeStyle='#eef2f7'; ctx.lineWidth=1; for(let x=0;x<W;x+=40){ ctx.beginPath(); ctx.moveTo(x,H-260); ctx.lineTo(x,H); ctx.stroke(); } for(let y=H-260;y<H;y+=40){ ctx.beginPath(); ctx.moveTo(0,y); ctx.lineTo(W,y); ctx.stroke(); }
+// Loop
+function loop(now){
+  let dt=(now-last)/1000; last=now; if(!isFinite(dt)||dt<=0) dt=0.016; dt=Math.min(dt,0.033);
+  if(overlay.style.display==='grid'){ requestAnimationFrame(loop); return; }
 
-  // oven block
-  ctx.fillStyle='#3b82f6'; ctx.fillRect(POS.oven.x-60, POS.oven.y-40, 120, 80);
-  ctx.fillStyle='#1d4ed8'; ctx.fillRect(POS.oven.x-46, POS.oven.y-18, 92, 36); // dark belt
-  ctx.fillStyle='#0ea5e9'; ctx.font='16px system-ui'; ctx.fillText('الفرن', POS.oven.x-16, POS.oven.y-50);
-
-  // stack near oven (cylinder of pizzas)
-  drawStack(POS.stack.x, POS.stack.y, oven.stock, '🍕');
-
-  // counter block
-  ctx.fillStyle='#ef4444'; ctx.fillRect(POS.counter.x-70, POS.counter.y-30, 180, 80);
-  ctx.fillStyle='#b91c1c'; ctx.fillRect(POS.counter.x-70, POS.counter.y+34, 180, 8);
-  ctx.fillStyle='#111'; ctx.font='16px system-ui'; ctx.fillText('كاونتر', POS.counter.x-20, POS.counter.y-40);
-  // counter stock
-  drawStack(POS.counter.x+80, POS.counter.y+16, counter.stock, '🍕', true);
-
-  // queue label
-  ctx.fillStyle='#0ea5e9'; ctx.fillText('الطابور', POS.queueStart.x-20, POS.queueStart.y-60);
-
-  // customers
-  customers.forEach((c,idx)=>{
-    // body
-    ctx.fillStyle='#0ea5e9'; ctx.beginPath(); ctx.arc(c.x, c.y, 16, 0, Math.PI*2); ctx.fill(); // head
-    ctx.fillStyle='#64748b'; ctx.fillRect(c.x-12, c.y+2, 24, 22); // body
-    // bubble: order
-    const bx=c.x-18, by=c.y-46; ctx.fillStyle='rgba(255,255,255,.95)'; ctx.strokeStyle='#d1d8e2'; ctx.lineWidth=2; ctx.fillRect(bx,by,42,24); ctx.strokeRect(bx,by,42,24);
-    ctx.fillStyle='#111'; ctx.font='18px system-ui'; ctx.fillText('🍕', c.x-14, c.y-28); ctx.fillText(c.order.toString(), c.x+2, c.y-28);
-    // patience bar
-    const p=c.pat/patienceMax(); ctx.fillStyle='#e2e8f0'; ctx.fillRect(c.x-20,c.y-22,40,5); ctx.fillStyle=p>0.5?'#22c55e':(p>0.25?'#f59e0b':'#ef4444'); ctx.fillRect(c.x-20,c.y-22,40*p,5);
-    if(c.served){ ctx.fillStyle='#22c55e'; ctx.fillText('✓', c.x-4, c.y-54); }
-    if(c.leaving && !c.served){ ctx.fillStyle='#ef4444'; ctx.fillText('✗', c.x-4, c.y-54); }
-  });
-
-  // worker (with stack of pizzas carried)
-  ctx.fillStyle='#f97316'; ctx.beginPath(); ctx.arc(worker.x, worker.y-16, 18, 0, Math.PI*2); ctx.fill(); // head
-  ctx.fillStyle='#1f2937'; ctx.fillRect(worker.x-14, worker.y-6, 28, 28); // torso
-  // carried pizzas
-  for(let i=0;i<worker.carrying;i++){ drawSmallPizza(worker.x, worker.y-12 - i*10); }
-}
-
-function drawStack(x,y,count,emoji,small){
-  const height = Math.min(count, 10); // visual slices
-  for(let i=0;i<height;i++){
-    if(small) drawSmallPizza(x, y - i*8); else drawPizza(x, y - i*10);
+  timeLeft -= dt;
+  if(timeLeft<=0){
+    if(S.cash>=goal){ S.level = Math.min(LEVELS.length, S.level+1); startLevel(S.level,true); ovTitle.textContent='مبروك!'; ovBody.textContent='انتقلت للمستوى التالي'; ovBtn.textContent='تابع'; save(); }
+    else { startLevel(S.level,true); ovTitle.textContent='انتهى الوقت'; ovBody.textContent='حاول مرة أخرى لتحقيق الهدف'; ovBtn.textContent='إعادة'; }
   }
-}
-function drawPizza(x,y){
-  // simple disc with emoji to feel like pizza stack
-  ctx.fillStyle='#fef3c7'; ctx.beginPath(); ctx.ellipse(x,y,22,8,0,0,Math.PI*2); ctx.fill(); ctx.strokeStyle='#b45309'; ctx.stroke(); ctx.font='16px system-ui'; ctx.fillStyle='#111'; ctx.fillText('🍕', x-8, y+6);
-}
-function drawSmallPizza(x,y){ ctx.fillStyle='#fef3c7'; ctx.beginPath(); ctx.ellipse(x,y,12,5,0,0,Math.PI*2); ctx.fill(); ctx.strokeStyle='#b45309'; ctx.stroke(); ctx.font='12px system-ui'; ctx.fillStyle='#111'; ctx.fillText('🍕', x-6, y+4); }
 
-let last=0; function loop(now){ const dt=(now-last)/1000||0.016; last=now; step(dt); draw(); requestAnimationFrame(loop); }
+  spawnT -= dt; if(spawnT<=0){ spawnT=1/spawnRate(); spawnCustomer(); }
+
+  oven.timer -= dt; if(oven.timer<=0){ oven.timer=ovenInterval(); if(oven.stock<oven.limit){ oven.stock++; beep(520,0.05,'square',0.02); } }
+
+  customers.forEach(c=>{ if(!c.served){ c.pat -= dt; if(c.pat<=0){ c.leaving=true; } } if(c.served||c.leaving){ c.isoX+= (c.served? 100:140)*dt; const p=iso(c.isoX,c.isoY); c.scrX=p.X; c.scrY=p.Y; } });
+  serveFromCounter(); stepWorker(dt); beltPhase=(beltPhase+dt*60)%40;
+
+  draw(); requestAnimationFrame(loop);
+}
 requestAnimationFrame(loop);
 
-// ====== UI Buttons ======
-$('upOven').onclick = ()=>{ if(S.cash>=120){ S.cash-=120; S.ovenLvl++; renderUI(); save(); haptic(); } };
-$('upSpeed').onclick = ()=>{ if(S.cash>=100){ S.cash-=100; S.workerSpeed++; renderUI(); save(); haptic(); } };
-$('upCap').onclick = ()=>{ if(S.cash>=150){ S.cash-=150; S.carryCap++; renderUI(); save(); haptic(); } };
-$('upMk').onclick = ()=>{ if(S.cash>=130){ S.cash-=130; S.marketing++; renderUI(); save(); haptic(); } };
-$('save').onclick = save; $('reset').onclick = reset;
+// Draw
+function draw(){
+  ctx.clearRect(0,0,W(),H());
+  // ground
+  ctx.fillStyle=grad(0,H()-300,0,H(),'#f7fbff','#ffffff'); ctx.fillRect(0,H()-300,W(),300);
+  ctx.strokeStyle='#e9eef6'; for(let x=0;x<W();x+=40){ ctx.beginPath(); ctx.moveTo(x,H()-300); ctx.lineTo(x,H()); ctx.stroke(); } for(let y=H()-300;y<H();y+=40){ ctx.beginPath(); ctx.moveTo(0,y); ctx.lineTo(W(),y); ctx.stroke(); }
 
-function haptic(){ try{ tg?.HapticFeedback?.impactOccurred('light'); }catch(e){} }
-renderUI();
+  // belt
+  const b1=iso(140,150), b2=iso(200,150); drawBelt(b1.X,b1.Y,b2.X,b2.Y);
+
+  // oven (sprite fallback)
+  const pO=iso(200,150);
+  if(spritesReady && GFX.oven) { drawSprite(GFX.oven,pO.X-48,pO.Y-48); }
+  else { shadow(()=>{ ctx.fillStyle='#60a5fa'; ctx.fillRect(pO.X-48,pO.Y-32,96,64); }); }
+
+  // stock stack + counter
+  drawStack(iso(230,150).X, iso(230,150).Y, oven.stock);
+  const pC=iso(320,150); drawCounter(pC.X,pC.Y); drawStack(pC.X+40,pC.Y+18,counter.stock,true);
+
+  // worker
+  if(spritesReady && GFX.worker) drawSprite(GFX.worker, worker.x-32, worker.y-38);
+  else { shadow(()=>{ ctx.fillStyle='#2563eb'; ctx.beginPath(); ctx.arc(worker.x, worker.y-18, 18, 0, Math.PI*2); ctx.fill(); ctx.fillRect(worker.x-20, worker.y-6, 40, 30); }); }
+  for(let i=0;i<worker.carrying;i++){ drawPizza(worker.x+16, worker.y-8 - i*8, 0.6); }
+
+  // customers
+  customers.forEach(c=>{ const p=iso(c.isoX,c.isoY); c.scrX=p.X; c.scrY=p.Y;
+    if(spritesReady && GFX.customer) drawSprite(GFX.customer, p.X-28, p.Y-28);
+    else { shadow(()=>{ ctx.fillStyle='#94a3b8'; ctx.beginPath(); ctx.arc(p.X, p.Y, 16, 0, Math.PI*2); ctx.fill(); ctx.fillStyle='#1f2937'; ctx.fillRect(p.X-12, p.Y+2, 24, 22); }); }
+    drawBubble(p.X,p.Y-30,c.order,c.pat/patienceMax());
+  });
+
+  // timer bar
+  const w = Math.max(0, (timeLeft/LEVELS[S.level-1].time)*100); ctx.fillStyle='#e2e8f0'; ctx.fillRect(W()-210,14,190,10); ctx.fillStyle='#22c55e'; ctx.fillRect(W()-210,14,1.9*w,10);
+}
+
+// Draw helpers
+function drawSprite(bmp,x,y){ if(!bmp) return; shadow(()=>ctx.drawImage(bmp,x,y)); }
+function drawPizza(x,y,scale=1){ if(!GFX.pizza) { ctx.fillStyle='#f59e0b'; ctx.beginPath(); ctx.ellipse(x,y,16*scale,6*scale,0,0,Math.PI*2); ctx.fill(); ctx.strokeStyle='#b45309'; ctx.stroke(); return; } ctx.drawImage(GFX.pizza, x-20*scale, y-10*scale, 40*scale, 40*scale); }
+function drawStack(x,y,count,small){ const layers=Math.min(10,count); for(let i=0;i<layers;i++){ drawPizza(x, y-i*(small?6:8), small?.5:1); } }
+function drawCounter(x,y){ shadow(()=>{ ctx.fillStyle='#ef4444'; ctx.fillRect(x-60,y-24,160,64); }); }
+function drawBubble(x,y,n,pat){ ctx.fillStyle='rgba(255,255,255,.96)'; ctx.strokeStyle='#d1d8e2'; ctx.lineWidth=2; ctx.fillRect(x-20,y-26,46,24); ctx.strokeRect(x-20,y-26,46,24); ctx.font='18px system-ui'; ctx.fillStyle='#111'; ctx.fillText('🍕',x-16,y-8); ctx.fillText(String(n),x+2,y-8); ctx.fillStyle='#e2e8f0'; ctx.fillRect(x-22,y-2,44,5); ctx.fillStyle=pat>0.5?'#22c55e':(pat>0.25?'#f59e0b':'#ef4444'); ctx.fillRect(x-22,y-2,44*pat,5); }
+
+renderHUD();
 </script>
 </body>
 </html>
