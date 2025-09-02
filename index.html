@@ -19,7 +19,7 @@
       color:var(--text); font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial;
       display:flex; align-items:center; justify-content:center; padding:16px; overflow:hidden
     }
-    .wrap{ width:min(980px,100%); display:grid; grid-template-columns: 1fr 300px; gap:16px }
+    .wrap{ width:min(980px,100%); display:grid; grid-template-columns: 1fr 240px; gap:16px }
     @media (max-width: 920px){ .wrap{ grid-template-columns: 1fr } }
 
     .card{ background:linear-gradient(180deg, rgba(255,255,255,.05), rgba(255,255,255,.02));
@@ -40,11 +40,11 @@
     .stat .k{ font-size:12px; color:var(--muted) }
     .stat .v{ font-size:20px; font-weight:800 }
 
-    .boards{ display:grid; grid-template-columns: 1fr 180px; gap:12px }
+    .boards{ display:grid; grid-template-columns: 1fr 200px; gap:12px }
     @media (max-width: 920px){ .boards{ grid-template-columns: 1fr } }
 
     .stage{ position:relative; display:grid; place-items:center }
-    canvas#cv{ width:100%; max-width:500px; aspect-ratio: 10/20; background:linear-gradient(180deg, rgba(255,255,255,.03), rgba(255,255,255,.01)); border-radius:14px; box-shadow: inset 0 0 0 2px rgba(255,255,255,.04) }
+    canvas#cv{ width:100%; max-width:520px; aspect-ratio: 10/20; background:linear-gradient(180deg, rgba(255,255,255,.03), rgba(255,255,255,.01)); border-radius:14px; box-shadow: inset 0 0 0 2px rgba(255,255,255,.06) }
 
     .side{ display:grid; grid-auto-rows: min-content; gap:12px }
     .panel{ background:var(--glass); border:1px solid var(--line); border-radius:14px; padding:10px }
@@ -86,12 +86,12 @@
 
       <div class="boards">
         <div class="stage">
-          <canvas id="cv" width="300" height="600" aria-label="ساحة اللعب" role="img"></canvas>
+          <canvas id="cv" width="320" height="640" aria-label="ساحة اللعب" role="img"></canvas>
         </div>
         <div class="side">
           <div class="panel">
             <h3>القادم</h3>
-            <canvas id="next" width="160" height="160"></canvas>
+            <canvas id="next" width="200" height="200"></canvas>
           </div>
           <div class="panel">
             <h3>التحكم</h3>
@@ -105,7 +105,7 @@
           </div>
           <div class="panel">
             <h3>تلميح</h3>
-            <div class="tip">حرّك القطعة بالأسهم أو الأزرار. ↑ للتدوير، ↓ إسقاط سريع، مسافة = هارد دروب. يتم مسح الصفوف الممتلئة بالكامل وتزداد السرعة كل مستوى.</div>
+            <div class="tip">القادم الآن يعرض **قطعة واحدة فقط** في المنتصف. ↑ للتدوير، ↓ إسقاط سريع، مسافة = هارد دروب. السرعة تزيد كل 10 صفوف.</div>
           </div>
         </div>
       </div>
@@ -132,7 +132,7 @@
     const cv = document.getElementById('cv');
     const cx = cv.getContext('2d');
     const W = cv.width, H = cv.height;
-    const CS = Math.floor(W / COLS); // حجم الخلية
+    const CS = Math.floor(W / COLS); // حجم الخلية — على 320px يطلع 32px واضح على الموبايل
 
     const nextCV = document.getElementById('next');
     const nx = nextCV.getContext('2d');
@@ -153,9 +153,7 @@
     function beep(freq=520, dur=60, gain=.08){ if(muted) return; const a = new (window.AudioContext||window.webkitAudioContext)(); const o=a.createOscillator(); const g=a.createGain(); o.type='sine'; o.frequency.value=freq; o.connect(g); g.connect(a.destination); g.gain.setValueAtTime(gain,a.currentTime); g.gain.exponentialRampToValueAtTime(.0001,a.currentTime+dur/1000); o.start(); o.stop(a.currentTime+dur/1000); setTimeout(()=>a.close(), dur+120); }
 
     // ألوان التترومينوز
-    const COLORS = {
-      I:'#22d3ee', O:'#f59e0b', T:'#a78bfa', S:'#34d399', Z:'#f87171', J:'#60a5fa', L:'#f472b6'
-    };
+    const COLORS = { I:'#22d3ee', O:'#f59e0b', T:'#a78bfa', S:'#34d399', Z:'#f87171', J:'#60a5fa', L:'#f472b6' };
 
     // أشكال القطع (مصفوفة 4×4)
     const SHAPES = {
@@ -172,7 +170,7 @@
     let grid;
 
     // حالة اللعبة
-    let cur, bag=[], queue=[], score=0, lines=0, level=1, best=Number(localStorage.getItem('tetris_best')||0);
+    let cur, bag=[], nextPiece=null, score=0, lines=0, level=1, best=Number(localStorage.getItem('tetris_best')||0);
     let dropInterval = 900; // ms — تقل مع زيادة المستوى
     let dropTimer = 0, lastTime = 0, paused=false, running=false;
 
@@ -183,20 +181,17 @@
       return { type, shape, x: Math.floor(COLS/2)-2, y: -2, color: COLORS[type] };
     }
 
-    function refillBag(){
+    function takeFromBag(){
       if(bag.length===0){ bag = Object.keys(SHAPES).sort(()=>Math.random()-.5); }
       return bag.pop();
     }
 
-    function refillQueue(){
-      while(queue.length<3){ queue.push(refillBag()); }
-      drawNext();
-    }
-
     function spawn(){
-      const t = refillBag();
+      // استخدم nextPiece الجاهز إن وجد، ثم حضّر التالي
+      const t = nextPiece || takeFromBag();
       cur = newPiece(t);
-      refillQueue(); // keep queue filled
+      nextPiece = takeFromBag();
+      drawNext();
       if(collide(cur, cur.x, cur.y)) { gameOver('امتلأت اللوحة من الأعلى.'); }
     }
 
@@ -233,12 +228,11 @@
 
     function clearLines(){
       let cleared=0;
-      outer: for(let y=ROWS-1; y>=0;){
+      for(let y=ROWS-1; y>=0;){
         if(grid[y].every(v=>v)){ grid.splice(y,1); grid.unshift(Array(COLS).fill(0)); cleared++; }
-        else { y--; }
+        else y--;
       }
       if(cleared){
-        // نقاط كلاسيكية مبسطة
         const table = {1:100, 2:300, 3:500, 4:800};
         score += table[cleared] || (cleared*300);
         lines += cleared;
@@ -253,11 +247,11 @@
       cx.clearRect(0,0,W,H);
       // خلفية ناعمة
       const grd = cx.createLinearGradient(0,0,0,H);
-      grd.addColorStop(0,'rgba(255,255,255,.05)'); grd.addColorStop(1,'rgba(255,255,255,.02)');
+      grd.addColorStop(0,'rgba(255,255,255,.06)'); grd.addColorStop(1,'rgba(255,255,255,.02)');
       cx.fillStyle = grd; cx.fillRect(0,0,W,H);
 
-      // شبكة
-      cx.strokeStyle = 'rgba(255,255,255,.04)'; cx.lineWidth=1;
+      // شبكة أوضح
+      cx.strokeStyle = 'rgba(255,255,255,.08)'; cx.lineWidth=1;
       for(let x=0;x<=COLS;x++){ cx.beginPath(); cx.moveTo(x*CS+.5,0); cx.lineTo(x*CS+.5,H); cx.stroke(); }
       for(let y=0;y<=ROWS;y++){ cx.beginPath(); cx.moveTo(0,y*CS+.5); cx.lineTo(W,y*CS+.5); cx.stroke(); }
 
@@ -267,21 +261,15 @@
       for(let y=0;y<4;y++) for(let x=0;x<4;x++) if(cur.shape[y][x]) drawCell(cur.x+x, cur.y+y, cur.color, true);
     }
 
-    function drawCell(gx,gy,color, floating=false){
-      if(gy<0) return;
-      const px=gx*CS, py=gy*CS, r=6;
-      // ظل
+    function drawCell(gx,gy,color){
+      if(gy<0) return; const px=gx*CS, py=gy*CS, r=6;
       cx.save(); cx.shadowColor='rgba(0,0,0,.35)'; cx.shadowBlur=10; cx.shadowOffsetY=6;
-      // جسم بتدرج
       const grad = cx.createLinearGradient(px,py,px,py+CS);
-      grad.addColorStop(0, shade(color,1.12)); grad.addColorStop(1, shade(color,0.90));
+      grad.addColorStop(0, shade(color,1.15)); grad.addColorStop(1, shade(color,0.88));
       roundRect(cx, px+2, py+2, CS-4, CS-4, r, true, false, grad);
       cx.restore();
-      // لمعة
-      cx.fillStyle='rgba(255,255,255,.12)'; roundRect(cx, px+6, py+5, CS-12, 6, 4, true);
-      // إطار
-      cx.strokeStyle='rgba(255,255,255,.10)'; cx.lineWidth=1; roundRect(cx, px+2, py+2, CS-4, CS-4, r, false, true);
-      if(floating){ cx.globalAlpha=.12; cx.fillStyle=color; cx.fillRect(px+4, py+CS-6, CS-8, 3); cx.globalAlpha=1; }
+      cx.fillStyle='rgba(255,255,255,.14)'; roundRect(cx, px+6, py+5, CS-12, 6, 4, true);
+      cx.strokeStyle='rgba(255,255,255,.12)'; cx.lineWidth=1; roundRect(cx, px+2, py+2, CS-4, CS-4, r, false, true);
     }
 
     function shade(hex,k){ const f=parseInt(hex.slice(1),16),t=k<1?0:255,p=k<1?k:k-1; const R=f>>16,G=f>>8&255,B=f&255; const nr=Math.round((t-R)*p+R),ng=Math.round((t-G)*p+G),nb=Math.round((t-B)*p+B); return `rgb(${nr},${ng},${nb})`; }
@@ -289,69 +277,40 @@
 
     function drawNext(){
       nx.clearRect(0,0,nextCV.width,nextCV.height);
-      let off=10, cell=20; let y=10;
-      queue.slice(0,3).forEach((t,i)=>{
-        const shape = SHAPES[t]; const col = COLORS[t];
-        // قياس الحجم
-        let minX=4,maxX=-1,minY=4,maxY=-1;
-        for(let yy=0;yy<4;yy++) for(let xx=0;xx<4;xx++) if(shape[yy][xx]){ minX=Math.min(minX,xx); maxX=Math.max(maxX,xx); minY=Math.min(minY,yy); maxY=Math.max(maxY,yy); }
-        const w=(maxX-minX+1)*cell, h=(maxY-minY+1)*cell; const startX=(nextCV.width - w)/2;
-        for(let yy=minY; yy<=maxY; yy++) for(let xx=minX; xx<=maxX; xx++) if(shape[yy][xx]){
-          drawPreview(startX + (xx-minX)*cell, y + (yy-minY)*cell, cell, col);
-        }
-        y += h + 12;
-      });
-    }
-
-    function drawPreview(px,py,s,color){
-      const r=5; const grad=nx.createLinearGradient(px,py,px,py+s);
-      grad.addColorStop(0, shade(color,1.12)); grad.addColorStop(1, shade(color,0.90));
-      nx.shadowColor='rgba(0,0,0,.25)'; nx.shadowBlur=8; nx.shadowOffsetY=4;
-      roundRect(nx, px+1, py+1, s-2, s-2, r, true, false, grad);
-      nx.shadowBlur=0; nx.shadowOffsetY=0; nx.strokeStyle='rgba(255,255,255,.1)'; nx.lineWidth=1; roundRect(nx, px+1, py+1, s-2, s-2, r, false, true);
-    }
-
-    // منطق التحديث
-    function update(dt){
-      if(paused || !running) return;
-      dropTimer += dt;
-      if(dropTimer > dropInterval){
-        dropTimer = 0;
-        if(!move(0,1)){ lock(); }
+      const shape = SHAPES[nextPiece]; const col = COLORS[nextPiece];
+      // حدد Bounding box للقطعة
+      let minX=4,maxX=-1,minY=4,maxY=-1;
+      for(let yy=0;yy<4;yy++) for(let xx=0;xx<4;xx++) if(shape[yy][xx]){ minX=Math.min(minX,xx); maxX=Math.max(maxX,xx); minY=Math.min(minY,yy); maxY=Math.max(maxY,yy); }
+      const cellsX=maxX-minX+1, cellsY=maxY-minY+1;
+      const s = Math.floor(Math.min((nextCV.width-40)/cellsX, (nextCV.height-40)/cellsY));
+      const startX = Math.floor((nextCV.width - s*cellsX)/2);
+      const startY = Math.floor((nextCV.height - s*cellsY)/2);
+      for(let yy=minY; yy<=maxY; yy++) for(let xx=minX; xx<=maxX; xx++) if(shape[yy][xx]){
+        drawPreview(startX + (xx-minX)*s, startY + (yy-minY)*s, s, col);
       }
     }
 
-    function move(dx,dy){
-      if(!collide(cur, cur.x+dx, cur.y+dy)){ cur.x += dx; cur.y += dy; return true; }
-      return false;
+    function drawPreview(px,py,s,color){
+      const r=6; const grad=nx.createLinearGradient(px,py,px,py+s);
+      grad.addColorStop(0, shade(color,1.15)); grad.addColorStop(1, shade(color,0.88));
+      nx.shadowColor='rgba(0,0,0,.25)'; nx.shadowBlur=8; nx.shadowOffsetY=4;
+      roundRect(nx, px+2, py+2, s-4, s-4, r, true, false, grad);
+      nx.shadowBlur=0; nx.shadowOffsetY=0; nx.strokeStyle='rgba(255,255,255,.12)'; nx.lineWidth=1; roundRect(nx, px+2, py+2, s-4, s-4, r, false, true);
     }
 
-    function hardDrop(){
-      let d=0; while(move(0,1)) d++;
-      score += Math.min(2*d, 40); // مكافأة بسيطة
-      lock();
-    }
-
-    function lock(){
-      merge(cur); clearLines();
-      spawn(); updateHUD(); draw();
-      beep(520,60,.06);
-    }
+    // منطق التحديث
+    function update(dt){ if(paused || !running) return; dropTimer += dt; if(dropTimer > dropInterval){ dropTimer = 0; if(!move(0,1)){ lock(); } } }
+    function move(dx,dy){ if(!collide(cur, cur.x+dx, cur.y+dy)){ cur.x += dx; cur.y += dy; return true; } return false; }
+    function hardDrop(){ let d=0; while(move(0,1)) d++; score += Math.min(2*d, 40); lock(); }
+    function lock(){ merge(cur); clearLines(); spawn(); updateHUD(); draw(); beep(520,60,.06); }
 
     function updateHUD(){ scoreEl.textContent = score; linesEl.textContent = lines; levelEl.textContent = level; bestEl.textContent = Math.max(best, score); }
 
-    function gameOver(reason){
-      running=false; paused=false; best = Math.max(best, score); localStorage.setItem('tetris_best', best);
-      updateHUD();
-      showModal('نهاية اللعبة', `${reason} نتيجتك: ${score}`);
-      beep(240,140,.08);
-    }
-
+    function gameOver(reason){ running=false; paused=false; best = Math.max(best, score); localStorage.setItem('tetris_best', best); updateHUD(); showModal('نهاية اللعبة', `${reason} نتيجتك: ${score}`); beep(240,140,.08); }
     function showModal(title,msg){ modalTitle.textContent = title; modalMsg.textContent = msg; modal.style.display='grid'; }
     function hideModal(){ modal.style.display='none'; }
 
-    // مدخلات لوحة المفاتيح
-    const held = {left:false,right:false,down:false};
+    // مدخلات
     window.addEventListener('keydown',(e)=>{
       if(!running) return;
       if(e.key==='ArrowLeft' || e.key==='a'){ move(-1,0); draw(); }
@@ -361,7 +320,6 @@
       if(e.code==='Space'){ e.preventDefault(); hardDrop(); draw(); }
     });
 
-    // أزرار اللمس
     document.getElementById('leftBtn').onpointerdown = ()=>{ if(running){ move(-1,0); draw(); } };
     document.getElementById('rightBtn').onpointerdown= ()=>{ if(running){ move(1,0); draw(); } };
     document.getElementById('downBtn').onpointerdown = ()=>{ if(running){ if(move(0,1)){ score+=1; updateHUD(); draw(); } } };
@@ -371,28 +329,16 @@
     // أزرار علوية
     document.getElementById('newBtn').addEventListener('click', startGame);
     document.getElementById('againBtn').addEventListener('click', startGame);
-    document.getElementById('shareBtn').addEventListener('click', ()=>{
-      const text = `🎮 سجلت ${score} نقطة في Falling Blocks DX!`; navigator.clipboard && navigator.clipboard.writeText(text); modalMsg.textContent='تم نسخ نتيجتك — الصقها أينما تريد!';
-    });
-    document.getElementById('howBtn').addEventListener('click', ()=>{
-      showModal('طريقة اللعب','قطعة رباعية تسقط من الأعلى تلقائيًا. حرّكها بالأسهم أو الأزرار. ↑ للتدوير، ↓ لإسقاط سريع، مسافة = هارد دروب. عند اكتمال صفّ يمسح ويزيد رصيدك، وتزيد السرعة كل 10 صفوف.');
-    });
+    document.getElementById('shareBtn').addEventListener('click', ()=>{ const text = `🎮 سجلت ${score} نقطة في Falling Blocks DX!`; navigator.clipboard && navigator.clipboard.writeText(text); modalMsg.textContent='تم نسخ نتيجتك — الصقها أينما تريد!'; });
+    document.getElementById('howBtn').addEventListener('click', ()=>{ showModal('طريقة اللعب','قطعة رباعية تسقط من الأعلى تلقائيًا. حرّكها بالأسهم أو الأزرار. ↑ للتدوير، ↓ لإسقاط سريع، مسافة = هارد دروب. عند اكتمال صفّ يمسح ويزيد رصيدك، وتزيد السرعة كل 10 صفوف.'); });
     document.getElementById('muteBtn').addEventListener('click', (e)=>{ muted=!muted; e.target.textContent = muted? '🔇 صامت':'🔊 الصوت'; });
     document.getElementById('pauseBtn').addEventListener('click', (e)=>{ if(!running) return; paused=!paused; e.target.textContent = paused? '▶︎ متابعة':'⏸︎ إيقاف'; });
 
-    function startGame(){
-      hideModal(); grid = emptyGrid(); score=0; lines=0; level=1; dropInterval=900; dropTimer=0; paused=false; running=true; queue=[]; bag=[]; refillQueue(); spawn(); updateHUD(); draw();
-      // kick off loop
-      lastTime = performance.now(); requestAnimationFrame(tick);
-    }
-
+    function startGame(){ hideModal(); grid = emptyGrid(); score=0; lines=0; level=1; dropInterval=900; dropTimer=0; paused=false; running=true; bag=[]; nextPiece=null; spawn(); updateHUD(); draw(); lastTime = performance.now(); requestAnimationFrame(tick); }
     function tick(now){ if(!running){ draw(); return; } const dt = now-lastTime; lastTime=now; if(!paused){ update(dt); draw(); } requestAnimationFrame(tick); }
 
-    // استجابة الحجم
-    const ro = new ResizeObserver(()=>{
-      const el = cv; const p = el.parentElement; const size = Math.min(500, p.clientWidth);
-      el.style.width = size+'px'; el.style.height = (size*2)+'px';
-    });
+    // استجابة الحجم (تكبير أو تصغير مع الحفاظ على وضوح الخلية)
+    const ro = new ResizeObserver(()=>{ const el = cv; const p = el.parentElement; const size = Math.min(520, p.clientWidth); el.style.width = size+'px'; el.style.height = (size*2)+'px'; });
     ro.observe(cv.parentElement);
 
     // ابدأ فورًا
