@@ -78,7 +78,7 @@
   <div class="overlay" id="overlay">
     <div class="card">
       <h2 id="ovTitle">شرح سريع</h2>
-      <p id="ovBody">اضغط على الزبون لبدء الطلب. السيور تنقل العجين → الفرن ينتج → العامل يحمل ويسلّم. حقّق الهدف قبل نهاية الوقت!</p>
+    <p id="ovBody">اضغط “حسناً” للبدء. السيور تنقل العجين → الفرن ينتج → العامل يحمل ويسلّم. حقّق الهدف قبل نهاية الوقت!</p>
       <button class="btn" id="ovBtn">حسناً</button>
     </div>
   </div>
@@ -151,14 +151,23 @@ const LEVELS=[
 const S = JSON.parse(localStorage.getItem('pf_iso_levels')||'null') || {level:1, cash:200, ovenLvl:2, workerSpeed:1, carryCap:3, marketing:0};
 let timeLeft=LEVELS[S.level-1].time, goal=LEVELS[S.level-1].goal;
 
-// Isometric coords (أوفست آمن داخل الإطار)
-const iso = (x,y)=>({ X: x - y + W()*0.33, Y: (x + y) * 0.50 + H()*0.38 });
+// Isometric origin (مركز ثابت داخل الفريم)
+function isoOrigin(){ return { ox: W()*0.50, oy: H()*0.60 }; }
+const iso = (x,y)=>{ const {ox,oy}=isoOrigin(); return { X: x - y + ox, Y: (x + y) * 0.5 + oy }; };
 
 // Entities
 const oven={timer:0, stock:0, limit:99};
 const counter={stock:0, limit:40};
-const worker={x:iso(240,160).X, y:iso(240,160).Y, carrying:0, target:null, state:'toStack'};
+const worker={x:iso(0,0).X, y:iso(0,0).Y, carrying:0, target:null, state:'toStack'};
 const customers=[]; // {isoX,isoY,scrX,scrY,order,pat,served,leaving}
+
+// Positions relative to origin
+const POS = {
+  oven:     {x:-120, y:-20},
+  stack:    {x:-60,  y:-20},
+  counter:  {x: 140, y:-20},
+  queueX:   240
+};
 
 // Rates
 function ovenInterval(){ return Math.max(0.6, 2.2 - S.ovenLvl*0.18); }
@@ -198,6 +207,7 @@ function startLevel(n, resetCash=false){
   timeLeft=L.time; goal=L.goal;
   S.ovenLvl=L.oven; S.workerSpeed=L.speed; S.carryCap=L.cap; S.marketing=L.mk;
   oven.stock=0; counter.stock=0; customers.length=0; spawnT=1/spawnRate();
+  // 3 زباين مبدئيين
   for(let i=0;i<3;i++) spawnCustomer();
   renderHUD();
   overlay.style.display='grid'; ovTitle.textContent=`المستوى ${n}`; ovBody.textContent=`الهدف ${goal} خلال ${L.time} ثانية`; ovBtn.textContent='ابدأ';
@@ -209,9 +219,9 @@ ovBtn.onclick=()=>{ overlay.style.display='none'; last=performance.now(); };
 function spawnCustomer(){
   const range=LEVELS[S.level-1].order;
   const n = range[0] + Math.floor(Math.random()*(range[1]-range[0]+1));
-  const baseY = 160 + Math.random()*60;
-  const p=iso(420, baseY);
-  customers.push({isoX:420, isoY:baseY, scrX:p.X, scrY:p.Y, order:n, pat:patienceMax(), served:false, leaving:false});
+  const baseY = -30 + Math.random()*80;
+  const p=iso(POS.queueX, baseY);
+  customers.push({isoX:POS.queueX, isoY:baseY, scrX:p.X, scrY:p.Y, order:n, pat:patienceMax(), served:false, leaving:false});
 }
 function serveFromCounter(){
   const c = customers.find(z=>!z.served && !z.leaving);
@@ -226,7 +236,7 @@ function serveFromCounter(){
 }
 
 // Worker FSM
-const P_STACK=iso(210,150), P_COUNTER=iso(320,150);
+const P_STACK=iso(POS.stack.x,POS.stack.y), P_COUNTER=iso(POS.counter.x,POS.counter.y);
 function workerSpeedPx(){ return (90 + S.workerSpeed*26); }
 function moveTo(o,tx,ty,dt){ const dx=tx-o.x, dy=ty-o.y; const d=Math.hypot(dx,dy); if(d>1){ o.x+=dx/d*workerSpeedPx()*dt; o.y+=dy/d*workerSpeedPx()*dt; } }
 function closeTo(o,tx,ty,eps){ return Math.hypot(o.x-tx,o.y-ty)<=eps; }
@@ -244,9 +254,10 @@ function stepWorker(dt){
 
 // Conveyor (animated)
 let beltPhase=0;
-function drawBelt(x1,y1,x2,y2){
-  const dx=x2-x1, dy=y2-y1, len=Math.hypot(dx,dy), ang=Math.atan2(dy,dx);
-  ctx.save(); ctx.translate(x1,y1); ctx.rotate(ang);
+function drawBeltIso(x1,y1,x2,y2){
+  const p1=iso(x1,y1), p2=iso(x2,y2);
+  const dx=p2.X-p1.X, dy=p2.Y-p1.Y, len=Math.hypot(dx,dy), ang=Math.atan2(dy,dx);
+  ctx.save(); ctx.translate(p1.X,p1.Y); ctx.rotate(ang);
   ctx.fillStyle='#334155'; ctx.fillRect(0,-10,len,20);
   const step=20, phase=(beltPhase%step);
   ctx.fillStyle='#94a3b8'; for(let x=-phase; x<len; x+=step){ ctx.fillRect(x-4,-6,8,12); }
@@ -286,35 +297,35 @@ requestAnimationFrame(loop);
 // Draw
 function draw(){
   ctx.clearRect(0,0,W(),H());
-  // ground
+  // أرضية
   ctx.fillStyle=grad(0,H()-300,0,H(),'#f7fbff','#ffffff'); ctx.fillRect(0,H()-300,W(),300);
   ctx.strokeStyle='#e9eef6'; for(let x=0;x<W();x+=40){ ctx.beginPath(); ctx.moveTo(x,H()-300); ctx.lineTo(x,H()); ctx.stroke(); } for(let y=H()-300;y<H();y+=40){ ctx.beginPath(); ctx.moveTo(0,y); ctx.lineTo(W(),y); ctx.stroke(); }
 
-  // belt
-  const b1=iso(140,150), b2=iso(200,150); drawBelt(b1.X,b1.Y,b2.X,b2.Y);
+  // سيور: من مدخل العجين إلى الفرن
+  drawBeltIso(POS.oven.x-140, POS.oven.y, POS.oven.x-20, POS.oven.y);
 
-  // oven (sprite fallback)
-  const pO=iso(200,150);
+  // الفرن
+  const pO=iso(POS.oven.x,POS.oven.y);
   if(spritesReady && GFX.oven) { drawSprite(GFX.oven,pO.X-48,pO.Y-48); }
   else { shadow(()=>{ ctx.fillStyle='#60a5fa'; ctx.fillRect(pO.X-48,pO.Y-32,96,64); }); }
 
-  // stock stack + counter
-  drawStack(iso(230,150).X, iso(230,150).Y, oven.stock);
-  const pC=iso(320,150); drawCounter(pC.X,pC.Y); drawStack(pC.X+40,pC.Y+18,counter.stock,true);
+  // مخزون الفرن + الكاونتر
+  drawStack(iso(POS.stack.x,POS.stack.y).X, iso(POS.stack.x,POS.stack.y).Y, oven.stock);
+  const pC=iso(POS.counter.x,POS.counter.y); drawCounter(pC.X,pC.Y); drawStack(pC.X+40,pC.Y+18,counter.stock,true);
 
-  // worker
+  // العامل
   if(spritesReady && GFX.worker) drawSprite(GFX.worker, worker.x-32, worker.y-38);
   else { shadow(()=>{ ctx.fillStyle='#2563eb'; ctx.beginPath(); ctx.arc(worker.x, worker.y-18, 18, 0, Math.PI*2); ctx.fill(); ctx.fillRect(worker.x-20, worker.y-6, 40, 30); }); }
   for(let i=0;i<worker.carrying;i++){ drawPizza(worker.x+16, worker.y-8 - i*8, 0.6); }
 
-  // customers
+  // الزبائن
   customers.forEach(c=>{ const p=iso(c.isoX,c.isoY); c.scrX=p.X; c.scrY=p.Y;
     if(spritesReady && GFX.customer) drawSprite(GFX.customer, p.X-28, p.Y-28);
     else { shadow(()=>{ ctx.fillStyle='#94a3b8'; ctx.beginPath(); ctx.arc(p.X, p.Y, 16, 0, Math.PI*2); ctx.fill(); ctx.fillStyle='#1f2937'; ctx.fillRect(p.X-12, p.Y+2, 24, 22); }); }
     drawBubble(p.X,p.Y-30,c.order,c.pat/patienceMax());
   });
 
-  // timer bar
+  // شريط الوقت
   const w = Math.max(0, (timeLeft/LEVELS[S.level-1].time)*100); ctx.fillStyle='#e2e8f0'; ctx.fillRect(W()-210,14,190,10); ctx.fillStyle='#22c55e'; ctx.fillRect(W()-210,14,1.9*w,10);
 }
 
