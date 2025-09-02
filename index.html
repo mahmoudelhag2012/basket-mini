@@ -17,7 +17,10 @@
     .pill{display:inline-flex; align-items:center; gap:8px; padding:8px 12px; border-radius:999px; background:rgba(255,255,255,.16); font-weight:700}
     .grid{display:grid; grid-template-columns:1.2fr .8fr; gap:10px; padding:10px}
     .panel{background:#f8fafc; border:1px solid #eef2f7; border-radius:18px; padding:10px}
-    canvas{width:100%; aspect-ratio:16/9; background:linear-gradient(#f5fbff,#fff)}
+    .panel canvas{
+      display:block; margin-inline:auto; width:100%; max-width:1000px;
+      aspect-ratio:16/9; height:auto; background:linear-gradient(#f5fbff,#fff); border-radius:12px;
+    }
     .row{display:flex; align-items:center; justify-content:space-between; gap:8px; padding:8px 0}
     .btn{background:#fff; border:1px solid #e5e7eb; border-radius:14px; padding:10px 12px; box-shadow:var(--shadow); cursor:pointer; font-weight:700}
     .btn:active{transform:translateY(1px)}
@@ -84,14 +87,14 @@
 // Telegram
 const tg = window.Telegram?.WebApp; if(tg){ try{ tg.ready(); tg.expand(); }catch(e){} }
 
-// Canvas + HiDPI scaling
+// Canvas + HiDPI scaling (محاذاة و16:9)
 const cv = document.getElementById('cv');
 const ctx = cv.getContext('2d');
 function scaleCanvas(){
   const dpr = Math.max(1, window.devicePixelRatio || 1);
   const rect = cv.getBoundingClientRect();
-  const cssW = Math.max(640, Math.floor(rect.width || 960));
-  const cssH = Math.max(360, Math.floor(rect.height || 540));
+  const cssW = Math.max(640, Math.floor(rect.width  || 960));
+  const cssH = Math.max(360, Math.floor(rect.height || cssW * 9/16));
   cv.width  = Math.floor(cssW * dpr);
   cv.height = Math.floor(cssH * dpr);
   ctx.setTransform(dpr,0,0,dpr,0,0);
@@ -148,28 +151,38 @@ const LEVELS=[
 const S = JSON.parse(localStorage.getItem('pf_iso_levels')||'null') || {level:1, cash:200, ovenLvl:2, workerSpeed:1, carryCap:3, marketing:0};
 let timeLeft=LEVELS[S.level-1].time, goal=LEVELS[S.level-1].goal;
 
-// Isometric coords
-const iso = (x,y)=>({ X: x - y + W()*0.35, Y: (x + y) * 0.5 + H()*0.40 });
+// Isometric coords (أوفست آمن داخل الإطار)
+const iso = (x,y)=>({ X: x - y + W()*0.33, Y: (x + y) * 0.50 + H()*0.38 });
 
 // Entities
 const oven={timer:0, stock:0, limit:99};
 const counter={stock:0, limit:40};
 const worker={x:iso(240,160).X, y:iso(240,160).Y, carrying:0, target:null, state:'toStack'};
-const customers=[]; // {isoX,isoY,scrX,scrY,order,pat,served,leaving,clicked}
+const customers=[]; // {isoX,isoY,scrX,scrY,order,pat,served,leaving}
 
 // Rates
 function ovenInterval(){ return Math.max(0.6, 2.2 - S.ovenLvl*0.18); }
 function spawnRate(){ return LEVELS[S.level-1].spawn + S.marketing*0.05; }
 function patienceMax(){ return 6.5 + S.marketing*0.2; }
-let spawnT=1/spawnRate(); let last=performance.now();
+let spawnT=1/spawnRate();
 
 // HUD & overlay
 const $=id=>document.getElementById(id);
-function renderHUD(){ $('cash').textContent=S.cash.toFixed(0); $('level').textContent=S.level; $('goal').textContent=goal; const m=Math.floor(timeLeft/60), s=(timeLeft%60|0).toString().padStart(2,'0'); $('time').textContent=`${m}:${s}`; $('ovenBar').style.width=(S.ovenLvl*10)+'%'; $('speedBar').style.width=(S.workerSpeed*10)+'%'; $('capBar').style.width=(S.carryCap*10)+'%'; $('mkBar').style.width=(S.marketing*10)+'%'; }
+function renderHUD(){
+  $('cash').textContent=S.cash.toFixed(0);
+  $('level').textContent=S.level;
+  $('goal').textContent=goal;
+  const m=Math.floor(timeLeft/60), s=(timeLeft%60|0).toString().padStart(2,'0');
+  $('time').textContent=`${m}:${s}`;
+  $('ovenBar').style.width=(S.ovenLvl*10)+'%';
+  $('speedBar').style.width=(S.workerSpeed*10)+'%';
+  $('capBar').style.width=(S.carryCap*10)+'%';
+  $('mkBar').style.width=(S.marketing*10)+'%';
+}
 function save(){ localStorage.setItem('pf_iso_levels', JSON.stringify(S)); }
 
 const overlay=$('overlay'); const ovTitle=$('ovTitle'), ovBody=$('ovBody'), ovBtn=$('ovBtn');
-$('btnTut').onclick=()=>{ ovTitle.textContent='شرح سريع'; ovBody.textContent='اضغط على الزبون لبدء الطلب. السير ينقل العجين للفرن. العامل يحمل من المخزن ويسلّم. حقّق الهدف قبل الوقت.'; overlay.style.display='grid'; };
+$('btnTut').onclick=()=>{ ovTitle.textContent='شرح سريع'; ovBody.textContent='السير ينقل العجين للفرن. العامل يحمل من المخزن ويسلّم. حقّق الهدف قبل الوقت.'; overlay.style.display='grid'; };
 $('btnMute').onclick=()=>{ muted=!muted; $('btnMute').textContent = muted?'🔇 صامت':'🔊 صوت'; };
 $('btnRestart').onclick=()=>{ startLevel(S.level,true); };
 
@@ -179,27 +192,38 @@ $('upCap').onclick=()=>{ if(S.cash>=150){ S.cash-=150; S.carryCap++; beep(640); 
 $('upMk').onclick=()=>{ if(S.cash>=130){ S.cash-=130; S.marketing++; beep(520); renderHUD(); save(); } };
 $('save').onclick=save; $('reset').onclick=()=>{ localStorage.removeItem('pf_iso_levels'); location.reload(); };
 
-// Levels control
+// Levels control (مع زبائن مبدئيين)
 function startLevel(n, resetCash=false){
   const L=LEVELS[n-1];
   timeLeft=L.time; goal=L.goal;
   S.ovenLvl=L.oven; S.workerSpeed=L.speed; S.carryCap=L.cap; S.marketing=L.mk;
   oven.stock=0; counter.stock=0; customers.length=0; spawnT=1/spawnRate();
+  for(let i=0;i<3;i++) spawnCustomer();
   renderHUD();
   overlay.style.display='grid'; ovTitle.textContent=`المستوى ${n}`; ovBody.textContent=`الهدف ${goal} خلال ${L.time} ثانية`; ovBtn.textContent='ابدأ';
 }
 startLevel(S.level,true);
-ovBtn.onclick=()=>{ overlay.style.display='none'; };
+ovBtn.onclick=()=>{ overlay.style.display='none'; last=performance.now(); };
 
-// Click: select customer to serve
-cv.addEventListener('click', (e)=>{
-  const r=cv.getBoundingClientRect(); const x=(e.clientX-r.left); const y=(e.clientY-r.top);
-  for(let i=customers.length-1;i>=0;i--){ const c=customers[i]; const dx=x-c.scrX, dy=y-c.scrY; if(dx*dx+dy*dy<22*22 && !c.served){ c.clicked=true; break; } }
-});
-
-// Spawn & serve
-function spawnCustomer(){ const range=LEVELS[S.level-1].order; const n = range[0] + Math.floor(Math.random()*(range[1]-range[0]+1)); const p=iso(420, 160+Math.random()*80); customers.push({isoX:420, isoY:160+Math.random()*80, scrX:p.X, scrY:p.Y, order:n, pat:patienceMax(), served:false, leaving:false}); }
-function serveFromCounter(){ const c=customers.find(z=>z.clicked && !z.served && !z.leaving); if(!c) return; const give=Math.min(counter.stock,c.order); if(give>0){ c.order-=give; counter.stock-=give; const pay=give*10; S.cash+=pay; if(c.order===0){ c.served=true; beep(880,0.07,'sine',0.04); } renderHUD(); save(); } }
+// Spawn & serve (من غير ضغط)
+function spawnCustomer(){
+  const range=LEVELS[S.level-1].order;
+  const n = range[0] + Math.floor(Math.random()*(range[1]-range[0]+1));
+  const baseY = 160 + Math.random()*60;
+  const p=iso(420, baseY);
+  customers.push({isoX:420, isoY:baseY, scrX:p.X, scrY:p.Y, order:n, pat:patienceMax(), served:false, leaving:false});
+}
+function serveFromCounter(){
+  const c = customers.find(z=>!z.served && !z.leaving);
+  if(!c) return;
+  const give = Math.min(counter.stock, c.order);
+  if(give>0){
+    c.order -= give; counter.stock -= give;
+    const pay=give*10; S.cash += pay;
+    if(c.order===0){ c.served=true; beep(880,0.07,'sine',0.04); }
+    renderHUD(); save();
+  }
+}
 
 // Worker FSM
 const P_STACK=iso(210,150), P_COUNTER=iso(320,150);
@@ -229,22 +253,30 @@ function drawBelt(x1,y1,x2,y2){
   ctx.restore();
 }
 
-// Loop
+// Loop (العداد يتحرّك فعليًا)
+let last = performance.now();
 function loop(now){
   let dt=(now-last)/1000; last=now; if(!isFinite(dt)||dt<=0) dt=0.016; dt=Math.min(dt,0.033);
+
   if(overlay.style.display==='grid'){ requestAnimationFrame(loop); return; }
 
   timeLeft -= dt;
+  renderHUD();                      // تحديث العداد كل فريم
+
   if(timeLeft<=0){
-    if(S.cash>=goal){ S.level = Math.min(LEVELS.length, S.level+1); startLevel(S.level,true); ovTitle.textContent='مبروك!'; ovBody.textContent='انتقلت للمستوى التالي'; ovBtn.textContent='تابع'; save(); }
-    else { startLevel(S.level,true); ovTitle.textContent='انتهى الوقت'; ovBody.textContent='حاول مرة أخرى لتحقيق الهدف'; ovBtn.textContent='إعادة'; }
+    if(S.cash>=goal){
+      S.level = Math.min(LEVELS.length, S.level+1); save();
+      startLevel(S.level,true); ovTitle.textContent='مبروك!'; ovBody.textContent='انتقلت للمستوى التالي'; ovBtn.textContent='تابع';
+    }else{
+      startLevel(S.level,true); ovTitle.textContent='انتهى الوقت'; ovBody.textContent='حاول مرة أخرى لتحقيق الهدف'; ovBtn.textContent='إعادة';
+    }
   }
 
   spawnT -= dt; if(spawnT<=0){ spawnT=1/spawnRate(); spawnCustomer(); }
-
   oven.timer -= dt; if(oven.timer<=0){ oven.timer=ovenInterval(); if(oven.stock<oven.limit){ oven.stock++; beep(520,0.05,'square',0.02); } }
 
-  customers.forEach(c=>{ if(!c.served){ c.pat -= dt; if(c.pat<=0){ c.leaving=true; } } if(c.served||c.leaving){ c.isoX+= (c.served? 100:140)*dt; const p=iso(c.isoX,c.isoY); c.scrX=p.X; c.scrY=p.Y; } });
+  customers.forEach(c=>{ if(!c.served){ c.pat -= dt; if(c.pat<=0){ c.leaving=true; } }
+    if(c.served||c.leaving){ c.isoX+= (c.served? 100:140)*dt; const p=iso(c.isoX,c.isoY); c.scrX=p.X; c.scrY=p.Y; } });
   serveFromCounter(); stepWorker(dt); beltPhase=(beltPhase+dt*60)%40;
 
   draw(); requestAnimationFrame(loop);
