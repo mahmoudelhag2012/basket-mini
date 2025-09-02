@@ -3,169 +3,214 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Lemonade Tycoon — Mini App</title>
+  <title>Burger Rush — 2D Crowd Tycoon (Mini App)</title>
   <script src="https://telegram.org/js/telegram-web-app.js"></script>
   <style>
-    :root{
-      --bg:#f2f7ff; --card:#fff; --text:#1f2937; --muted:#6b7280;
-      --brand:#22c55e; --brand2:#3b82f6; --shadow:0 12px 30px rgba(0,0,0,.08);
-      --r:20px;
-    }
+    :root{ --bg:#f4f7fb; --card:#fff; --ink:#0f172a; --muted:#6b7280; --accent:#22c55e; --accent2:#3b82f6; --danger:#ef4444; --shadow:0 10px 28px rgba(0,0,0,.08); }
     *{box-sizing:border-box}
     html,body{height:100%}
-    body{margin:0; font-family: system-ui, -apple-system, Segoe UI, Roboto, "Cairo", sans-serif; background:radial-gradient(1000px 500px at 50% -10%, #ffffff, var(--bg)); color:var(--text); -webkit-tap-highlight-color:transparent; display:flex; justify-content:center}
-    .app{width:min(920px,100%); padding:16px}
-    .frame{background:var(--card); border-radius:28px; box-shadow:var(--shadow); overflow:hidden}
-
-    .header{display:flex; justify-content:space-between; align-items:center; padding:16px 18px; background:linear-gradient(90deg, var(--brand), var(--brand2)); color:#fff}
-    .header b{font-size:18px}
-    .stat{display:flex; gap:10px; align-items:center; background:rgba(255,255,255,.15); padding:8px 12px; border-radius:999px}
-
-    .hero{display:grid; grid-template-columns:1.1fr .9fr; gap:16px; padding:16px}
-    .shop{background:#f8fafc; border:1px solid #eef2f7; border-radius:22px; padding:14px}
-    .shop h3{margin:6px 0 10px; font-size:18px}
-    .row{display:flex; align-items:center; justify-content:space-between; gap:8px; padding:10px 0}
-    .row + .row{border-top:1px dashed #e5e7eb}
-    .btn{display:inline-flex; align-items:center; gap:8px; padding:10px 14px; border-radius:14px; border:1px solid #e5e7eb; background:#fff; box-shadow:var(--shadow); cursor:pointer; font-weight:700}
+    body{margin:0; font-family:system-ui,-apple-system,Segoe UI,Roboto,"Cairo",sans-serif; background:radial-gradient(1000px 600px at 50% -10%, #ffffff, var(--bg)); color:var(--ink); display:flex; justify-content:center}
+    .app{width:min(960px,100%); padding:12px}
+    .frame{background:var(--card); border-radius:24px; box-shadow:var(--shadow); overflow:hidden; border:1px solid #eef2f7}
+    .top{display:flex; justify-content:space-between; align-items:center; padding:10px 14px; background:linear-gradient(90deg,var(--accent),var(--accent2)); color:#fff}
+    .top .stat{display:flex; align-items:center; gap:10px; background:rgba(255,255,255,.15); padding:8px 12px; border-radius:999px}
+    .wrap{display:grid; grid-template-columns:1.2fr .8fr; gap:10px; padding:12px}
+    .panel{background:#f8fafc; border:1px solid #eef2f7; border-radius:18px; padding:10px}
+    .panel h3{margin:4px 0 10px}
+    .btn{background:#fff; border:1px solid #e5e7eb; border-radius:14px; padding:10px 12px; box-shadow:var(--shadow); cursor:pointer; font-weight:700}
     .btn:active{transform:translateY(1px)}
-
+    .row{display:flex; align-items:center; justify-content:space-between; gap:8px; padding:8px 0}
     .meter{height:10px; border-radius:999px; background:#eef2f7; overflow:hidden}
-    .meter > span{display:block; height:100%; background:linear-gradient(90deg, var(--brand), var(--brand2))}
-
-    .cards{display:grid; grid-template-columns:repeat(3, 1fr); gap:12px}
-    .card{background:#fff; border:1px solid #eef2f7; border-radius:18px; padding:12px; box-shadow:var(--shadow)}
-    .card h4{margin:6px 0 8px}
-
-    .footer{display:flex; justify-content:space-between; align-items:center; padding:12px 16px; color:var(--muted); border-top:1px solid #eef2f7}
-
-    @media (max-width:720px){ .hero{grid-template-columns:1fr} }
+    .meter>span{display:block; height:100%; background:linear-gradient(90deg,var(--accent),var(--accent2))}
+    canvas{width:100%; aspect-ratio: 16/9; background:linear-gradient(#e9f5ff,#fff)}
+    .storebar{display:flex; gap:8px; align-items:center; justify-content:center; padding:8px}
+    .pill{display:inline-flex; align-items:center; gap:8px; padding:8px 12px; border-radius:999px; background:#fff; border:1px solid #e5e7eb; box-shadow:var(--shadow); font-weight:700}
+    .footer{padding:10px 14px; display:flex; justify-content:space-between; align-items:center; color:var(--muted); border-top:1px solid #eef2f7}
+    @media (max-width:760px){ .wrap{grid-template-columns:1fr} }
   </style>
 </head>
 <body>
   <div class="app">
     <div class="frame">
-      <div class="header">
-        <b>عصير ليمون – تايكون</b>
-        <div class="stat"><span>💰</span><b id="money">0</b></div>
+      <div class="top">
+        <b>Burger Rush — حانة برجر مزدحمة</b>
+        <div class="stat">💰 <b id="cash">0</b> • ⭐ <b id="combo">x1</b></div>
       </div>
-      <div class="hero">
-        <div class="shop">
-          <h3>الكشك</h3>
-          <div class="row"><div>السعر/كوب</div><div><b id="price">5</b>💲 <button class="btn" id="incPrice">+1</button> <button class="btn" id="decPrice">-1</button></div></div>
-          <div class="row"><div>الجودة (يرفع رضا الزبائن)</div><div><div class="meter" style="width:180px"><span id="qualityBar" style="width:20%"></span></div> <button class="btn" id="upgradeQuality">ترقية (20💰)</button></div></div>
-          <div class="row"><div>الإعلانات (يزيد الزوار/الدقيقة)</div><div><div class="meter" style="width:180px"><span id="adsBar" style="width:0%"></span></div> <button class="btn" id="upgradeAds">ترقية (30💰)</button></div></div>
-          <div class="row"><div>العمال (يزيد سرعة التقديم)</div><div><b id="staff">1</b> 👤 <button class="btn" id="hire">تعيين (50💰)</button></div></div>
-          <div class="row"><div>المخزون (ليمونات/سكر/ماء)</div><div><b id="stock">30</b> كوب <button class="btn" id="buyStock">شراء 20 (20💰)</button></div></div>
-          <div class="row"><div>الزوار/دقيقة</div><div><b id="visitors">10</b></div></div>
-          <div class="row"><div>الرضا</div><div><b id="satisfaction">0%</b></div></div>
-          <div class="row"><button class="btn" id="openShop">ابدأ البيع الآن</button><div id="status">جاهز</div></div>
+
+      <div class="wrap">
+        <div class="panel">
+          <h3>صالة واحدة • عملاء متحركين (2D)</h3>
+          <canvas id="game" width="960" height="540"></canvas>
+          <div class="storebar">
+            <div class="pill">🍔 برجر — <b id="bStock">∞</b></div>
+            <div class="pill">🌭 هوت دوج — <b id="hStock">∞</b></div>
+            <div class="pill">☕ قهوة — <b id="cStock">∞</b></div>
+          </div>
         </div>
-        <div class="cards">
-          <div class="card"><h4>الإيراد اليومي</h4><div class="meter"><span id="dayBar" style="width:0%"></span></div><div style="margin-top:6px">اليوم: <b id="dayRevenue">0</b>💰</div></div>
-          <div class="card"><h4>معدل الخدمة</h4><div>الطلب/ثانية: <b id="serveRate">1.0</b></div><div>الكوب/سعر: <b id="price2">5</b></div></div>
-          <div class="card"><h4>حفظ البيانات</h4><button class="btn" id="save">حفظ</button> <button class="btn" id="reset">بداية جديدة</button></div>
+        <div class="panel">
+          <h3>الترقيات (تشغل الناس بصريًا)</h3>
+          <div class="row"><div>سرعة الطهي</div><div><div class="meter" style="width:160px"><span id="cookBar" style="width:20%"></span></div> <button class="btn" id="upCook">ترقية (40💰)</button></div></div>
+          <div class="row"><div>عامل إضافي (يخدم زبونين معًا)</div><div><b id="staff">1</b> 👤 <button class="btn" id="upStaff">توظيف (120💰)</button></div></div>
+          <div class="row"><div>موسيقى ولافتات (يزيد الصبر)</div><div><div class="meter" style="width:160px"><span id="ambBar" style="width:0%"></span></div> <button class="btn" id="upAmb">ترقية (60💰)</button></div></div>
+          <div class="row"><div>تلميح سريع</div><div><button class="btn" id="hint">أظهر الطلبات</button></div></div>
+          <div class="row"><div>حفظ التقدم</div><div><button class="btn" id="save">حفظ</button> <button class="btn" id="reset">بداية جديدة</button></div></div>
+          <div class="row" style="color:var(--muted)">اضغط على العميل لتقديم الطلب المطابق (🍔/🌭/☕). لو أخطأت يقل الصبر ويقل الكومبو.</div>
         </div>
       </div>
+
       <div class="footer">
-        <div>⏱️ كل ثانية = 1 “وحدة زمن” داخل اللعبة. كل 60 ثانية = يوم واحد.</div>
-        <div id="day">اليوم 1</div>
+        <div>هدف اليوم: <b id="goal">300</b>💰 • تم: <b id="rev">0</b>💰</div>
+        <div>طابور حيّ + مؤشرات صبر فوق رؤوس العملاء</div>
       </div>
     </div>
   </div>
 
 <script>
-  // Telegram Mini App tweaks
-  const tg = window.Telegram?.WebApp; if(tg){ try{ tg.ready(); tg.expand(); }catch(e){} }
+const tg = window.Telegram?.WebApp; if(tg){ try{ tg.ready(); tg.expand(); }catch(e){} }
 
-  // ===== Game State =====
-  const S = JSON.parse(localStorage.getItem('lemon_tycoon')||'null') || {
-    money: 50,
-    price: 5,
-    quality: 1, // 1..10
-    ads: 0,     // 0..10
-    staff: 1,   // 1..10
-    stock: 30,  // cups available
-    visitorsPerMin: 10,
-    day: 1,
-    dayRevenue: 0,
-    open: false
-  };
+// ===== Game core (2D single screen with moving customers) =====
+const cv = document.getElementById('game');
+const ctx = cv.getContext('2d');
+const W = cv.width, H = cv.height;
 
-  // ===== UI Binders =====
-  const el = id=>document.getElementById(id);
-  function render(){
-    el('money').textContent = S.money.toFixed(0);
-    el('price').textContent = S.price;
-    el('price2').textContent = S.price;
-    el('qualityBar').style.width = (S.quality*10)+'%';
-    el('adsBar').style.width = (S.ads*10)+'%';
-    el('staff').textContent = S.staff;
-    el('stock').textContent = S.stock;
-    el('visitors').textContent = visitorsPerMin().toFixed(0);
-    el('serveRate').textContent = serveRate().toFixed(2);
-    el('day').textContent = 'اليوم ' + S.day;
-    el('dayRevenue').textContent = S.dayRevenue.toFixed(0);
-    el('dayBar').style.width = Math.min(100, (S.dayRevenue/goalForDay())*100) + '%';
+// State
+const S = JSON.parse(localStorage.getItem('burger_rush')||'null') || {
+  cash: 100, dayRevenue: 0, cookLvl: 1, staff: 1, ambiance: 0, combo: 1
+};
+
+// UI refs
+const $ = id=>document.getElementById(id);
+function renderUI(){
+  $('cash').textContent = S.cash.toFixed(0);
+  $('rev').textContent = S.dayRevenue.toFixed(0);
+  $('combo').textContent = 'x'+S.combo.toFixed(1);
+  $('cookBar').style.width = (S.cookLvl*10)+'%';
+  $('ambBar').style.width = (S.ambiance*10)+'%';
+  $('staff').textContent = S.staff;
+  $('goal').textContent = 300 + (S.cookLvl+S.staff+S.ambiance)*60;
+}
+function save(){ localStorage.setItem('burger_rush', JSON.stringify(S)); }
+function reset(){ localStorage.removeItem('burger_rush'); location.reload(); }
+
+// Customers
+const MENU = ['🍔','🌭','☕'];
+const COLORS = ['#ffd166','#06d6a0','#118ab2','#ef476f'];
+const customers = []; // {x,y,vx,order,patience,served}
+let spawnTimer = 0, t = 0;
+
+function patienceMax(){ return 6 + S.ambiance*1.2; }
+function cookTime(){ return Math.max(0.6, 1.6 - S.cookLvl*0.12); }
+
+function spawnCustomer(){
+  const order = MENU[Math.floor(Math.random()*MENU.length)];
+  customers.push({
+    x: -40, y: H-120 - Math.random()*40,
+    vx: 1.2 + Math.random()*0.6,
+    order, patience: patienceMax(), served:false, cooldown:0
+  });
+}
+
+function serve(c){
+  // simulate cooking delay then pay
+  if(c.cooldown>0) return; // already being cooked
+  c.cooldown = cookTime();
+}
+
+cv.addEventListener('click', (e)=>{
+  const r = cv.getBoundingClientRect();
+  const x = (e.clientX - r.left) * (cv.width/r.width);
+  const y = (e.clientY - r.top) * (cv.height/r.height);
+  // hit test head circle
+  for(let i=customers.length-1;i>=0;i--){
+    const c = customers[i];
+    const dx = x-(c.x+0); const dy = y-(c.y-18);
+    if(dx*dx+dy*dy < 26*26){ serve(c); break; }
   }
+});
 
-  function save(){ localStorage.setItem('lemon_tycoon', JSON.stringify(S)); }
-  function reset(){ localStorage.removeItem('lemon_tycoon'); location.reload(); }
+function step(dt){
+  t += dt; spawnTimer -= dt; if(spawnTimer<=0){ spawnCustomer(); spawnTimer = 1.8 + Math.random()*1.4; }
 
-  // ===== Core Sim =====
-  function visitorsPerMin(){ return S.visitorsPerMin + S.ads*3 + (S.quality-1)*1.5; }
-  function satisfaction(){
-    // رضا يتأثر بالسعر مقابل الجودة
-    const base = 50 + (S.quality-1)*5 + S.ads*2; // %
-    const penalty = Math.max(0, (S.price-5)*4);   // كل زيادة سعر تقلل الرضا
-    return Math.max(0, Math.min(95, base - penalty));
+  // simulate customers
+  const laneX = W*0.6; // cashier position
+  customers.forEach(c=>{
+    // move until cashier
+    if(!c.served && c.x < laneX - 120) c.x += c.vx*(1+0.25*(S.staff-1))*dt*60;
+    // patience drops
+    if(!c.served){ c.patience -= dt; if(c.patience<0){ c.patience=0; c.leave = true; } }
+    // cooking
+    if(c.cooldown>0){ c.cooldown -= dt; if(c.cooldown<=0){
+      c.served = true; // paid
+      const price = c.order==='☕'?8: (c.order==='🌭'?10:12);
+      const tip = Math.max(0, Math.floor( (c.patience/patienceMax())*6 * S.combo ));
+      const pay = price + tip;
+      S.cash += pay; S.dayRevenue += pay; S.combo = Math.min(5, S.combo + 0.2);
+    } }
+    if(c.leave){ S.combo = Math.max(1, S.combo - 0.4); }
+    // slide out
+    if(c.served){ c.x += 2.2*dt*60; }
+  });
+  // remove off-screen or left
+  for(let i=customers.length-1;i>=0;i--){
+    const c = customers[i];
+    if(c.x>W+60 || (c.leave && c.x<-30)) customers.splice(i,1);
+    if(c.leave && !c.served) c.x -= 2.2*dt*60;
   }
-  function serveRate(){ // cups per second depending on staff
-    return 0.8 + (S.staff-1)*0.4; // عامل واحد ~0.8 كوب/ث
-  }
+}
 
-  let tick=0; let loop=null; const DAY_LEN=60; // 60s = one day
-  function start(){ if(loop) return; S.open=true; el('status').textContent='جاري البيع…'; loop=setInterval(step, 1000); }
-  function stop(){ if(loop){ clearInterval(loop); loop=null; } S.open=false; el('status').textContent='متوقف'; }
+function draw(){
+  ctx.clearRect(0,0,W,H);
+  // floor
+  ctx.fillStyle = '#f0f7ff'; ctx.fillRect(0,H-140,W,140);
+  // cashier counter
+  ctx.fillStyle = '#ffffff'; ctx.fillRect(W*0.6-40,H-200,260,120);
+  ctx.strokeStyle = '#dbe6f1'; ctx.lineWidth=2; ctx.strokeRect(W*0.6-40,H-200,260,120);
+  ctx.fillStyle = '#e2f5e9'; ctx.fillRect(W*0.6-36,H-90,252,10);
+  ctx.fillStyle = '#0ea5e9'; ctx.font = '20px system-ui'; ctx.fillText('الكاشير', W*0.6+54, H-160);
 
-  function step(){
-    tick++;
-    const visitors = visitorsPerMin()/60; // per second
-    const willing = visitors * (satisfaction()/100);
-    const canServe = Math.min(willing, serveRate());
-    const orders = Math.min(S.stock, Math.floor(canServe* (1+Math.random()*0.2)) );
-    if(orders>0){
-      const revenue = orders * S.price;
-      S.stock -= orders;
-      S.money += revenue;
-      S.dayRevenue += revenue;
-    }
-    if(tick % DAY_LEN === 0){ // new day
-      S.day++;
-      S.dayRevenue = 0;
-    }
-    render(); save();
-  }
+  // queue markers
+  for(let i=0;i<5;i++){ ctx.fillStyle='#eef2f7'; ctx.beginPath(); ctx.arc(W*0.6-140-i*40, H-80, 6, 0, Math.PI*2); ctx.fill(); }
 
-  function goalForDay(){ return 300 + (S.day-1)*80; }
+  // customers
+  customers.forEach((c,idx)=>{
+    // body
+    ctx.fillStyle = COLORS[idx%COLORS.length];
+    ctx.beginPath(); ctx.arc(c.x, c.y, 22, 0, Math.PI*2); ctx.fill(); // head
+    ctx.fillRect(c.x-18, c.y+2, 36, 28); // torso
+    ctx.fillStyle = '#fff'; ctx.fillRect(c.x-12, c.y+6, 24, 18); // shirt
 
-  // ===== Buttons =====
-  el('openShop').onclick = ()=>{ S.open ? stop() : start(); };
-  el('incPrice').onclick = ()=>{ S.price = Math.min(50, S.price+1); render(); };
-  el('decPrice').onclick = ()=>{ S.price = Math.max(1, S.price-1); render(); };
-  el('upgradeQuality').onclick = ()=>{
-    if(S.money>=20 && S.quality<10){ S.money-=20; S.quality++; render(); save(); haptic(); }
-  };
-  el('upgradeAds').onclick = ()=>{
-    if(S.money>=30 && S.ads<10){ S.money-=30; S.ads++; render(); save(); haptic(); }
-  };
-  el('hire').onclick = ()=>{ if(S.money>=50 && S.staff<10){ S.money-=50; S.staff++; render(); save(); haptic(); } };
-  el('buyStock').onclick = ()=>{ if(S.money>=20){ S.money-=20; S.stock+=20; render(); save(); haptic(); } };
-  el('save').onclick = save; el('reset').onclick = reset;
+    // order bubble
+    ctx.fillStyle = 'rgba(255,255,255,.95)'; ctx.strokeStyle = '#d1d8e2';
+    ctx.lineWidth=2; const bx=c.x-18, by=c.y-56; ctx.fillRect(bx,by,36,28); ctx.strokeRect(bx,by,36,28);
+    ctx.font='20px system-ui'; ctx.fillStyle='#111'; ctx.fillText(c.order, c.x-6, c.y-36);
 
-  function haptic(){ try{ tg?.HapticFeedback?.impactOccurred('light'); }catch(e){} }
+    // patience bar
+    const p = c.patience/patienceMax();
+    ctx.fillStyle = '#e2e8f0'; ctx.fillRect(c.x-22,c.y-26,44,6);
+    ctx.fillStyle = p>0.5? '#22c55e' : (p>0.25? '#f59e0b' : '#ef4444');
+    ctx.fillRect(c.x-22,c.y-26,44*p,6);
 
-  // Auto-start if previously open
-  render(); if(S.open) start();
+    // cooking spinner
+    if(c.cooldown>0){ ctx.fillStyle='#93c5fd'; ctx.fillRect(c.x-10, c.y+34, 20, 6); }
+
+    // emoji feedback
+    if(c.served){ ctx.fillStyle='#16a34a'; ctx.fillText('✓', c.x-4, c.y-70); }
+    if(c.leave && !c.served){ ctx.fillStyle='#ef4444'; ctx.fillText('✗', c.x-4, c.y-70); }
+  });
+}
+
+let last=0; function loop(now){ const dt = (now-last)/1000||0.016; last=now; step(dt); draw(); requestAnimationFrame(loop); }
+requestAnimationFrame(loop);
+
+// Upgrades
+$('upCook').onclick = ()=>{ if(S.cash>=40){ S.cash-=40; S.cookLvl++; renderUI(); save(); haptic(); } };
+$('upStaff').onclick = ()=>{ if(S.cash>=120){ S.cash-=120; S.staff++; renderUI(); save(); haptic(); } };
+$('upAmb').onclick = ()=>{ if(S.cash>=60){ S.cash-=60; S.ambiance++; renderUI(); save(); haptic(); } };
+$('hint').onclick = ()=>{ customers.forEach(c=>{ c.patience = Math.min(patienceMax(), c.patience+1.5); }); };
+$('save').onclick = save; $('reset').onclick = reset;
+
+function haptic(){ try{ tg?.HapticFeedback?.impactOccurred('light'); }catch(e){} }
+renderUI();
 </script>
 </body>
 </html>
