@@ -3,33 +3,51 @@
 <head>
 <meta charset="utf-8"/>
 <meta name="viewport" content="width=device-width, initial-scale=1"/>
-<title>Pizza Factory — Minimal Stable</title>
+<title>Pizza Factory — Stable + Rewards</title>
 <style>
-:root{--bg:#eaf2ff;--card:#fff;--ink:#0f172a;--muted:#6b7280;--accent:#22c55e;--accent2:#3b82f6}
+:root{
+  --bg:#eaf2ff; --card:#fff; --ink:#0f172a; --muted:#6b7280;
+  --accent:#22c55e; --accent2:#3b82f6; --danger:#ef4444; --gold:#eab308;
+}
 *{box-sizing:border-box} html,body{height:100%}
-body{margin:0;font-family:system-ui,-apple-system,Segoe UI,Roboto,"Cairo",sans-serif;background:radial-gradient(900px 520px at 50% -10%,#fff,var(--bg));color:var(--ink);display:flex;justify-content:center}
-.wrap{width:min(1024px,100%);padding:12px}
-.top{display:flex;justify-content:space-between;align-items:center;gap:8px;padding:10px 14px;background:linear-gradient(90deg,var(--accent),var(--accent2));color:#fff;border-radius:16px}
-.stats{display:flex;gap:8px;flex-wrap:wrap}
-.pill{display:inline-flex;gap:6px;align-items:center;padding:8px 12px;border-radius:999px;background:rgba(255,255,255,.16);font-weight:700}
-.grid{display:grid;grid-template-columns:1.1fr .9fr;gap:10px;margin-top:10px}
-.card{background:var(--card);border:1px solid #e8eef5;border-radius:16px;padding:10px}
-canvas{display:block;width:100%;aspect-ratio:16/9;background:#fff;border-radius:12px}
-.row{display:flex;justify-content:space-between;align-items:center;padding:8px 0}
-.meter{height:10px;width:160px;border-radius:999px;background:#eef2f7;overflow:hidden}
-.meter span{display:block;height:100%;background:linear-gradient(90deg,var(--accent),var(--accent2))}
-.btn{padding:8px 12px;border:1px solid #e5e7eb;border-radius:12px;background:#fff;cursor:pointer;font-weight:700}
-.hud{color:var(--muted);padding:6px 2px;text-align:center}
+body{
+  margin:0; font-family:system-ui,-apple-system,Segoe UI,Roboto,"Cairo",sans-serif;
+  background:radial-gradient(900px 520px at 50% -10%,#fff,var(--bg));
+  color:var(--ink); display:flex; justify-content:center;
+}
+.wrap{width:min(1024px,100%); padding:12px}
+.top{
+  display:flex; justify-content:space-between; align-items:center; gap:8px;
+  padding:10px 14px; border-radius:16px; color:#fff;
+  background:linear-gradient(90deg,var(--accent),var(--accent2));
+}
+.stats{display:flex; gap:8px; flex-wrap:wrap}
+.pill{display:inline-flex; gap:6px; align-items:center; padding:8px 12px; border-radius:999px; background:rgba(255,255,255,.16); font-weight:700}
+.grid{display:grid; grid-template-columns:1.1fr .9fr; gap:10px; margin-top:10px}
+.card{background:var(--card); border:1px solid #e8eef5; border-radius:16px; padding:10px}
+canvas{display:block; width:100%; aspect-ratio:16/9; background:#fff; border-radius:12px}
+.row{display:flex; justify-content:space-between; align-items:center; padding:8px 0}
+.meter{height:10px; width:160px; border-radius:999px; background:#eef2f7; overflow:hidden}
+.meter span{display:block; height:100%; background:linear-gradient(90deg,var(--accent),var(--accent2))}
+.btn{padding:8px 12px; border:1px solid #e5e7eb; border-radius:12px; background:#fff; cursor:pointer; font-weight:700}
+.btn:active{transform:translateY(1px)}
+.hud{color:var(--muted); padding:6px 2px; text-align:center}
+.overlay{position:fixed; inset:0; display:none; place-items:center; background:rgba(15,23,42,.65)}
+.modal{background:#fff; border-radius:16px; width:min(520px,92%); padding:16px; text-align:center}
+.modal h2{margin:8px 0}
+.modal p{margin:6px 0}
+.badge{display:inline-flex; align-items:center; gap:6px; padding:6px 10px; border-radius:999px; background:#f1f5f9; margin:4px}
 @media (max-width:780px){.grid{grid-template-columns:1fr}}
 </style>
 </head>
 <body>
 <div class="wrap">
   <div class="top">
-    <b>Pizza Factory — نسخة ثابتة</b>
+    <b>Pizza Factory — نسخة ثابتة + مكافآت</b>
     <div class="stats">
       <div class="pill">💰 <b id="cash">0</b></div>
-      <div class="pill">⭐ المستوى <b id="level">1</b></div>
+      <div class="pill">💎 <b id="gems">0</b></div>
+      <div class="pill">⭐ <b id="level">1</b></div>
       <div class="pill">🎯 المتبقي <b id="left">0</b></div>
       <div class="pill">⏳ الوقت <b id="time">00:00</b></div>
     </div>
@@ -39,7 +57,7 @@ canvas{display:block;width:100%;aspect-ratio:16/9;background:#fff;border-radius:
     <div class="card">
       <h3>الملعب (بدون Shadow/شبكة)</h3>
       <canvas id="cv"></canvas>
-      <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:8px">
+      <div style="display:flex; gap:8px; flex-wrap:wrap; margin-top:8px">
         <button class="btn" id="restart">إعادة المستوى</button>
         <button class="btn" id="mute">🔊 صوت</button>
       </div>
@@ -50,55 +68,66 @@ canvas{display:block;width:100%;aspect-ratio:16/9;background:#fff;border-radius:
       <div class="row"><div>⏱️ سرعة الفرن</div><div style="display:flex;gap:8px;align-items:center"><div class="meter"><span id="ovBar" style="width:20%"></span></div><button class="btn" id="upOven">+ (120💰)</button></div></div>
       <div class="row"><div>🏃‍♂️ سرعة العامل</div><div style="display:flex;gap:8px;align-items:center"><div class="meter"><span id="spBar" style="width:20%"></span></div><button class="btn" id="upSpeed">+ (100💰)</button></div></div>
       <div class="row"><div>🧺 سعة الحمل</div><div style="display:flex;gap:8px;align-items:center"><div class="meter"><span id="capBar" style="width:20%"></span></div><button class="btn" id="upCap">+ (150💰)</button></div></div>
-      <div class="row"><div>📣 تسويق</div><div style="display:flex;gap:8px;align-items:center"><div class="meter"><span id="mkBar" style="width:0%"></span></div><button class="btn" id="upMk">+ (130💰)</button></div></div>
+      <div class="row"><div>📣 تسويق (يزوّد الزبائن)</div><div style="display:flex;gap:8px;align-items:center"><div class="meter"><span id="mkBar" style="width:0%"></span></div><button class="btn" id="upMk">+ (130💰)</button></div></div>
     </div>
   </div>
 
-  <div class="hud">👷 العامل بيشيل من المخزن → يسلّم على الكاونتر. **التقدّم = الإيراد فقط** (المشتريات لا تقلله).</div>
+  <div class="hud">👷 العامل يشيل من المخزن → يسلّم على الكاونتر. **التقدّم = الإيراد فقط** (المشتريات لا تقلله).</div>
+</div>
+
+<!-- Overlay لبدء/فوز/خسارة -->
+<div class="overlay" id="ov">
+  <div class="modal">
+    <h2 id="ovTitle">المستوى</h2>
+    <p id="ovMsg"></p>
+    <div id="ovRewards" style="margin:6px 0"></div>
+    <button class="btn" id="ovBtn">ابدأ</button>
+  </div>
 </div>
 
 <script>
-/* ====== Canvas setup (no overlay, starts فورًا) ====== */
+/* ================== Canvas ================== */
 const cv=document.getElementById('cv'), ctx=cv.getContext('2d');
 function fit(){
   const dpr=Math.max(1,window.devicePixelRatio||1);
   const r=cv.getBoundingClientRect();
   const w=Math.max(640,Math.floor(r.width||960)), h=Math.max(360,Math.floor(w*9/16));
-  cv.width=Math.floor(w*dpr); cv.height=Math.floor(h*dpr);
-  ctx.setTransform(dpr,0,0,dpr,0,0);
+  cv.width=Math.floor(w*dpr); cv.height=Math.floor(h*dpr); ctx.setTransform(dpr,0,0,dpr,0,0);
 }
 new ResizeObserver(fit).observe(cv); fit();
 const W=()=>cv.getBoundingClientRect().width||960, H=()=>cv.getBoundingClientRect().height||540;
 
-/* ====== UI refs ====== */
+/* ================== HUD refs ================== */
 const $=id=>document.getElementById(id);
-const cashEl=$('cash'), levelEl=$('level'), leftEl=$('left'), timeEl=$('time');
+const cashEl=$('cash'), gemsEl=$('gems'), levelEl=$('level'), leftEl=$('left'), timeEl=$('time');
 $('restart').onclick=()=>startLevel(S.level,true);
 let muted=false; $('mute').onclick=()=>{muted=!muted;$('mute').textContent=muted?'🔇 صامت':'🔊 صوت'};
 
-/* ====== Sound (بسيط) ====== */
-let ac=null; function beep(f=850,d=0.06){ if(muted) return;
-  ac=ac||new (window.AudioContext||window.webkitAudioContext)(); const o=ac.createOscillator(), g=ac.createGain();
-  o.type='triangle'; o.frequency.value=f; g.gain.value=.03; o.connect(g).connect(ac.destination); o.start(); o.stop(ac.currentTime+d);
+/* ================== Sound ================== */
+let AC=null; function beep(f=850,d=.06,g=.03){ if(muted) return;
+  AC=AC||new (window.AudioContext||window.webkitAudioContext)();
+  const o=AC.createOscillator(), G=AC.createGain(); o.type='triangle'; o.frequency.value=f; G.gain.value=g;
+  o.connect(G).connect(AC.destination); o.start(); o.stop(AC.currentTime+d);
 }
 
-/* ====== Levels & State ====== */
+/* ================== Levels & Rewards ================== */
+/* سهّلت المستوى الرابع: زوّدت الوقت وقلّلت الهدف */
 const LEVELS=[
-  {goal:200,time:60,spawn:.55,order:[1,2],oven:2,speed:1,cap:3,mk:0},
-  {goal:350,time:70,spawn:.70,order:[1,3],oven:3,speed:1,cap:3,mk:1},
-  {goal:500,time:80,spawn:.85,order:[2,3],oven:3,speed:2,cap:4,mk:1},
-  {goal:700,time:90,spawn:1.00,order:[2,3],oven:4,speed:2,cap:5,mk:2},
+  {goal:200,time:60, spawn:.55, order:[1,2], oven:2, speed:1, cap:3, mk:0},
+  {goal:330,time:70, spawn:.70, order:[1,3], oven:3, speed:1, cap:3, mk:1},
+  {goal:480,time:80, spawn:.85, order:[2,3], oven:3, speed:2, cap:4, mk:1},
+  {goal:600,time:95, spawn:1.00, order:[2,3], oven:4, speed:2, cap:5, mk:2}, // أسهل
 ];
-const S = JSON.parse(localStorage.getItem('pf_iso_min')||'null') || {level:1,cash:200,ovenLvl:2,workerSpeed:1,carryCap:3,marketing:0};
-let timeLeft=0, goal=0, revenue=0;
+function rewardFor(level){ return {cash:50+level*15, gems:1}; }
 
-function ovenInterval(){return Math.max(.6,2.2 - S.ovenLvl*0.18)}
-function spawnRate(){return LEVELS[S.level-1].spawn + S.marketing*.05}
-function patienceMax(){return 6 + S.marketing*.2}
+/* ================== State ================== */
+const S = JSON.parse(localStorage.getItem('pf_factory_rewards')||'null') ||
+          {level:1, cash:250, gems:0, ovenLvl:2, workerSpeed:1, carryCap:3, marketing:0};
+let timeLeft=0, goal=0, revenue=0; // التقدّم = الإيراد فقط
 
-/* ====== World ====== */
-const oven={timer:0,stock:0,limit:99};
-const counter={stock:0,limit:40};
+/* ================== World ================== */
+const oven={timer:0, stock:0, limit:99};
+const counter={stock:0, limit:40};
 const worker={x:0,y:0,carrying:0,state:'toStack'};
 const customers=[];
 const POS={ oven:{x:-120,y:-20}, stack:{x:-60,y:-20}, counter:{x:140,y:-20}, queueX:230 };
@@ -106,18 +135,15 @@ function origin(){return {ox:W()*0.5, oy:H()*0.62}}
 const iso=(x,y)=>{const {ox,oy}=origin(); return {X:x-y+ox, Y:(x+y)*.5+oy};}
 const P_STACK=()=>iso(POS.stack.x,POS.stack.y), P_COUNTER=()=>iso(POS.counter.x,POS.counter.y);
 
-/* ====== Start level ====== */
-function startLevel(n,reset){
-  const L=LEVELS[n-1]; S.ovenLvl=L.oven; S.workerSpeed=L.speed; S.carryCap=L.cap; S.marketing=L.mk;
-  timeLeft=L.time; goal=L.goal; if(reset) revenue=0;
-  oven.stock=0; counter.stock=0; customers.length=0; worker.carrying=0; worker.state='toStack';
-  const p0=iso(0,0); worker.x=p0.X; worker.y=p0.Y;
-  spawnT=1/spawnRate();
-  for(let i=0;i<3;i++) spawnCustomer();
-  renderHUD();
-}
+/* ================== Rates ================== */
+function ovenInterval(){return Math.max(.6, 2.2 - S.ovenLvl*0.18)}
+function spawnRate(){return LEVELS[S.level-1].spawn + S.marketing*0.05}
+function patienceMax(){return 6.0 + S.marketing*0.2}
+
+/* ================== HUD ================== */
 function renderHUD(){
   cashEl.textContent=S.cash.toFixed(0);
+  gemsEl.textContent=S.gems.toFixed(0);
   levelEl.textContent=S.level;
   leftEl.textContent=Math.max(0,goal-revenue).toFixed(0);
   const m=(timeLeft/60)|0, s=(timeLeft%60|0).toString().padStart(2,'0'); timeEl.textContent=`${m}:${s}`;
@@ -126,28 +152,70 @@ function renderHUD(){
   $('capBar').style.width=(S.carryCap*10)+'%';
   $('mkBar').style.width=(S.marketing*10)+'%';
 }
-$('upOven').onclick=()=>{ if(S.cash>=120){S.cash-=120;S.ovenLvl++; renderHUD(); save();}}
-$('upSpeed').onclick=()=>{ if(S.cash>=100){S.cash-=100;S.workerSpeed++; renderHUD(); save();}}
-$('upCap').onclick=()=>{ if(S.cash>=150){S.cash-=150;S.carryCap++; renderHUD(); save();}}
-$('upMk').onclick=()=>{ if(S.cash>=130){S.cash-=130;S.marketing++; renderHUD(); save();}}
-function save(){ localStorage.setItem('pf_iso_min',JSON.stringify(S))}
+function save(){ localStorage.setItem('pf_factory_rewards', JSON.stringify(S)); }
 
-/* ====== Customers & Serving ====== */
+/* ================== Upgrades ================== */
+$('upOven').onclick=()=>{ if(S.cash>=120){S.cash-=120; S.ovenLvl++; renderHUD(); save();} }
+$('upSpeed').onclick=()=>{ if(S.cash>=100){S.cash-=100; S.workerSpeed++; renderHUD(); save();} }
+$('upCap').onclick=()=>{ if(S.cash>=150){S.cash-=150; S.carryCap++; renderHUD(); save();} }
+$('upMk').onclick=()=>{ if(S.cash>=130){S.cash-=130; S.marketing++; renderHUD(); save();} }
+
+/* ================== Overlay (Start/Win/Lose) ================== */
+const ov=$('ov'), ovTitle=$('ovTitle'), ovMsg=$('ovMsg'), ovBtn=$('ovBtn'), ovRewards=$('ovRewards');
+function showOverlay(title,msg,btn,rewards){
+  ovTitle.textContent=title; ovMsg.textContent=msg; ovRewards.innerHTML='';
+  if(rewards){ // عرض المكافآت
+    const a=document.createElement('div'); a.className='badge'; a.textContent=`+${rewards.cash} 💰`;
+    const b=document.createElement('div'); b.className='badge'; b.textContent=`+${rewards.gems} 💎`;
+    ovRewards.append(a,b);
+  }
+  ovBtn.textContent=btn; ov.style.display='grid';
+}
+ovBtn.onclick=()=>{ ov.style.display='none'; last=performance.now(); }
+
+/* ================== Level Flow ================== */
+let spawnT=1, last=performance.now();
+function startLevel(n, reset){
+  const L=LEVELS[n-1];
+  timeLeft=L.time; goal=L.goal;
+  S.ovenLvl=L.oven; S.workerSpeed=L.speed; S.carryCap=L.cap; S.marketing=L.mk;
+  if(reset) revenue=0;
+  oven.stock=0; counter.stock=0; customers.length=0; worker.carrying=0; worker.state='toStack';
+  const p0=iso(0,0); worker.x=p0.X; worker.y=p0.Y;
+  spawnT=1/spawnRate(); for(let i=0;i<3;i++) spawnCustomer();
+  renderHUD(); showOverlay(`المستوى ${n}`, `حقق ${goal} قبل انتهاء الوقت.`, 'ابدأ');
+}
+function winLevel(){
+  const rw=rewardFor(S.level);
+  S.cash += rw.cash; S.gems += rw.gems;
+  save();
+  showOverlay('مبروك! 🎉','حققت الهدف وتم إضافة مكافآت.', 'المستوى التالي', rw);
+  S.level = Math.min(LEVELS.length, S.level+1);
+  // ابدأ التالي عند الضغط
+  ovBtn.onclick=()=>{ ov.style.display='none'; startLevel(S.level,true); };
+}
+function loseLevel(){
+  showOverlay('انتهى الوقت ⏳','ما حققتش الهدف — جرب تاني.', 'إعادة');
+  ovBtn.onclick=()=>{ ov.style.display='none'; startLevel(S.level,true); };
+}
+
+/* ================== Customers & Serving ================== */
 function rand(a,b){return a+Math.floor(Math.random()*(b-a+1))}
 function spawnCustomer(){
   const r=LEVELS[S.level-1].order; const n=rand(r[0],r[1]);
   const baseY=-20+Math.random()*60; const p=iso(POS.queueX,baseY);
-  customers.push({isoX:POS.queueX,isoY:baseY,x:p.X,y:p.Y,order:n,pat:patienceMax(),served:false,leaving:false})
+  customers.push({isoX:POS.queueX,isoY:baseY,x:p.X,y:p.Y,order:n,pat:patienceMax(),served:false,leaving:false});
 }
 function serve(){
   const c=customers.find(z=>!z.served&&!z.leaving); if(!c) return;
   const give=Math.min(counter.stock,c.order); if(give<=0) return;
-  c.order-=give; counter.stock-=give; const pay=give*10; S.cash+=pay; revenue=Math.min(goal,revenue+pay);
-  if(c.order===0){ c.served=true; beep(); }
+  c.order-=give; counter.stock-=give;
+  const pay=give*10; S.cash+=pay; revenue=Math.min(goal,revenue+pay);
+  if(c.order===0){ c.served=true; beep(900,.07,.04); }
   renderHUD(); save();
 }
 
-/* ====== Worker FSM ====== */
+/* ================== Worker FSM ================== */
 function speedPx(){return 90+S.workerSpeed*26}
 function moveTo(o,tx,ty,dt){const dx=tx-o.x,dy=ty-o.y,d=Math.hypot(dx,dy); if(d>1){o.x+=dx/d*speedPx()*dt;o.y+=dy/d*speedPx()*dt}}
 function near(o,tx,ty,e){return Math.hypot(o.x-tx,o.y-ty)<=e}
@@ -164,17 +232,19 @@ function stepWorker(dt){
   }
 }
 
-/* ====== Game Loop ====== */
-let spawnT=1, last=performance.now();
+/* ================== Game Loop ================== */
 function loop(now){
   let dt=(now-last)/1000; last=now; if(!isFinite(dt)||dt<=0) dt=.016; dt=Math.min(dt,.033);
+  if(ov.style.display==='grid'){ requestAnimationFrame(loop); return; }
 
-  timeLeft-=dt; if(timeLeft<0) timeLeft=0;
-  if(revenue>=goal){ S.level=Math.min(LEVELS.length,S.level+1); save(); startLevel(S.level,true); }
+  // فوز فوري عند الوصول للهدف
+  if(revenue>=goal){ winLevel(); requestAnimationFrame(loop); return; }
+
+  timeLeft-=dt; if(timeLeft<=0){ timeLeft=0; renderHUD(); loseLevel(); requestAnimationFrame(loop); return; }
   renderHUD();
 
   spawnT-=dt; if(spawnT<=0){spawnT=1/spawnRate(); spawnCustomer();}
-  oven.timer-=dt; if(oven.timer<=0){oven.timer=ovenInterval(); if(oven.stock<oven.limit){oven.stock++; if(!muted) beep(520,.05);}}
+  oven.timer-=dt; if(oven.timer<=0){oven.timer=ovenInterval(); if(oven.stock<oven.limit){oven.stock++; if(!muted) beep(520,.05,.02);}}
   customers.forEach(c=>{ if(!c.served){ c.pat-=dt; if(c.pat<=0) c.leaving=true; }
     if(c.served||c.leaving){ c.isoX+=(c.served?100:140)*dt; const p=iso(c.isoX,c.isoY); c.x=p.X; c.y=p.Y; }
   });
@@ -183,13 +253,13 @@ function loop(now){
 }
 startLevel(S.level,true); requestAnimationFrame(loop);
 
-/* ====== Drawing (NO shadow, NO grid) ====== */
+/* ================== Drawing (NO grid / NO shadow) ================== */
 function ellipse(x,y,rx,ry){ctx.beginPath(); ctx.ellipse(x,y,rx,ry,0,0,Math.PI*2); ctx.fill();}
 function drawPizza(x,y,s=1){ctx.fillStyle='#f59e0b'; ellipse(x,y,16*s,6*s); ctx.strokeStyle='#b45309'; ctx.stroke();}
 function drawStack(x,y,count,small){const n=Math.min(10,count); for(let i=0;i<n;i++) drawPizza(x,y-i*(small?6:8), small?.5:1)}
 function draw(){
-  ctx.clearRect(0,0,W(),H());
-  // أرضية ناعمة
+  ctx.clearRect(0,0,W(),H());                  // تمسح كل حاجة (لا خطوط ولا آثار)
+  // أرضية ناعمة فقط
   const g=ctx.createLinearGradient(0,H()-260,0,H()); g.addColorStop(0,'#f7fbff'); g.addColorStop(1,'#ffffff');
   ctx.fillStyle=g; ctx.fillRect(0,H()-260,W(),260);
 
@@ -209,25 +279,25 @@ function draw(){
   ctx.fillStyle='#3b82f6'; ctx.fillRect(worker.x-18,worker.y-6,36,28);
   for(let i=0;i<worker.carrying;i++) drawPizza(worker.x+14,worker.y-8 - i*8,.6);
 
-  // زبائن + فقاعة الطلب المعتمة
+  // زبائن + فقاعة الطلب المعتمة (لا شفافية، لا Shadow)
   customers.forEach(c=>{
     ctx.fillStyle='#94a3b8'; ellipse(c.x,c.y-18,12,12);
     ctx.fillStyle='#1f2937'; ctx.fillRect(c.x-10,c.y-2,20,18);
     // فقاعة
-    ctx.fillStyle='#fff'; ctx.fillRect(c.x-20,c.y-34,48,24);
-    ctx.strokeStyle='#d1d8e2'; ctx.strokeRect(c.x-20,c.y-34,48,24);
+    ctx.fillStyle='#ffffff'; ctx.fillRect(c.x-20,c.y-34,48,24);
+    ctx.strokeStyle='#d1d8e2'; ctx.lineWidth=2; ctx.strokeRect(c.x-20,c.y-34,48,24);
     ctx.fillStyle='#111'; ctx.font='16px system-ui'; ctx.fillText('🍕'+c.order,c.x-14,c.y-16);
     // صبر
-    const pat=c.pat/Math.max(0.0001,patienceMax());
+    const pat=Math.max(0,Math.min(1,c.pat/Math.max(.0001,patienceMax())));
     ctx.fillStyle='#e2e8f0'; ctx.fillRect(c.x-20,c.y-10,48,4);
     ctx.fillStyle=pat>.5?'#22c55e':(pat>.25?'#f59e0b':'#ef4444');
-    ctx.fillRect(c.x-20,c.y-10,48*Math.max(0,Math.min(1,pat)),4);
+    ctx.fillRect(c.x-20,c.y-10,48*pat,4);
   });
 
   // شريط التقدّم (ذهبي) — من الإيراد فقط
   const gw=Math.max(160,W()-220), prog=Math.max(0,Math.min(1,revenue/goal));
   ctx.fillStyle='#e2e8f0'; ctx.fillRect(20,20,gw,8);
-  ctx.fillStyle='#eab308'; ctx.fillRect(20,20,gw*prog,8);
+  ctx.fillStyle= '#eab308'; ctx.fillRect(20,20,gw*prog,8);
 
   // شريط الوقت (أخضر)
   const tp=Math.max(0,timeLeft/LEVELS[S.level-1].time);
