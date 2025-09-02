@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8"/>
 <meta name="viewport" content="width=device-width, initial-scale=1"/>
-<title>Pizza Factory — Isometric + L-Conveyor + Levels</title>
+<title>Pizza Factory — Isometric + Levels</title>
 <script src="https://telegram.org/js/telegram-web-app.js"></script>
 <style>
 :root{--bg:#eaf2ff;--card:#fff;--ink:#0f172a;--muted:#6b7280;--accent:#22c55e;--accent2:#3b82f6;--danger:#ef4444;--shadow:0 10px 28px rgba(0,0,0,.08)}
@@ -36,7 +36,7 @@ body{margin:0;font-family:system-ui,-apple-system,Segoe UI,Roboto,"Cairo",sans-s
 <div class="app">
   <div class="frame">
     <div class="top">
-      <b>Pizza Factory — إيزومتريك + سيور L + مراحل</b>
+      <b>Pizza Factory — إيزومتريك + مراحل</b>
       <div class="stats">
         <div class="pill">💰 <b id="cash">0</b></div>
         <div class="pill">⭐ المستوى <b id="level">1</b></div>
@@ -47,7 +47,7 @@ body{margin:0;font-family:system-ui,-apple-system,Segoe UI,Roboto,"Cairo",sans-s
 
     <div class="grid">
       <div class="panel">
-        <h3>الملعب (Isometric + L-Conveyor + Sprites)</h3>
+        <h3>الملعب (Isometric + Sprites)</h3>
         <canvas id="cv"></canvas>
         <div class="toolbar">
           <button class="iconbtn" id="btnTut">📘 شرح سريع</button>
@@ -56,7 +56,7 @@ body{margin:0;font-family:system-ui,-apple-system,Segoe UI,Roboto,"Cairo",sans-s
         </div>
       </div>
       <div class="panel">
-        <h3>ترقيات (تؤثر على الجرافيك والحركة فورًا)</h3>
+        <h3>ترقيات (تؤثر فورًا)</h3>
         <div class="row"><div>⏱️ سرعة الفرن</div><div><div class="meter" style="width:160px"><span id="ovenBar" style="width:20%"></span></div> <button class="btn" id="upOven">+ (120💰)</button></div></div>
         <div class="row"><div>🏃‍♂️ سرعة العامل</div><div><div class="meter" style="width:160px"><span id="speedBar" style="width:20%"></span></div> <button class="btn" id="upSpeed">+ (100💰)</button></div></div>
         <div class="row"><div>🧺 سعة الحمل</div><div><div class="meter" style="width:160px"><span id="capBar" style="width:20%"></span></div> <button class="btn" id="upCap">+ (150💰)</button></div></div>
@@ -66,7 +66,7 @@ body{margin:0;font-family:system-ui,-apple-system,Segoe UI,Roboto,"Cairo",sans-s
     </div>
 
     <div class="hud">
-      <div>🚚 السيور تنقل العجين — العامل يحمل من المخزن ويسلّم على الكاوُنتر</div>
+      <div>👷 العامل يحمل من المخزن ويسلّم على الكاوُنتر</div>
       <div>🎵 أصوات خفيفة عند الإنتاج والتسليم</div>
     </div>
   </div>
@@ -103,10 +103,8 @@ const H = ()=> (cv.getBoundingClientRect().height|| 540);
 function shadow(f){ctx.save();ctx.shadowColor='rgba(0,0,0,.18)';ctx.shadowBlur=12;ctx.shadowOffsetY=6;f();ctx.restore();}
 function grad(x0,y0,x1,y1,c0,c1){const g=ctx.createLinearGradient(x0,y0,x1,y1);g.addColorStop(0,c0);g.addColorStop(1,c1);return g;}
 
-// Sprites (SVG default) + optional PNG/WebP
-const USE_PNG = false; // فعّلها لو هتحط PNG/WebP في PNG_SPRITES
-const PNG_SPRITES = { worker:"", customer:"", oven:"", pizza:"" }; // ضع روابط/داتا-URI
-const SVG_SPRITES = {
+// Sprites (SVG)
+const SPRITES = {
   worker:`<svg xmlns='http://www.w3.org/2000/svg' width='64' height='64' viewBox='0 0 64 64'>
     <defs><linearGradient id='b' x1='0' x2='1'><stop offset='0' stop-color='#60a5fa'/><stop offset='1' stop-color='#2563eb'/></linearGradient></defs>
     <circle cx='32' cy='22' r='12' fill='#f97316'/><rect x='18' y='28' width='28' height='24' rx='6' fill='url(#b)'/>
@@ -124,13 +122,8 @@ const SVG_SPRITES = {
   </svg>`
 };
 let spritesReady=false; const GFX={};
-async function loadBitmapFromSVG(svg){try{const b=new Blob([svg],{type:'image/svg+xml'});const u=URL.createObjectURL(b);const i=new Image();i.decoding='async';i.src=u;await i.decode();const bmp=await createImageBitmap(i);URL.revokeObjectURL(u);return bmp;}catch{return null;}}
-async function loadBitmapFromURL(url){return new Promise((res)=>{const i=new Image();i.crossOrigin='anonymous';i.onload=async()=>res(await createImageBitmap(i));i.onerror=()=>res(null);i.src=url;});}
-(async()=>{
-  if(USE_PNG && PNG_SPRITES.worker){ for(const k in PNG_SPRITES){ GFX[k]=await loadBitmapFromURL(PNG_SPRITES[k]); } }
-  else{ for(const k in SVG_SPRITES){ GFX[k]=await loadBitmapFromSVG(SVG_SPRITES[k]); } }
-  spritesReady=true;
-})();
+async function svgToBitmap(svg){try{const b=new Blob([svg],{type:'image/svg+xml'});const u=URL.createObjectURL(b);const i=new Image();i.decoding='async';i.src=u;await i.decode();const x=await createImageBitmap(i);URL.revokeObjectURL(u);return x;}catch{return null;}}
+(async()=>{for(const k in SPRITES){GFX[k]=await svgToBitmap(SPRITES[k]);}spritesReady=true;})();
 
 // Sound
 let audioCtx=null, muted=false;
@@ -141,31 +134,29 @@ function beep(freq=880,dur=0.06,type='triangle',gain=0.03){
 
 // Levels
 const LEVELS=[
-  {goal:200,time:60, spawn:0.5, order:[1,2], oven:2, speed:1, cap:3, mk:0},
-  {goal:350,time:70, spawn:0.65, order:[1,3], oven:3, speed:1, cap:3, mk:1},
-  {goal:500,time:80, spawn:0.8, order:[2,3], oven:3, speed:2, cap:4, mk:1},
-  {goal:700,time:90, spawn:1.0, order:[2,3], oven:4, speed:2, cap:5, mk:2},
+  {goal:200,time:60, spawn:0.55, order:[1,2], oven:2, speed:1, cap:3, mk:0},
+  {goal:350,time:70, spawn:0.70, order:[1,3], oven:3, speed:1, cap:3, mk:1},
+  {goal:500,time:80, spawn:0.85, order:[2,3], oven:3, speed:2, cap:4, mk:1},
+  {goal:700,time:90, spawn:1.00, order:[2,3], oven:4, speed:2, cap:5, mk:2},
 ];
 
 // State
 const S = JSON.parse(localStorage.getItem('pf_iso_levels')||'null') || {level:1, cash:200, ovenLvl:2, workerSpeed:1, carryCap:3, marketing:0};
 let timeLeft=LEVELS[S.level-1].time, goal=LEVELS[S.level-1].goal;
-let levelStartCash=S.cash; // عشان نحسب المتبقي بشكل صحيح
+let levelStartCash=S.cash;
 
-// Isometric origin ثابت في منتصف اللوحة
+// Isometric origin ثابت
 function isoOrigin(){ return {ox: W()*0.50, oy: H()*0.60}; }
 const iso = (x,y)=>{ const {ox,oy}=isoOrigin(); return {X:x-y+ox, Y:(x+y)*0.5+oy}; };
 
-// كيانات
+// Entities & positions
 const oven={timer:0, stock:0, limit:99};
 const counter={stock:0, limit:40};
 const worker={x:iso(0,0).X, y:iso(0,0).Y, carrying:0, state:'toStack'};
 const customers=[];
+const POS={ oven:{x:-120,y:-20}, stack:{x:-60,y:-20}, counter:{x:140,y:-20}, queueX:230 };
 
-// مواضع نسبية (أبعدنا الطابور عن السيور/الديكور)
-const POS={ oven:{x:-120,y:-20}, stack:{x:-60,y:-20}, counter:{x:140,y:-20}, queueX:210 };
-
-// معدلات
+// Rates
 function ovenInterval(){ return Math.max(0.6, 2.2 - S.ovenLvl*0.18); }
 function spawnRate(){ return LEVELS[S.level-1].spawn + S.marketing*0.05; }
 function patienceMax(){ return 6.5 + S.marketing*0.2; }
@@ -188,9 +179,9 @@ function renderHUD(){
 }
 function save(){ localStorage.setItem('pf_iso_levels', JSON.stringify(S)); }
 
-// Overlay & أزرار
+// Overlay & controls
 const overlay=$('overlay'), ovTitle=$('ovTitle'), ovBody=$('ovBody'), ovBtn=$('ovBtn');
-$('btnTut').onclick=()=>{ ovTitle.textContent='شرح سريع'; ovBody.textContent='السيور تنقل العجين للفرن. العامل يحمل من المخزن ويسلّم. حقّق الهدف قبل الوقت.'; overlay.style.display='grid'; };
+$('btnTut').onclick=()=>{ ovTitle.textContent='شرح سريع'; ovBody.textContent='الفرن ينتج باستمرار؛ العامل يحمّل ويسلّم للزبائن. حقّق الهدف قبل الوقت.'; overlay.style.display='grid'; };
 $('btnMute').onclick=()=>{ muted=!muted; $('btnMute').textContent=muted?'🔇 صامت':'🔊 صوت'; };
 $('btnRestart').onclick=()=>{ startLevel(S.level,true); };
 $('upOven').onclick=()=>{ if(S.cash>=120){ S.cash-=120; S.ovenLvl++; beep(900); renderHUD(); save(); } };
@@ -199,12 +190,12 @@ $('upCap').onclick=()=>{ if(S.cash>=150){ S.cash-=150; S.carryCap++; beep(640); 
 $('upMk').onclick=()=>{ if(S.cash>=130){ S.cash-=130; S.marketing++; beep(520); renderHUD(); save(); } };
 $('save').onclick=save; $('reset').onclick=()=>{ localStorage.removeItem('pf_iso_levels'); location.reload(); };
 
-// مستوى
-function startLevel(n, reset=false){
+// Level start
+function startLevel(n, resetBaseline=false){
   const L=LEVELS[n-1];
   timeLeft=L.time; goal=L.goal;
   S.ovenLvl=L.oven; S.workerSpeed=L.speed; S.carryCap=L.cap; S.marketing=L.mk;
-  if(reset) levelStartCash = S.cash; // نأخذ خط أساس جديد
+  if(resetBaseline) levelStartCash=S.cash;        // أساس جديد لحساب المتبقي
   oven.stock=0; counter.stock=0; customers.length=0; spawnT=1/spawnRate();
   for(let i=0;i<3;i++) spawnCustomer();
   renderHUD();
@@ -213,7 +204,7 @@ function startLevel(n, reset=false){
 startLevel(S.level,true);
 ovBtn.onclick=()=>{ overlay.style.display='none'; last=performance.now(); };
 
-// Spawn & خدمة تلقائية
+// Spawn & serve
 function spawnCustomer(){
   const range=LEVELS[S.level-1].order;
   const n = range[0] + Math.floor(Math.random()*(range[1]-range[0]+1));
@@ -250,30 +241,25 @@ function stepWorker(dt){
   }
 }
 
-// سيور L-shape (مساران)
-let beltPhase=0;
-function drawBeltIso(x1,y1,x2,y2){
-  const p1=iso(x1,y1), p2=iso(x2,y2);
-  const dx=p2.X-p1.X, dy=p2.Y-p1.Y, len=Math.hypot(dx,dy), ang=Math.atan2(dy,dx);
-  ctx.save(); ctx.translate(p1.X,p1.Y); ctx.rotate(ang);
-  ctx.fillStyle='#334155'; ctx.fillRect(0,-10,len,20);
-  const step=20, phase=(beltPhase%step); ctx.fillStyle='#94a3b8';
-  for(let x=-phase;x<len;x+=step){ ctx.fillRect(x-4,-6,8,12); }
-  ctx.restore();
-}
-
 // Loop
 let last = performance.now();
 function loop(now){
   let dt=(now-last)/1000; last=now; if(!isFinite(dt)||dt<=0) dt=0.016; dt=Math.min(dt,0.033);
   if(overlay.style.display==='grid'){ requestAnimationFrame(loop); return; }
 
+  // advance level فور ما يتحقق الهدف
+  if(goalCompleted() >= goal){
+    S.level = Math.min(LEVELS.length, S.level+1); save();
+    startLevel(S.level,true); ovTitle.textContent='مبروك!'; ovBody.textContent='انتقلت للمستوى التالي'; ovBtn.textContent='تابع';
+    requestAnimationFrame(loop); return;
+  }
+
   timeLeft -= dt;
   renderHUD();
 
   if(timeLeft<=0){
     if(goalCompleted()>=goal){
-      S.level=Math.min(LEVELS.length,S.level+1); save();
+      S.level = Math.min(LEVELS.length, S.level+1); save();
       startLevel(S.level,true); ovTitle.textContent='مبروك!'; ovBody.textContent='انتقلت للمستوى التالي'; ovBtn.textContent='تابع';
     }else{
       startLevel(S.level,true); ovTitle.textContent='انتهى الوقت'; ovBody.textContent='حاول مرة أخرى لتحقيق الهدف'; ovBtn.textContent='إعادة';
@@ -285,13 +271,13 @@ function loop(now){
 
   customers.forEach(c=>{ if(!c.served){ c.pat -= dt; if(c.pat<=0) c.leaving=true; }
     if(c.served||c.leaving){ c.isoX += (c.served?100:140)*dt; const p=iso(c.isoX,c.isoY); c.scrX=p.X; c.scrY=p.Y; } });
-  serveFromCounter(); stepWorker(dt); beltPhase=(beltPhase+dt*60)%40;
+  serveFromCounter(); stepWorker(dt);
 
   draw(); requestAnimationFrame(loop);
 }
 requestAnimationFrame(loop);
 
-// رسم
+// Draw
 function draw(){
   ctx.clearRect(0,0,W(),H());
 
@@ -300,10 +286,6 @@ function draw(){
   ctx.strokeStyle='#e9eef6';
   for(let x=0;x<W();x+=40){ ctx.beginPath(); ctx.moveTo(x,H()-300); ctx.lineTo(x,H()); ctx.stroke(); }
   for(let y=H()-300;y<H();y+=40){ ctx.beginPath(); ctx.moveTo(0,y); ctx.lineTo(W(),y); ctx.stroke(); }
-
-  // سيور L: مدخل→فرن ، ومن الفرن→الكاونتر
-  drawBeltIso(POS.oven.x-160, POS.oven.y, POS.oven.x-40, POS.oven.y);          // أفقي
-  drawBeltIso(POS.oven.x-40, POS.oven.y, POS.counter.x-20, POS.counter.y+60);  // مائل لأسفل تجاه الكاونتر
 
   // الفرن
   const pO=iso(POS.oven.x,POS.oven.y);
@@ -319,7 +301,7 @@ function draw(){
   else shadow(()=>{ctx.fillStyle='#2563eb';ctx.beginPath();ctx.arc(worker.x,worker.y-18,18,0,Math.PI*2);ctx.fill();ctx.fillRect(worker.x-20,worker.y-6,40,30);});
   for(let i=0;i<worker.carrying;i++) drawPizza(worker.x+16,worker.y-8 - i*8,.6);
 
-  // الزبائن (بدون خطوط/آثار)
+  // الزبائن (فقاعة بباكجراوند معتم لمنع خطوط الشبكة)
   customers.forEach(c=>{
     const p=iso(c.isoX,c.isoY); c.scrX=p.X; c.scrY=p.Y;
     if(spritesReady && GFX.customer) shadow(()=>ctx.drawImage(GFX.customer,p.X-28,p.Y-28));
@@ -327,17 +309,17 @@ function draw(){
     drawBubble(p.X,p.Y-30,c.order,c.pat/patienceMax());
   });
 
-  // شريط تقدم الهدف (ذهبي) – يقل المتبقي
+  // شريط تقدم الهدف (ذهبي)
   const prog = Math.max(0, Math.min(1, goalCompleted()/goal));
-  ctx.fillStyle='#e2e8f0'; ctx.fillRect(20,20, W()-280, 10);
-  ctx.fillStyle='#eab308'; ctx.fillRect(20,20, (W()-280)*prog, 10);
+  ctx.fillStyle='#e2e8f0'; ctx.fillRect(20,20, W()-220, 10);
+  ctx.fillStyle='#eab308'; ctx.fillRect(20,20, (W()-220)*prog, 10);
 
   // شريط الوقت (أخضر)
   const tprog = Math.max(0, timeLeft/LEVELS[S.level-1].time);
-  ctx.fillStyle='#22c55e'; ctx.fillRect(W()-240,20, 200*tprog, 10);
+  ctx.fillStyle='#22c55e'; ctx.fillRect(W()-190,20, 170*tprog, 10);
 }
 
-// Helpers للرسم
+// Helpers
 function drawPizza(x,y,scale=1){
   if(!GFX.pizza){ ctx.fillStyle='#f59e0b'; ctx.beginPath(); ctx.ellipse(x,y,16*scale,6*scale,0,0,Math.PI*2); ctx.fill(); ctx.strokeStyle='#b45309'; ctx.stroke(); return; }
   ctx.drawImage(GFX.pizza, x-20*scale, y-10*scale, 40*scale, 40*scale);
@@ -345,11 +327,10 @@ function drawPizza(x,y,scale=1){
 function drawStack(x,y,count,small){ const layers=Math.min(10,count); for(let i=0;i<layers;i++) drawPizza(x, y-i*(small?6:8), small?.5:1); }
 function drawCounter(x,y){ shadow(()=>{ ctx.fillStyle='#ef4444'; ctx.fillRect(x-60,y-24,160,64); }); }
 function drawBubble(x,y,n,pat){
-  ctx.fillStyle='rgba(255,255,255,.96)'; ctx.strokeStyle='#d1d8e2'; ctx.lineWidth=2;
-  ctx.fillRect(x-20,y-26,46,24); ctx.strokeRect(x-20,y-26,46,24);
-  ctx.font='18px system-ui'; ctx.fillStyle='#111'; ctx.fillText('🍕',x-16,y-8); ctx.fillText(String(n),x+2,y-8);
-  ctx.fillStyle='#e2e8f0'; ctx.fillRect(x-22,y-2,44,5);
-  ctx.fillStyle=pat>0.5?'#22c55e':(pat>0.25?'#f59e0b':'#ef4444'); ctx.fillRect(x-22,y-2,44*pat,5);
+  shadow(()=>{ ctx.fillStyle='rgba(255,255,255,1)'; ctx.strokeStyle='#d1d8e2'; ctx.lineWidth=2; ctx.fillRect(x-22,y-28,50,26); ctx.strokeRect(x-22,y-28,50,26); });
+  ctx.font='18px system-ui'; ctx.fillStyle='#111'; ctx.fillText('🍕',x-18,y-9); ctx.fillText(String(n),x+2,y-9);
+  ctx.fillStyle='#e2e8f0'; ctx.fillRect(x-22,y-2,50,5);
+  ctx.fillStyle=pat>0.5?'#22c55e':(pat>0.25?'#f59e0b':'#ef4444'); ctx.fillRect(x-22,y-2,50*pat,5);
 }
 
 renderHUD();
