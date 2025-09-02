@@ -3,214 +3,236 @@
 <head>
 <meta charset="utf-8"/>
 <meta name="viewport" content="width=device-width, initial-scale=1"/>
-<title>Pizza Factory — Clean Levels (No Shadows)</title>
-<script src="https://telegram.org/js/telegram-web-app.js"></script>
+<title>Pizza Factory — Minimal Stable</title>
 <style>
-:root{--bg:#eaf2ff;--card:#fff;--ink:#0f172a;--muted:#6b7280;--accent:#22c55e;--accent2:#3b82f6;--shadow:0 10px 28px rgba(0,0,0,.08)}
+:root{--bg:#eaf2ff;--card:#fff;--ink:#0f172a;--muted:#6b7280;--accent:#22c55e;--accent2:#3b82f6}
 *{box-sizing:border-box} html,body{height:100%}
-body{margin:0;font-family:system-ui,-apple-system,Segoe UI,Roboto,"Cairo",sans-serif;background:radial-gradient(1000px 540px at 50% -10%,#fff,var(--bg));color:var(--ink);display:flex;justify-content:center}
-.app{width:min(1040px,100%);padding:12px}
-.frame{background:var(--card);border-radius:24px;box-shadow:var(--shadow);overflow:hidden;border:1px solid #e8eef5}
-.top{display:flex;justify-content:space-between;align-items:center;gap:10px;padding:10px 14px;background:linear-gradient(90deg,var(--accent),var(--accent2));color:#fff}
-.stats{display:flex;gap:10px;flex-wrap:wrap}
-.pill{display:inline-flex;align-items:center;gap:8px;padding:8px 12px;border-radius:999px;background:rgba(255,255,255,.16);font-weight:700}
-.grid{display:grid;grid-template-columns:1.2fr .8fr;gap:10px;padding:10px}
-.panel{background:#f8fafc;border:1px solid #eef2f7;border-radius:18px;padding:10px}
-.panel canvas{display:block;margin-inline:auto;width:100%;max-width:1000px;aspect-ratio:16/9;height:auto;background:#ffffff;border-radius:12px}
-.row{display:flex;align-items:center;justify-content:space-between;gap:8px;padding:8px 0}
-.btn{background:#fff;border:1px solid #e5e7eb;border-radius:14px;padding:10px 12px;cursor:pointer;font-weight:700}
-.btn:active{transform:translateY(1px)}
-.meter{height:10px;border-radius:999px;background:#eef2f7;overflow:hidden}
-.meter>span{display:block;height:100%;background:linear-gradient(90deg,var(--accent),var(--accent2))}
-.toolbar{display:flex;gap:8px;flex-wrap:wrap;padding:8px}
-.iconbtn{display:inline-flex;align-items:center;gap:8px;padding:8px 10px;background:#fff;border:1px solid #e5e7eb;border-radius:12px;font-weight:700}
-.hud{display:flex;justify-content:space-between;align-items:center;color:var(--muted);padding:6px 10px}
-.overlay{position:fixed;inset:0;background:rgba(15,23,42,.66);display:none;place-items:center;z-index:50}
-.card{background:#fff;border-radius:18px;padding:16px;width:min(520px,90%);text-align:center}
-.card h2{margin:8px 0}
+body{margin:0;font-family:system-ui,-apple-system,Segoe UI,Roboto,"Cairo",sans-serif;background:radial-gradient(900px 520px at 50% -10%,#fff,var(--bg));color:var(--ink);display:flex;justify-content:center}
+.wrap{width:min(1024px,100%);padding:12px}
+.top{display:flex;justify-content:space-between;align-items:center;gap:8px;padding:10px 14px;background:linear-gradient(90deg,var(--accent),var(--accent2));color:#fff;border-radius:16px}
+.stats{display:flex;gap:8px;flex-wrap:wrap}
+.pill{display:inline-flex;gap:6px;align-items:center;padding:8px 12px;border-radius:999px;background:rgba(255,255,255,.16);font-weight:700}
+.grid{display:grid;grid-template-columns:1.1fr .9fr;gap:10px;margin-top:10px}
+.card{background:var(--card);border:1px solid #e8eef5;border-radius:16px;padding:10px}
+canvas{display:block;width:100%;aspect-ratio:16/9;background:#fff;border-radius:12px}
+.row{display:flex;justify-content:space-between;align-items:center;padding:8px 0}
+.meter{height:10px;width:160px;border-radius:999px;background:#eef2f7;overflow:hidden}
+.meter span{display:block;height:100%;background:linear-gradient(90deg,var(--accent),var(--accent2))}
+.btn{padding:8px 12px;border:1px solid #e5e7eb;border-radius:12px;background:#fff;cursor:pointer;font-weight:700}
+.hud{color:var(--muted);padding:6px 2px;text-align:center}
 @media (max-width:780px){.grid{grid-template-columns:1fr}}
 </style>
 </head>
 <body>
-<div class="app">
-  <div class="frame">
-    <div class="top">
-      <b>Pizza Factory — مراحل نظيفة</b>
-      <div class="stats">
-        <div class="pill">💰 <b id="cash">0</b></div>
-        <div class="pill">⭐ المستوى <b id="level">1</b></div>
-        <div class="pill">🎯 المتبقي <b id="goalLeft">0</b></div>
-        <div class="pill">⏳ الوقت <b id="time">00:00</b></div>
-      </div>
-    </div>
-
-    <div class="grid">
-      <div class="panel">
-        <h3>الملعب (Isometric + Sprites — بدون Shadow/شبكة)</h3>
-        <canvas id="cv"></canvas>
-        <div class="toolbar">
-          <button class="iconbtn" id="btnTut">📘 شرح سريع</button>
-          <button class="iconbtn" id="btnMute">🔊 صوت</button>
-          <button class="iconbtn" id="btnRestart">🔁 إعادة</button>
-        </div>
-      </div>
-      <div class="panel">
-        <h3>ترقيات</h3>
-        <div class="row"><div>⏱️ سرعة الفرن</div><div><div class="meter" style="width:160px"><span id="ovenBar" style="width:20%"></span></div> <button class="btn" id="upOven">+ (120💰)</button></div></div>
-        <div class="row"><div>🏃‍♂️ سرعة العامل</div><div><div class="meter" style="width:160px"><span id="speedBar" style="width:20%"></span></div> <button class="btn" id="upSpeed">+ (100💰)</button></div></div>
-        <div class="row"><div>🧺 سعة الحمل</div><div><div class="meter" style="width:160px"><span id="capBar" style="width:20%"></span></div> <button class="btn" id="upCap">+ (150💰)</button></div></div>
-        <div class="row"><div>📣 تسويق</div><div><div class="meter" style="width:160px"><span id="mkBar" style="width:0%"></span></div> <button class="btn" id="upMk">+ (130💰)</button></div></div>
-        <div class="row"><div>حفظ</div><div><button class="btn" id="save">حفظ</button> <button class="btn" id="reset">بداية جديدة</button></div></div>
-      </div>
-    </div>
-
-    <div class="hud">
-      <div>👷 العامل يحمل من المخزن ويسلّم على الكاونتر. التقدّم = الإيراد فقط.</div>
-      <div>🎵 أصوات خفيفة عند الإنتاج والتسليم</div>
+<div class="wrap">
+  <div class="top">
+    <b>Pizza Factory — نسخة ثابتة</b>
+    <div class="stats">
+      <div class="pill">💰 <b id="cash">0</b></div>
+      <div class="pill">⭐ المستوى <b id="level">1</b></div>
+      <div class="pill">🎯 المتبقي <b id="left">0</b></div>
+      <div class="pill">⏳ الوقت <b id="time">00:00</b></div>
     </div>
   </div>
-</div>
 
-<div class="overlay" id="overlay">
-  <div class="card">
-    <h2 id="ovTitle">شرح سريع</h2>
-    <p id="ovBody">حقّق الهدف قبل نهاية الوقت. عدّاد المتبقي يقلّ بحسب الإيراد المُجمّع فقط.</p>
-    <button class="btn" id="ovBtn">حسناً</button>
+  <div class="grid">
+    <div class="card">
+      <h3>الملعب (بدون Shadow/شبكة)</h3>
+      <canvas id="cv"></canvas>
+      <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:8px">
+        <button class="btn" id="restart">إعادة المستوى</button>
+        <button class="btn" id="mute">🔊 صوت</button>
+      </div>
+    </div>
+
+    <div class="card">
+      <h3>ترقيات</h3>
+      <div class="row"><div>⏱️ سرعة الفرن</div><div style="display:flex;gap:8px;align-items:center"><div class="meter"><span id="ovBar" style="width:20%"></span></div><button class="btn" id="upOven">+ (120💰)</button></div></div>
+      <div class="row"><div>🏃‍♂️ سرعة العامل</div><div style="display:flex;gap:8px;align-items:center"><div class="meter"><span id="spBar" style="width:20%"></span></div><button class="btn" id="upSpeed">+ (100💰)</button></div></div>
+      <div class="row"><div>🧺 سعة الحمل</div><div style="display:flex;gap:8px;align-items:center"><div class="meter"><span id="capBar" style="width:20%"></span></div><button class="btn" id="upCap">+ (150💰)</button></div></div>
+      <div class="row"><div>📣 تسويق</div><div style="display:flex;gap:8px;align-items:center"><div class="meter"><span id="mkBar" style="width:0%"></span></div><button class="btn" id="upMk">+ (130💰)</button></div></div>
+    </div>
   </div>
+
+  <div class="hud">👷 العامل بيشيل من المخزن → يسلّم على الكاونتر. **التقدّم = الإيراد فقط** (المشتريات لا تقلله).</div>
 </div>
 
 <script>
-// Telegram
-const tg = window.Telegram?.WebApp; if(tg){try{tg.ready();tg.expand();}catch(e){}}
-
-// Canvas
-const cv = document.getElementById('cv');
-const ctx = cv.getContext('2d');
-function scaleCanvas(){
-  const dpr = Math.max(1, window.devicePixelRatio||1);
-  const rect = cv.getBoundingClientRect();
-  const cssW = Math.max(640, Math.floor(rect.width||960));
-  const cssH = Math.max(360, Math.floor(rect.height||cssW*9/16));
-  cv.width=Math.floor(cssW*dpr); cv.height=Math.floor(cssH*dpr);
+/* ====== Canvas setup (no overlay, starts فورًا) ====== */
+const cv=document.getElementById('cv'), ctx=cv.getContext('2d');
+function fit(){
+  const dpr=Math.max(1,window.devicePixelRatio||1);
+  const r=cv.getBoundingClientRect();
+  const w=Math.max(640,Math.floor(r.width||960)), h=Math.max(360,Math.floor(w*9/16));
+  cv.width=Math.floor(w*dpr); cv.height=Math.floor(h*dpr);
   ctx.setTransform(dpr,0,0,dpr,0,0);
 }
-new ResizeObserver(scaleCanvas).observe(cv); scaleCanvas();
-const W = ()=> (cv.getBoundingClientRect().width || 960);
-const H = ()=> (cv.getBoundingClientRect().height|| 540);
+new ResizeObserver(fit).observe(cv); fit();
+const W=()=>cv.getBoundingClientRect().width||960, H=()=>cv.getBoundingClientRect().height||540;
 
-// ===== Sprites (SVG) — بدون ظلال =====
-const SPRITES = {
-  worker:`<svg xmlns='http://www.w3.org/2000/svg' width='64' height='64'><circle cx='32' cy='22' r='12' fill='#f97316'/><rect x='18' y='28' width='28' height='24' rx='6' fill='#3b82f6'/><rect x='16' y='16' width='18' height='6' rx='3' fill='#1d4ed8'/><rect x='34' y='18' width='10' height='4' fill='#1d4ed8'/></svg>`,
-  customer:`<svg xmlns='http://www.w3.org/2000/svg' width='56' height='56'><circle cx='28' cy='18' r='10' fill='#94a3b8'/><rect x='16' y='24' width='24' height='20' rx='6' fill='#1f2937'/></svg>`,
-  oven:`<svg xmlns='http://www.w3.org/2000/svg' width='96' height='64'><rect x='2' y='8' width='92' height='48' rx='10' fill='#60a5fa'/><rect x='12' y='22' width='72' height='20' rx='6' fill='#1d4ed8'/></svg>`,
-  pizza:`<svg xmlns='http://www.w3.org/2000/svg' width='40' height='40'><ellipse cx='20' cy='24' rx='16' ry='6' fill='#f59e0b' stroke='#b45309' stroke-width='2'/><text x='12' y='28' font-size='16'>🍕</text></svg>`
-};
-let spritesReady=false, GFX={};
-async function svgBmp(svg){try{const b=new Blob([svg],{type:'image/svg+xml'});const u=URL.createObjectURL(b);const i=new Image();i.decoding='async';i.src=u;await i.decode();const bmp=await createImageBitmap(i);URL.revokeObjectURL(u);return bmp;}catch{return null;}}
-(async()=>{for(const k in SPRITES){GFX[k]=await svgBmp(SPRITES[k]);} spritesReady=true;})();
+/* ====== UI refs ====== */
+const $=id=>document.getElementById(id);
+const cashEl=$('cash'), levelEl=$('level'), leftEl=$('left'), timeEl=$('time');
+$('restart').onclick=()=>startLevel(S.level,true);
+let muted=false; $('mute').onclick=()=>{muted=!muted;$('mute').textContent=muted?'🔇 صامت':'🔊 صوت'};
 
-// ===== صوت بسيط =====
-let audioCtx=null, muted=false;
-function beep(freq=880,dur=0.06,type='triangle',gain=0.03){
-  if(muted) return; if(!audioCtx) audioCtx=new (window.AudioContext||window.webkitAudioContext)();
-  const o=audioCtx.createOscillator(), g=audioCtx.createGain();
-  o.type=type; o.frequency.value=freq; g.gain.value=gain; o.connect(g).connect(audioCtx.destination);
-  o.start(); o.stop(audioCtx.currentTime+dur);
+/* ====== Sound (بسيط) ====== */
+let ac=null; function beep(f=850,d=0.06){ if(muted) return;
+  ac=ac||new (window.AudioContext||window.webkitAudioContext)(); const o=ac.createOscillator(), g=ac.createGain();
+  o.type='triangle'; o.frequency.value=f; g.gain.value=.03; o.connect(g).connect(ac.destination); o.start(); o.stop(ac.currentTime+d);
 }
 
-// ===== مستويات =====
+/* ====== Levels & State ====== */
 const LEVELS=[
-  {goal:200,time:60, spawn:0.55, order:[1,2], oven:2, speed:1, cap:3, mk:0},
-  {goal:350,time:70, spawn:0.70, order:[1,3], oven:3, speed:1, cap:3, mk:1},
-  {goal:500,time:80, spawn:0.85, order:[2,3], oven:3, speed:2, cap:4, mk:1},
-  {goal:700,time:90, spawn:1.00, order:[2,3], oven:4, speed:2, cap:5, mk:2},
+  {goal:200,time:60,spawn:.55,order:[1,2],oven:2,speed:1,cap:3,mk:0},
+  {goal:350,time:70,spawn:.70,order:[1,3],oven:3,speed:1,cap:3,mk:1},
+  {goal:500,time:80,spawn:.85,order:[2,3],oven:3,speed:2,cap:4,mk:1},
+  {goal:700,time:90,spawn:1.00,order:[2,3],oven:4,speed:2,cap:5,mk:2},
 ];
+const S = JSON.parse(localStorage.getItem('pf_iso_min')||'null') || {level:1,cash:200,ovenLvl:2,workerSpeed:1,carryCap:3,marketing:0};
+let timeLeft=0, goal=0, revenue=0;
 
-// ===== حالة اللعبة =====
-const S = JSON.parse(localStorage.getItem('pf_iso_levels')||'null') || {level:1, cash:200, ovenLvl:2, workerSpeed:1, carryCap:3, marketing:0};
-let timeLeft=LEVELS[S.level-1].time, goal=LEVELS[S.level-1].goal;
+function ovenInterval(){return Math.max(.6,2.2 - S.ovenLvl*0.18)}
+function spawnRate(){return LEVELS[S.level-1].spawn + S.marketing*.05}
+function patienceMax(){return 6 + S.marketing*.2}
 
-// المؤشر الصحيح للتقدّم = الإيراد فقط
-let revenueEarned = 0;
-
-// إيزومتريك: نقطة مرجعية ثابتة
-function isoOrigin(){ return {ox: W()*0.50, oy: H()*0.60}; }
-const iso=(x,y)=>{const {ox,oy}=isoOrigin(); return {X:x-y+ox, Y:(x+y)*0.5+oy};};
-
-// كيانات + مواضع
-const oven={timer:0, stock:0, limit:99};
-const counter={stock:0, limit:40};
-const worker={x:iso(0,0).X, y:iso(0,0).Y, carrying:0, state:'toStack'};
+/* ====== World ====== */
+const oven={timer:0,stock:0,limit:99};
+const counter={stock:0,limit:40};
+const worker={x:0,y:0,carrying:0,state:'toStack'};
 const customers=[];
 const POS={ oven:{x:-120,y:-20}, stack:{x:-60,y:-20}, counter:{x:140,y:-20}, queueX:230 };
+function origin(){return {ox:W()*0.5, oy:H()*0.62}}
+const iso=(x,y)=>{const {ox,oy}=origin(); return {X:x-y+ox, Y:(x+y)*.5+oy};}
+const P_STACK=()=>iso(POS.stack.x,POS.stack.y), P_COUNTER=()=>iso(POS.counter.x,POS.counter.y);
 
-// معدلات
-function ovenInterval(){ return Math.max(0.6, 2.2 - S.ovenLvl*0.18); }
-function spawnRate(){ return LEVELS[S.level-1].spawn + S.marketing*0.05; }
-function patienceMax(){ return 6.5 + S.marketing*0.2; }
-let spawnT=1/spawnRate();
-
-// HUD
-const $=id=>document.getElementById(id);
-function goalLeft(){ return Math.max(0, goal - revenueEarned); } // ينقص فقط
+/* ====== Start level ====== */
+function startLevel(n,reset){
+  const L=LEVELS[n-1]; S.ovenLvl=L.oven; S.workerSpeed=L.speed; S.carryCap=L.cap; S.marketing=L.mk;
+  timeLeft=L.time; goal=L.goal; if(reset) revenue=0;
+  oven.stock=0; counter.stock=0; customers.length=0; worker.carrying=0; worker.state='toStack';
+  const p0=iso(0,0); worker.x=p0.X; worker.y=p0.Y;
+  spawnT=1/spawnRate();
+  for(let i=0;i<3;i++) spawnCustomer();
+  renderHUD();
+}
 function renderHUD(){
-  $('cash').textContent=S.cash.toFixed(0);
-  $('level').textContent=S.level;
-  $('goalLeft').textContent=goalLeft().toFixed(0);
-  const m=Math.floor(timeLeft/60), s=(timeLeft%60|0).toString().padStart(2,'0');
-  $('time').textContent=`${m}:${s}`;
-  $('ovenBar').style.width=(S.ovenLvl*10)+'%';
-  $('speedBar').style.width=(S.workerSpeed*10)+'%';
+  cashEl.textContent=S.cash.toFixed(0);
+  levelEl.textContent=S.level;
+  leftEl.textContent=Math.max(0,goal-revenue).toFixed(0);
+  const m=(timeLeft/60)|0, s=(timeLeft%60|0).toString().padStart(2,'0'); timeEl.textContent=`${m}:${s}`;
+  $('ovBar').style.width=(S.ovenLvl*10)+'%';
+  $('spBar').style.width=(S.workerSpeed*10)+'%';
   $('capBar').style.width=(S.carryCap*10)+'%';
   $('mkBar').style.width=(S.marketing*10)+'%';
 }
-function save(){ localStorage.setItem('pf_iso_levels', JSON.stringify(S)); }
+$('upOven').onclick=()=>{ if(S.cash>=120){S.cash-=120;S.ovenLvl++; renderHUD(); save();}}
+$('upSpeed').onclick=()=>{ if(S.cash>=100){S.cash-=100;S.workerSpeed++; renderHUD(); save();}}
+$('upCap').onclick=()=>{ if(S.cash>=150){S.cash-=150;S.carryCap++; renderHUD(); save();}}
+$('upMk').onclick=()=>{ if(S.cash>=130){S.cash-=130;S.marketing++; renderHUD(); save();}}
+function save(){ localStorage.setItem('pf_iso_min',JSON.stringify(S))}
 
-// UI
-const overlay=$('overlay'), ovTitle=$('ovTitle'), ovBody=$('ovBody'), ovBtn=$('ovBtn');
-$('btnTut').onclick=()=>{ overlay.style.display='grid'; ovTitle.textContent='شرح سريع'; ovBody.textContent='عدّاد المتبقي يقلّ بالإيراد فقط. المشتريات لا تؤثر على التقدّم.'; };
-$('btnMute').onclick=()=>{ muted=!muted; $('btnMute').textContent=muted?'🔇 صامت':'🔊 صوت'; };
-$('btnRestart').onclick=()=>{ startLevel(S.level,true); };
-$('upOven').onclick=()=>{ if(S.cash>=120){ S.cash-=120; S.ovenLvl++; beep(900); renderHUD(); save(); } };
-$('upSpeed').onclick=()=>{ if(S.cash>=100){ S.cash-=100; S.workerSpeed++; beep(760); renderHUD(); save(); } };
-$('upCap').onclick=()=>{ if(S.cash>=150){ S.cash-=150; S.carryCap++; beep(640); renderHUD(); save(); } };
-$('upMk').onclick=()=>{ if(S.cash>=130){ S.cash-=130; S.marketing++; beep(520); renderHUD(); save(); } };
-$('save').onclick=save; $('reset').onclick=()=>{ localStorage.removeItem('pf_iso_levels'); location.reload(); };
-
-// بدء مستوى
-function startLevel(n, reset=true){
-  const L=LEVELS[n-1];
-  timeLeft=L.time; goal=L.goal;
-  S.ovenLvl=L.oven; S.workerSpeed=L.speed; S.carryCap=L.cap; S.marketing=L.mk;
-  if(reset) revenueEarned = 0;                   // إعادة ضبط الإيراد للمستوى
-  oven.stock=0; counter.stock=0; customers.length=0; spawnT=1/spawnRate();
-  for(let i=0;i<3;i++) spawnCustomer();
-  renderHUD();
-  overlay.style.display='grid'; ovTitle.textContent=`المستوى ${n}`; ovBody.textContent=`المتبقي ${goalLeft()} خلال ${L.time} ثانية`; ovBtn.textContent='ابدأ';
-}
-startLevel(S.level,true);
-ovBtn.onclick=()=>{ overlay.style.display='none'; last=performance.now(); };
-
-// زبائن + تسليم
+/* ====== Customers & Serving ====== */
+function rand(a,b){return a+Math.floor(Math.random()*(b-a+1))}
 function spawnCustomer(){
-  const r=LEVELS[S.level-1].order;
-  const n=r[0]+Math.floor(Math.random()*(r[1]-r[0]+1));
-  const baseY=-20+Math.random()*60; const p=iso(POS.queueX, baseY);
-  customers.push({isoX:POS.queueX, isoY:baseY, scrX:p.X, scrY:p.Y, order:n, pat:patienceMax(), served:false, leaving:false});
+  const r=LEVELS[S.level-1].order; const n=rand(r[0],r[1]);
+  const baseY=-20+Math.random()*60; const p=iso(POS.queueX,baseY);
+  customers.push({isoX:POS.queueX,isoY:baseY,x:p.X,y:p.Y,order:n,pat:patienceMax(),served:false,leaving:false})
 }
-function serveFromCounter(){
-  const c=customers.find(z=>!z.served && !z.leaving); if(!c) return;
-  const give=Math.min(counter.stock, c.order);
-  if(give>0){
-    c.order-=give; counter.stock-=give;
-    const pay=give*10;
-    S.cash+=pay; revenueEarned=Math.min(goal, revenueEarned+pay); // يزيد للإيراد فقط
-    if(c.order===0){ c.served=true; beep(880,0.07,'sine',0.04); }
-    renderHUD(); save();
+function serve(){
+  const c=customers.find(z=>!z.served&&!z.leaving); if(!c) return;
+  const give=Math.min(counter.stock,c.order); if(give<=0) return;
+  c.order-=give; counter.stock-=give; const pay=give*10; S.cash+=pay; revenue=Math.min(goal,revenue+pay);
+  if(c.order===0){ c.served=true; beep(); }
+  renderHUD(); save();
+}
+
+/* ====== Worker FSM ====== */
+function speedPx(){return 90+S.workerSpeed*26}
+function moveTo(o,tx,ty,dt){const dx=tx-o.x,dy=ty-o.y,d=Math.hypot(dx,dy); if(d>1){o.x+=dx/d*speedPx()*dt;o.y+=dy/d*speedPx()*dt}}
+function near(o,tx,ty,e){return Math.hypot(o.x-tx,o.y-ty)<=e}
+function stepWorker(dt){
+  const Ps=P_STACK(), Pc=P_COUNTER();
+  if(worker.state==='toStack'){ moveTo(worker,Ps.X,Ps.Y,dt); if(near(worker,Ps.X,Ps.Y,10)) worker.state='pickup'; }
+  else if(worker.state==='pickup'){
+    if(oven.stock>0 && worker.carrying<S.carryCap){ oven.stock--; worker.carrying++; }
+    if(worker.carrying>=S.carryCap || oven.stock===0) worker.state='toCounter';
+  } else if(worker.state==='toCounter'){ moveTo(worker,Pc.X,Pc.Y,dt); if(near(worker,Pc.X,Pc.Y,10)) worker.state='drop'; }
+  else if(worker.state==='drop'){
+    if(worker.carrying>0 && counter.stock<counter.limit){ counter.stock++; worker.carrying--; }
+    if(worker.carrying===0) worker.state='toStack';
   }
 }
 
-// العامل
-const P_STACK=iso(POS.stack.x,POS.stack.y), P_COUNTER=iso(POS.counter.x,POS.counter.y);
-function vPx(){ return (90+S.workerSpeed*26); }
-function moveTo(o,tx,ty,dt){ const dx=tx-o.x, dy=ty-o.y, d=Math.hypot(dx,dy); if(d>1){ o.x+=
+/* ====== Game Loop ====== */
+let spawnT=1, last=performance.now();
+function loop(now){
+  let dt=(now-last)/1000; last=now; if(!isFinite(dt)||dt<=0) dt=.016; dt=Math.min(dt,.033);
+
+  timeLeft-=dt; if(timeLeft<0) timeLeft=0;
+  if(revenue>=goal){ S.level=Math.min(LEVELS.length,S.level+1); save(); startLevel(S.level,true); }
+  renderHUD();
+
+  spawnT-=dt; if(spawnT<=0){spawnT=1/spawnRate(); spawnCustomer();}
+  oven.timer-=dt; if(oven.timer<=0){oven.timer=ovenInterval(); if(oven.stock<oven.limit){oven.stock++; if(!muted) beep(520,.05);}}
+  customers.forEach(c=>{ if(!c.served){ c.pat-=dt; if(c.pat<=0) c.leaving=true; }
+    if(c.served||c.leaving){ c.isoX+=(c.served?100:140)*dt; const p=iso(c.isoX,c.isoY); c.x=p.X; c.y=p.Y; }
+  });
+  serve(); stepWorker(dt);
+  draw(); requestAnimationFrame(loop);
+}
+startLevel(S.level,true); requestAnimationFrame(loop);
+
+/* ====== Drawing (NO shadow, NO grid) ====== */
+function ellipse(x,y,rx,ry){ctx.beginPath(); ctx.ellipse(x,y,rx,ry,0,0,Math.PI*2); ctx.fill();}
+function drawPizza(x,y,s=1){ctx.fillStyle='#f59e0b'; ellipse(x,y,16*s,6*s); ctx.strokeStyle='#b45309'; ctx.stroke();}
+function drawStack(x,y,count,small){const n=Math.min(10,count); for(let i=0;i<n;i++) drawPizza(x,y-i*(small?6:8), small?.5:1)}
+function draw(){
+  ctx.clearRect(0,0,W(),H());
+  // أرضية ناعمة
+  const g=ctx.createLinearGradient(0,H()-260,0,H()); g.addColorStop(0,'#f7fbff'); g.addColorStop(1,'#ffffff');
+  ctx.fillStyle=g; ctx.fillRect(0,H()-260,W(),260);
+
+  // فرن
+  const pO=iso(POS.oven.x,POS.oven.y);
+  ctx.fillStyle='#60a5fa'; ctx.fillRect(pO.X-48,pO.Y-32,96,64);
+  ctx.fillStyle='#1d4ed8'; ctx.fillRect(pO.X-36,pO.Y-6,72,20);
+
+  // مخزن + كاونتر
+  const pS=iso(POS.stack.x,POS.stack.y); drawStack(pS.X,pS.Y,oven.stock);
+  const pC=iso(POS.counter.x,POS.counter.y);
+  ctx.fillStyle='#ef4444'; ctx.fillRect(pC.X-60,pC.Y-24,160,64);
+  drawStack(pC.X+40,pC.Y+18,counter.stock,true);
+
+  // عامل
+  ctx.fillStyle='#f97316'; ellipse(worker.x,worker.y-18,14,14);
+  ctx.fillStyle='#3b82f6'; ctx.fillRect(worker.x-18,worker.y-6,36,28);
+  for(let i=0;i<worker.carrying;i++) drawPizza(worker.x+14,worker.y-8 - i*8,.6);
+
+  // زبائن + فقاعة الطلب المعتمة
+  customers.forEach(c=>{
+    ctx.fillStyle='#94a3b8'; ellipse(c.x,c.y-18,12,12);
+    ctx.fillStyle='#1f2937'; ctx.fillRect(c.x-10,c.y-2,20,18);
+    // فقاعة
+    ctx.fillStyle='#fff'; ctx.fillRect(c.x-20,c.y-34,48,24);
+    ctx.strokeStyle='#d1d8e2'; ctx.strokeRect(c.x-20,c.y-34,48,24);
+    ctx.fillStyle='#111'; ctx.font='16px system-ui'; ctx.fillText('🍕'+c.order,c.x-14,c.y-16);
+    // صبر
+    const pat=c.pat/Math.max(0.0001,patienceMax());
+    ctx.fillStyle='#e2e8f0'; ctx.fillRect(c.x-20,c.y-10,48,4);
+    ctx.fillStyle=pat>.5?'#22c55e':(pat>.25?'#f59e0b':'#ef4444');
+    ctx.fillRect(c.x-20,c.y-10,48*Math.max(0,Math.min(1,pat)),4);
+  });
+
+  // شريط التقدّم (ذهبي) — من الإيراد فقط
+  const gw=Math.max(160,W()-220), prog=Math.max(0,Math.min(1,revenue/goal));
+  ctx.fillStyle='#e2e8f0'; ctx.fillRect(20,20,gw,8);
+  ctx.fillStyle='#eab308'; ctx.fillRect(20,20,gw*prog,8);
+
+  // شريط الوقت (أخضر)
+  const tp=Math.max(0,timeLeft/LEVELS[S.level-1].time);
+  ctx.fillStyle='#22c55e'; ctx.fillRect(W()-180,20,160*tp,8);
+}
+</script>
+</body>
+</html>
