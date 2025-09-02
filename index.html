@@ -1,303 +1,403 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="ar" dir="rtl">
 <head>
-<meta charset="utf-8"/>
-<meta name="viewport" content="width=device-width, initial-scale=1"/>
-<title>Pizza Factory — Clean No-Shadow</title>
-<style>
-:root{
-  --bg:#f3f6fd; --card:#fff; --ink:#0f172a; --muted:#6b7280;
-  --accent:#22c55e; --accent2:#3b82f6; --gold:#eab308;
-}
-*{box-sizing:border-box} html,body{height:100%}
-body{margin:0;font-family:system-ui,-apple-system,Segoe UI,Roboto,"Cairo",sans-serif;background:var(--bg);color:var(--ink);display:flex;justify-content:center}
-.wrap{width:min(1024px,100%);padding:12px}
-.top{display:flex;justify-content:space-between;align-items:center;gap:8px;padding:10px 14px;border-radius:16px;color:#fff;background:linear-gradient(90deg,var(--accent),var(--accent2))}
-.stats{display:flex;gap:8px;flex-wrap:wrap}
-.pill{display:inline-flex;gap:6px;align-items:center;padding:8px 12px;border-radius:999px;background:rgba(255,255,255,.16);font-weight:700}
-.grid{display:grid;grid-template-columns:1.1fr .9fr;gap:10px;margin-top:10px}
-.card{background:var(--card);border:1px solid #e8eef5;border-radius:16px;padding:10px}
-canvas{display:block;width:100%;aspect-ratio:16/9;background:#ffffff;border-radius:12px}
-.row{display:flex;justify-content:space-between;align-items:center;padding:8px 0}
-.meter{height:10px;width:160px;border-radius:999px;background:#eef2f7;overflow:hidden}
-.meter span{display:block;height:100%;background:linear-gradient(90deg,var(--accent),var(--accent2))}
-.btn{padding:8px 12px;border:1px solid #e5e7eb;border-radius:12px;background:#fff;cursor:pointer;font-weight:700}
-.btn:active{transform:translateY(1px)}
-.hud{color:var(--muted);padding:6px 2px;text-align:center}
-.overlay{position:fixed;inset:0;background:rgba(15,23,42,.66);display:none;place-items:center;z-index:30}
-.modal{background:#fff;border-radius:16px;width:min(520px,92%);padding:16px;text-align:center}
-.modal h2{margin:8px 0}
-.modal p{margin:6px 0}
-.badge{display:inline-flex;align-items:center;gap:6px;padding:6px 10px;border-radius:999px;background:#f1f5f9;margin:4px}
-@media (max-width:780px){.grid{grid-template-columns:1fr}}
-</style>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Falling Blocks DX — تترس أصلية (HTML5)</title>
+  <style>
+    :root{
+      --bg1:#0b1023; --bg2:#1a2344; --panel:#0e1326;
+      --glass: rgba(255,255,255,.06); --line: rgba(255,255,255,.10);
+      --text:#e8ecf3; --muted:#a9b2c3; --accent:#22d3ee; --accent2:#a78bfa; --good:#34d399; --bad:#ef4444;
+      --r:18px; --shadow:0 16px 44px rgba(0,0,0,.38);
+    }
+    *{box-sizing:border-box}
+    html,body{height:100%}
+    body{
+      margin:0; background: radial-gradient(1200px 800px at 85% -10%, #243a6b 0%, transparent 60%),
+                 linear-gradient(180deg, var(--bg1), var(--bg2));
+      color:var(--text); font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial;
+      display:flex; align-items:center; justify-content:center; padding:16px; overflow:hidden
+    }
+    .wrap{ width:min(980px,100%); display:grid; grid-template-columns: 1fr 300px; gap:16px }
+    @media (max-width: 920px){ .wrap{ grid-template-columns: 1fr } }
+
+    .card{ background:linear-gradient(180deg, rgba(255,255,255,.05), rgba(255,255,255,.02));
+      border:1px solid var(--line); border-radius:var(--r); box-shadow:var(--shadow) }
+
+    header.card{ padding:14px 16px; display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:10px }
+    header h1{ margin:0; font-size: clamp(18px, 2.4vw, 26px); letter-spacing:.4px }
+    header .btns{ display:flex; gap:8px; flex-wrap:wrap }
+
+    button{ background:linear-gradient(180deg, #18223d, #0f172a); color:var(--text);
+      border:1px solid var(--line); border-radius:12px; padding:10px 14px; font-weight:700; cursor:pointer; transition:.2s transform, .2s filter }
+    button:hover{ transform:translateY(-1px); filter:brightness(1.08) }
+
+    #game.card{ display:grid; grid-template-columns: 1fr; padding:12px }
+
+    .hud{ display:grid; grid-template-columns: repeat(4, 1fr); gap:10px; margin:6px 4px 10px }
+    .stat{ background:var(--glass); border:1px solid var(--line); border-radius:12px; padding:8px 10px; text-align:center }
+    .stat .k{ font-size:12px; color:var(--muted) }
+    .stat .v{ font-size:20px; font-weight:800 }
+
+    .boards{ display:grid; grid-template-columns: 1fr 180px; gap:12px }
+    @media (max-width: 920px){ .boards{ grid-template-columns: 1fr } }
+
+    .stage{ position:relative; display:grid; place-items:center }
+    canvas#cv{ width:100%; max-width:500px; aspect-ratio: 10/20; background:linear-gradient(180deg, rgba(255,255,255,.03), rgba(255,255,255,.01)); border-radius:14px; box-shadow: inset 0 0 0 2px rgba(255,255,255,.04) }
+
+    .side{ display:grid; grid-auto-rows: min-content; gap:12px }
+    .panel{ background:var(--glass); border:1px solid var(--line); border-radius:14px; padding:10px }
+    .panel h3{ margin:0 0 8px; font-size:14px; color:var(--muted) }
+    canvas#next{ width:100%; aspect-ratio: 1/1; background:linear-gradient(180deg, rgba(255,255,255,.02), rgba(255,255,255,.01)); border-radius:12px }
+
+    .controls{ display:flex; align-items:center; justify-content:center; gap:10px; margin-top:8px; flex-wrap:wrap }
+    .controls button{ min-width:80px }
+
+    .tip{ text-align:center; color:var(--muted); font-size:12px; margin-top:6px }
+
+    .modal{ position:fixed; inset:0; display:none; place-items:center; background:rgba(10,14,26,.55); padding:18px; z-index:20 }
+    .modal .box{ width:min(520px,100%); background:var(--panel); border:1px solid var(--line); border-radius:20px; padding:18px; box-shadow:var(--shadow) }
+    .modal h2{ margin:0 0 6px; font-size:24px }
+    .modal p{ margin:6px 0 14px; color:var(--muted) }
+
+    .legal{ color:var(--muted); font-size:12px; text-align:center; margin-top:8px }
+  </style>
 </head>
 <body>
-<div class="wrap">
-  <div class="top">
-    <b>Pizza Factory — نسخة نظيفة بلا ظلال</b>
-    <div class="stats">
-      <div class="pill">💰 <b id="cash">0</b></div>
-      <div class="pill">💎 <b id="gems">0</b></div>
-      <div class="pill">⭐ <b id="level">1</b></div>
-      <div class="pill">🎯 المتبقي <b id="left">0</b></div>
-      <div class="pill">⏳ الوقت <b id="time">00:00</b></div>
-    </div>
+  <div class="wrap">
+    <header class="card">
+      <h1>Falling Blocks DX — تترس أصلية (نسخة نظيفة)</h1>
+      <div class="btns">
+        <button id="newBtn">لعبة جديدة</button>
+        <button id="pauseBtn">⏸︎ إيقاف</button>
+        <button id="muteBtn">🔊 الصوت</button>
+        <button id="howBtn">طريقة اللعب</button>
+      </div>
+    </header>
+
+    <section id="game" class="card">
+      <div class="hud">
+        <div class="stat"><div class="k">النتيجة</div><div id="score" class="v">0</div></div>
+        <div class="stat"><div class="k">الخطوط</div><div id="lines" class="v">0</div></div>
+        <div class="stat"><div class="k">المستوى</div><div id="level" class="v">1</div></div>
+        <div class="stat"><div class="k">أفضل نتيجة</div><div id="best" class="v">0</div></div>
+      </div>
+
+      <div class="boards">
+        <div class="stage">
+          <canvas id="cv" width="300" height="600" aria-label="ساحة اللعب" role="img"></canvas>
+        </div>
+        <div class="side">
+          <div class="panel">
+            <h3>القادم</h3>
+            <canvas id="next" width="160" height="160"></canvas>
+          </div>
+          <div class="panel">
+            <h3>التحكم</h3>
+            <div class="controls">
+              <button id="leftBtn">⟵ يسار</button>
+              <button id="rotBtn">⤿ تدوير</button>
+              <button id="rightBtn">يمين ⟶</button>
+              <button id="downBtn">⬇ إسقاط</button>
+              <button id="hardBtn">⬇⬇ هارد دروب</button>
+            </div>
+          </div>
+          <div class="panel">
+            <h3>تلميح</h3>
+            <div class="tip">حرّك القطعة بالأسهم أو الأزرار. ↑ للتدوير، ↓ إسقاط سريع، مسافة = هارد دروب. يتم مسح الصفوف الممتلئة بالكامل وتزداد السرعة كل مستوى.</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="legal">كود أصلي بالكامل (لا يستخدم أي أصول/أكواد من ألعاب أخرى). يعمل على الموبايل والكمبيوتر.</div>
+    </section>
   </div>
 
-  <div class="grid">
-    <div class="card">
-      <h3>الملعب (بدون Shadow/شبكة)</h3>
-      <canvas id="cv"></canvas>
-      <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:8px">
-        <button class="btn" id="restart">إعادة المستوى</button>
-        <button class="btn" id="mute">🔊 صوت</button>
+  <div id="modal" class="modal" role="dialog" aria-modal="true">
+    <div class="box">
+      <h2 id="modalTitle">نهاية اللعبة</h2>
+      <p id="modalMsg">امتلأت اللوحة من الأعلى.</p>
+      <div style="display:flex; gap:10px; flex-wrap:wrap">
+        <button id="againBtn">أعد المحاولة</button>
+        <button id="shareBtn">مشاركة النتيجة</button>
       </div>
     </div>
-
-    <div class="card">
-      <h3>ترقيات</h3>
-      <div class="row"><div>⏱️ سرعة الفرن</div><div style="display:flex;gap:8px;align-items:center"><div class="meter"><span id="ovBar" style="width:20%"></span></div><button class="btn" id="upOven">+ (120💰)</button></div></div>
-      <div class="row"><div>🏃‍♂️ سرعة العامل</div><div style="display:flex;gap:8px;align-items:center"><div class="meter"><span id="spBar" style="width:20%"></span></div><button class="btn" id="upSpeed">+ (100💰)</button></div></div>
-      <div class="row"><div>🧺 سعة الحمل</div><div style="display:flex;gap:8px;align-items:center"><div class="meter"><span id="capBar" style="width:20%"></span></div><button class="btn" id="upCap">+ (150💰)</button></div></div>
-      <div class="row"><div>📣 تسويق (يزوّد الزبائن)</div><div style="display:flex;gap:8px;align-items:center"><div class="meter"><span id="mkBar" style="width:0%"></span></div><button class="btn" id="upMk">+ (130💰)</button></div></div>
-    </div>
   </div>
 
-  <div class="hud">👷 العامل يشيل من المخزن → يسلّم على الكاونتر. **التقدّم = الإيراد فقط**.</div>
-</div>
+  <script>
+  (()=>{
+    // ===== ثوابت اللوحة =====
+    const COLS=10, ROWS=20;
+    const cv = document.getElementById('cv');
+    const cx = cv.getContext('2d');
+    const W = cv.width, H = cv.height;
+    const CS = Math.floor(W / COLS); // حجم الخلية
 
-<!-- Overlay -->
-<div class="overlay" id="ov">
-  <div class="modal">
-    <h2 id="ovTitle">المستوى</h2>
-    <p id="ovMsg"></p>
-    <div id="ovRewards" style="margin:6px 0"></div>
-    <button class="btn" id="ovBtn">ابدأ</button>
-  </div>
-</div>
+    const nextCV = document.getElementById('next');
+    const nx = nextCV.getContext('2d');
 
-<script>
-/* ===== Canvas ===== */
-const cv=document.getElementById('cv'), ctx=cv.getContext('2d');
-function fit(){
-  const dpr=Math.max(1,window.devicePixelRatio||1);
-  const r=cv.getBoundingClientRect();
-  const w=Math.max(640,Math.floor(r.width||960)), h=Math.max(360,Math.floor(w*9/16));
-  cv.width=Math.floor(w*dpr); cv.height=Math.floor(h*dpr);
-  ctx.setTransform(dpr,0,0,dpr,0,0);
-}
-new ResizeObserver(fit).observe(cv); fit();
-const W=()=>cv.getBoundingClientRect().width||960, H=()=>cv.getBoundingClientRect().height||540;
+    // HUD
+    const scoreEl = document.getElementById('score');
+    const linesEl = document.getElementById('lines');
+    const levelEl = document.getElementById('level');
+    const bestEl  = document.getElementById('best');
 
-/* ===== HUD ===== */
-const $=id=>document.getElementById(id);
-$('restart').onclick=()=>startLevel(S.level,true);
-let muted=false; $('mute').onclick=()=>{muted=!muted;$('mute').textContent=muted?'🔇 صامت':'🔊 صوت'};
-const cashEl=$('cash'), gemsEl=$('gems'), levelEl=$('level'), leftEl=$('left'), timeEl=$('time');
+    // Modal
+    const modal = document.getElementById('modal');
+    const modalTitle = document.getElementById('modalTitle');
+    const modalMsg = document.getElementById('modalMsg');
 
-/* ===== Sound ===== */
-let AC=null; function beep(f=850,d=.06,g=.03){ if(muted) return;
-  AC=AC||new (window.AudioContext||window.webkitAudioContext)();
-  const o=AC.createOscillator(), G=AC.createGain(); o.type='triangle'; o.frequency.value=f; G.gain.value=g;
-  o.connect(G).connect(AC.destination); o.start(); o.stop(AC.currentTime+d);
-}
+    // أصوات بسيطة
+    let muted=false;
+    function beep(freq=520, dur=60, gain=.08){ if(muted) return; const a = new (window.AudioContext||window.webkitAudioContext)(); const o=a.createOscillator(); const g=a.createGain(); o.type='sine'; o.frequency.value=freq; o.connect(g); g.connect(a.destination); g.gain.setValueAtTime(gain,a.currentTime); g.gain.exponentialRampToValueAtTime(.0001,a.currentTime+dur/1000); o.start(); o.stop(a.currentTime+dur/1000); setTimeout(()=>a.close(), dur+120); }
 
-/* ===== Levels + Rewards ===== */
-const LEVELS=[
-  {goal:200,time:60, spawn:.55, order:[1,2], oven:2, speed:1, cap:3, mk:0},
-  {goal:330,time:70, spawn:.70, order:[1,3], oven:3, speed:1, cap:3, mk:1},
-  {goal:480,time:80, spawn:.85, order:[2,3], oven:3, speed:2, cap:4, mk:1},
-  {goal:600,time:95, spawn:1.00, order:[2,3], oven:4, speed:2, cap:5, mk:2},
-];
-function rewardFor(level){ return {cash:50+level*15, gems:1}; }
+    // ألوان التترومينوز
+    const COLORS = {
+      I:'#22d3ee', O:'#f59e0b', T:'#a78bfa', S:'#34d399', Z:'#f87171', J:'#60a5fa', L:'#f472b6'
+    };
 
-/* ===== State ===== */
-const S = JSON.parse(localStorage.getItem('pf_factory_clean2'))||
-          {level:1,cash:250,gems:0,ovenLvl:2,workerSpeed:1,carryCap:3,marketing:0};
-let timeLeft=0, goal=0, revenue=0;
+    // أشكال القطع (مصفوفة 4×4)
+    const SHAPES = {
+      I: [[0,0,0,0],[1,1,1,1],[0,0,0,0],[0,0,0,0]],
+      O: [[0,1,1,0],[0,1,1,0],[0,0,0,0],[0,0,0,0]],
+      T: [[0,1,0,0],[1,1,1,0],[0,0,0,0],[0,0,0,0]],
+      S: [[0,1,1,0],[1,1,0,0],[0,0,0,0],[0,0,0,0]],
+      Z: [[1,1,0,0],[0,1,1,0],[0,0,0,0],[0,0,0,0]],
+      J: [[1,0,0,0],[1,1,1,0],[0,0,0,0],[0,0,0,0]],
+      L: [[0,0,1,0],[1,1,1,0],[0,0,0,0],[0,0,0,0]]
+    };
 
-/* ===== World (no conveyor, clean) ===== */
-const oven={timer:0,stock:0,limit:99};
-const counter={stock:0,limit:40};
-const worker={x:0,y:0,carrying:0,state:'toStack'};
-const customers=[];
-const POS={ oven:{x:-120,y:-20}, stack:{x:-60,y:-20}, counter:{x:140,y:-20}, queueX:230 };
-function origin(){return {ox:W()*0.5, oy:H()*0.62}}
-const iso=(x,y)=>{const {ox,oy}=origin(); return {X:x-y+ox, Y:(x+y)*.5+oy};}
-const P_STACK=()=>iso(POS.stack.x,POS.stack.y), P_COUNTER=()=>iso(POS.counter.x,POS.counter.y);
+    // شبكة اللعب
+    let grid;
 
-/* ===== Rates ===== */
-function ovenInterval(){return Math.max(.6, 2.2 - S.ovenLvl*0.18)}
-function spawnRate(){return LEVELS[S.level-1].spawn + S.marketing*0.05}
-function patienceMax(){return 6.0 + S.marketing*0.2}
+    // حالة اللعبة
+    let cur, bag=[], queue=[], score=0, lines=0, level=1, best=Number(localStorage.getItem('tetris_best')||0);
+    let dropInterval = 900; // ms — تقل مع زيادة المستوى
+    let dropTimer = 0, lastTime = 0, paused=false, running=false;
 
-/* ===== HUD Render ===== */
-function renderHUD(){
-  cashEl.textContent=S.cash.toFixed(0);
-  gemsEl.textContent=S.gems.toFixed(0);
-  levelEl.textContent=S.level;
-  leftEl.textContent=Math.max(0,goal-revenue).toFixed(0);
-  const m=(timeLeft/60)|0, s=(timeLeft%60|0).toString().padStart(2,'0'); timeEl.textContent=`${m}:${s}`;
-  $('ovBar').style.width=(S.ovenLvl*10)+'%';
-  $('spBar').style.width=(S.workerSpeed*10)+'%';
-  $('capBar').style.width=(S.carryCap*10)+'%';
-  $('mkBar').style.width=(S.marketing*10)+'%';
-}
-function save(){ localStorage.setItem('pf_factory_clean2', JSON.stringify(S)); }
+    function emptyGrid(){ return Array.from({length:ROWS},()=>Array(COLS).fill(0)); }
 
-/* ===== Upgrades ===== */
-$('upOven').onclick=()=>{ if(S.cash>=120){S.cash-=120;S.ovenLvl++;renderHUD();save();} };
-$('upSpeed').onclick=()=>{ if(S.cash>=100){S.cash-=100;S.workerSpeed++;renderHUD();save();} };
-$('upCap').onclick=()=>{ if(S.cash>=150){S.cash-=150;S.carryCap++;renderHUD();save();} };
-$('upMk').onclick=()=>{ if(S.cash>=130){S.cash-=130;S.marketing++;renderHUD();save();} };
+    function newPiece(type){
+      const shape = JSON.parse(JSON.stringify(SHAPES[type]));
+      return { type, shape, x: Math.floor(COLS/2)-2, y: -2, color: COLORS[type] };
+    }
 
-/* ===== Overlay ===== */
-const ov=$('ov'), ovTitle=$('ovTitle'), ovMsg=$('ovMsg'), ovBtn=$('ovBtn'), ovRewards=$('ovRewards');
-let overlayAction=()=>{};
-function showOverlay(title,msg,btn,rewards,action){
-  ovTitle.textContent=title; ovMsg.textContent=msg; ovBtn.textContent=btn;
-  ovRewards.innerHTML = rewards ? `<span class="badge">+${rewards.cash} 💰</span><span class="badge">+${rewards.gems} 💎</span>` : '';
-  overlayAction = action || (()=>{});
-  ov.style.display='grid';
-}
-ovBtn.onclick=()=>{ ov.style.display='none'; overlayAction(); last=performance.now(); };
+    function refillBag(){
+      if(bag.length===0){ bag = Object.keys(SHAPES).sort(()=>Math.random()-.5); }
+      return bag.pop();
+    }
 
-/* ===== Helpers ===== */
-function hardResetLevelVars(){
-  oven.stock=0; counter.stock=0; customers.length=0;
-  worker.carrying=0; worker.state='toStack';
-  const p0=iso(0,0); worker.x=p0.X; worker.y=p0.Y;
-}
+    function refillQueue(){
+      while(queue.length<3){ queue.push(refillBag()); }
+      drawNext();
+    }
 
-/* ===== Level Flow ===== */
-let spawnT=1, last=performance.now();
-function startLevel(n, reset){
-  const L=LEVELS[n-1];
-  timeLeft=L.time; goal=L.goal;
-  S.ovenLvl=L.oven; S.workerSpeed=L.speed; S.carryCap=L.cap; S.marketing=L.mk;
-  if(reset) revenue=0;
-  hardResetLevelVars();
-  spawnT=1/spawnRate();
-  for(let i=0;i<3;i++) spawnCustomer();
-  renderHUD();
-  showOverlay(`المستوى ${n}`, `حقق ${goal} قبل انتهاء الوقت.`, 'ابدأ', null, ()=>{/* يبدأ */});
-}
-function winLevel(){
-  const rw=rewardFor(S.level);
-  S.cash+=rw.cash; S.gems+=rw.gems; save();
-  showOverlay('مبروك! 🎉','حققت الهدف وتم إضافة مكافآت.','المستوى التالي', rw, ()=>{
-    S.level=Math.min(LEVELS.length,S.level+1); save(); startLevel(S.level,true);
-  });
-}
-function loseLevel(){
-  showOverlay('انتهى الوقت ⏳','ما حققتش الهدف — جرب تاني.','إعادة', null, ()=>{
-    startLevel(S.level,true);
-  });
-}
+    function spawn(){
+      const t = refillBag();
+      cur = newPiece(t);
+      refillQueue(); // keep queue filled
+      if(collide(cur, cur.x, cur.y)) { gameOver('امتلأت اللوحة من الأعلى.'); }
+    }
 
-/* ===== Customers & Serving ===== */
-function rand(a,b){return a+Math.floor(Math.random()*(b-a+1))}
-function spawnCustomer(){
-  const r=LEVELS[S.level-1].order; const n=rand(r[0],r[1]);
-  const baseY=-20+Math.random()*60; const p=iso(POS.queueX,baseY);
-  customers.push({isoX:POS.queueX,isoY:baseY,x:p.X,y:p.Y,order:n,pat:patienceMax(),served:false,leaving:false});
-}
-function serve(){
-  const c=customers.find(z=>!z.served&&!z.leaving); if(!c) return;
-  const give=Math.min(counter.stock,c.order); if(give<=0) return;
-  c.order-=give; counter.stock-=give;
-  const pay=give*10; S.cash+=pay; revenue=Math.min(goal,revenue+pay);
-  if(c.order===0){ c.served=true; beep(900,.07,.04); }
-  renderHUD(); save();
-}
+    function rotateCW(shape){
+      const N = shape.length; const res = Array.from({length:N}, ()=>Array(N).fill(0));
+      for(let y=0;y<N;y++) for(let x=0;x<N;x++) res[x][N-1-y]=shape[y][x];
+      return res;
+    }
 
-/* ===== Worker ===== */
-function speedPx(){return 90+S.workerSpeed*26}
-function moveTo(o,tx,ty,dt){const dx=tx-o.x,dy=ty-o.y,d=Math.hypot(dx,dy); if(d>1){o.x+=dx/d*speedPx()*dt;o.y+=dy/d*speedPx()*dt}}
-function near(o,tx,ty,e){return Math.hypot(o.x-tx,o.y-ty)<=e}
-function stepWorker(dt){
-  const Ps=P_STACK(), Pc=P_COUNTER();
-  if(worker.state==='toStack'){ moveTo(worker,Ps.X,Ps.Y,dt); if(near(worker,Ps.X,Ps.Y,10)) worker.state='pickup'; }
-  else if(worker.state==='pickup'){
-    if(oven.stock>0 && worker.carrying<S.carryCap){ oven.stock--; worker.carrying++; }
-    if(worker.carrying>=S.carryCap || oven.stock===0) worker.state='toCounter';
-  } else if(worker.state==='toCounter'){ moveTo(worker,Pc.X,Pc.Y,dt); if(near(worker,Pc.X,Pc.Y,10)) worker.state='drop'; }
-  else if(worker.state==='drop'){
-    if(worker.carrying>0 && counter.stock<counter.limit){ counter.stock++; worker.carrying--; }
-    if(worker.carrying===0) worker.state='toStack';
-  }
-}
+    function tryRotate(){
+      const rotated = rotateCW(cur.shape);
+      const kicks = [0,-1,1,-2,2];
+      for(const dx of kicks){ if(!collide(cur, cur.x+dx, cur.y, rotated)){ cur.shape = rotated; cur.x += dx; beep(720,60,.06); return; } }
+    }
 
-/* ===== Loop ===== */
-function loop(now){
-  let dt=(now-last)/1000; last=now; if(!isFinite(dt)||dt<=0) dt=.016; dt=Math.min(dt,.033);
+    function collide(piece, nx, ny, shape=piece.shape){
+      for(let y=0;y<4;y++) for(let x=0;x<4;x++){
+        if(!shape[y][x]) continue;
+        const gx = nx + x, gy = ny + y;
+        if(gy < 0) continue; // فوق الشاشة مسموح
+        if(gx<0 || gx>=COLS || gy>=ROWS) return true;
+        if(grid[gy][gx]) return true;
+      }
+      return false;
+    }
 
-  if(revenue>=goal){ winLevel(); requestAnimationFrame(loop); return; }
+    function merge(piece){
+      for(let y=0;y<4;y++) for(let x=0;x<4;x++){
+        if(!piece.shape[y][x]) continue;
+        const gx = piece.x + x, gy = piece.y + y;
+        if(gy>=0) grid[gy][gx] = piece.color;
+      }
+    }
 
-  timeLeft-=dt; if(timeLeft<=0){ timeLeft=0; renderHUD(); loseLevel(); requestAnimationFrame(loop); return; }
-  renderHUD();
+    function clearLines(){
+      let cleared=0;
+      outer: for(let y=ROWS-1; y>=0;){
+        if(grid[y].every(v=>v)){ grid.splice(y,1); grid.unshift(Array(COLS).fill(0)); cleared++; }
+        else { y--; }
+      }
+      if(cleared){
+        // نقاط كلاسيكية مبسطة
+        const table = {1:100, 2:300, 3:500, 4:800};
+        score += table[cleared] || (cleared*300);
+        lines += cleared;
+        level = 1 + Math.floor(lines/10);
+        dropInterval = Math.max(120, 900 - (level-1)*70);
+        beep(600,80,.09);
+      }
+    }
 
-  spawnT-=dt; if(spawnT<=0){spawnT=1/spawnRate(); spawnCustomer();}
-  oven.timer-=dt; if(oven.timer<=0){oven.timer=ovenInterval(); if(oven.stock<oven.limit){oven.stock++; if(!muted) beep(520,.05,.02);}}
-  customers.forEach(c=>{ if(!c.served){ c.pat-=dt; if(c.pat<=0) c.leaving=true; }
-    if(c.served||c.leaving){ c.isoX+=(c.served?100:140)*dt; const p=iso(c.isoX,c.isoY); c.x=p.X; c.y=p.Y; }
-  });
-  serve(); stepWorker(dt);
-  draw(); requestAnimationFrame(loop);
-}
+    // الرسم
+    function draw(){
+      cx.clearRect(0,0,W,H);
+      // خلفية ناعمة
+      const grd = cx.createLinearGradient(0,0,0,H);
+      grd.addColorStop(0,'rgba(255,255,255,.05)'); grd.addColorStop(1,'rgba(255,255,255,.02)');
+      cx.fillStyle = grd; cx.fillRect(0,0,W,H);
 
-/* ===== Drawing — نظيف بدون أي ظلال ===== */
-function ellipse(x,y,rx,ry){ctx.beginPath(); ctx.ellipse(x,y,rx,ry,0,0,Math.PI*2); ctx.fill();}
-function drawPizza(x,y,s=1){ctx.fillStyle='#f59e0b'; ellipse(x,y,16*s,6*s); ctx.strokeStyle='#b45309'; ctx.stroke();}
-function drawStack(x,y,count,small){const n=Math.min(10,count); for(let i=0;i<n;i++) drawPizza(x,y-i*(small?6:8), small?.5:1)}
-function draw(){
-  ctx.clearRect(0,0,W(),H());
-  ctx.shadowColor='rgba(0,0,0,0)'; ctx.shadowBlur=0; // تأكيد بدون Shadow
+      // شبكة
+      cx.strokeStyle = 'rgba(255,255,255,.04)'; cx.lineWidth=1;
+      for(let x=0;x<=COLS;x++){ cx.beginPath(); cx.moveTo(x*CS+.5,0); cx.lineTo(x*CS+.5,H); cx.stroke(); }
+      for(let y=0;y<=ROWS;y++){ cx.beginPath(); cx.moveTo(0,y*CS+.5); cx.lineTo(W,y*CS+.5); cx.stroke(); }
 
-  // فرن
-  const pO=iso(POS.oven.x,POS.oven.y);
-  ctx.fillStyle='#60a5fa'; ctx.fillRect(pO.X-48,pO.Y-32,96,64);
-  ctx.fillStyle='#1d4ed8'; ctx.fillRect(pO.X-36,pO.Y-6,72,20);
+      // البلاطات الثابتة
+      for(let y=0;y<ROWS;y++) for(let x=0;x<COLS;x++) if(grid[y][x]) drawCell(x,y,grid[y][x]);
+      // القطعة الحالية
+      for(let y=0;y<4;y++) for(let x=0;x<4;x++) if(cur.shape[y][x]) drawCell(cur.x+x, cur.y+y, cur.color, true);
+    }
 
-  // مخزن + كاونتر
-  const pS=iso(POS.stack.x,POS.stack.y); drawStack(pS.X,pS.Y,oven.stock);
-  const pC=iso(POS.counter.x,POS.counter.y);
-  ctx.fillStyle='#ef4444'; ctx.fillRect(pC.X-60,pC.Y-24,160,64);
-  drawStack(pC.X+40,pC.Y+18,counter.stock,true);
+    function drawCell(gx,gy,color, floating=false){
+      if(gy<0) return;
+      const px=gx*CS, py=gy*CS, r=6;
+      // ظل
+      cx.save(); cx.shadowColor='rgba(0,0,0,.35)'; cx.shadowBlur=10; cx.shadowOffsetY=6;
+      // جسم بتدرج
+      const grad = cx.createLinearGradient(px,py,px,py+CS);
+      grad.addColorStop(0, shade(color,1.12)); grad.addColorStop(1, shade(color,0.90));
+      roundRect(cx, px+2, py+2, CS-4, CS-4, r, true, false, grad);
+      cx.restore();
+      // لمعة
+      cx.fillStyle='rgba(255,255,255,.12)'; roundRect(cx, px+6, py+5, CS-12, 6, 4, true);
+      // إطار
+      cx.strokeStyle='rgba(255,255,255,.10)'; cx.lineWidth=1; roundRect(cx, px+2, py+2, CS-4, CS-4, r, false, true);
+      if(floating){ cx.globalAlpha=.12; cx.fillStyle=color; cx.fillRect(px+4, py+CS-6, CS-8, 3); cx.globalAlpha=1; }
+    }
 
-  // عامل
-  ctx.fillStyle='#f97316'; ellipse(worker.x,worker.y-18,14,14);
-  ctx.fillStyle='#3b82f6'; ctx.fillRect(worker.x-18,worker.y-6,36,28);
-  for(let i=0;i<worker.carrying;i++) drawPizza(worker.x+14,worker.y-8 - i*8,.6);
+    function shade(hex,k){ const f=parseInt(hex.slice(1),16),t=k<1?0:255,p=k<1?k:k-1; const R=f>>16,G=f>>8&255,B=f&255; const nr=Math.round((t-R)*p+R),ng=Math.round((t-G)*p+G),nb=Math.round((t-B)*p+B); return `rgb(${nr},${ng},${nb})`; }
+    function roundRect(ctx,x,y,w,h,r,fill=false,stroke=false,fillStyle){ ctx.beginPath(); ctx.moveTo(x+r,y); ctx.arcTo(x+w,y,x+w,y+h,r); ctx.arcTo(x+w,y+h,x,y+h,r); ctx.arcTo(x,y+h,x,y,r); ctx.arcTo(x,y,x+w,y,r); ctx.closePath(); if(fill){ ctx.fillStyle=fillStyle||'rgba(255,255,255,.08)'; ctx.fill(); } if(stroke){ ctx.stroke(); }}
 
-  // زبائن + فقاعة
-  customers.forEach(c=>{
-    ctx.fillStyle='#94a3b8'; ellipse(c.x,c.y-18,12,12);
-    ctx.fillStyle='#1f2937'; ctx.fillRect(c.x-10,c.y-2,20,18);
-    ctx.fillStyle='#ffffff'; ctx.fillRect(c.x-20,c.y-34,48,24);
-    ctx.strokeStyle='#d1d8e2'; ctx.lineWidth=2; ctx.strokeRect(c.x-20,c.y-34,48,24);
-    ctx.fillStyle='#111'; ctx.font='16px system-ui'; ctx.fillText('🍕'+c.order,c.x-14,c.y-16);
-    const pat=Math.max(0,Math.min(1,c.pat/Math.max(.0001,patienceMax())));
-    ctx.fillStyle='#e2e8f0'; ctx.fillRect(c.x-20,c.y-10,48,4);
-    ctx.fillStyle=pat>.5?'#22c55e':(pat>.25?'#f59e0b':'#ef4444');
-    ctx.fillRect(c.x-20,c.y-10,48*pat,4);
-  });
+    function drawNext(){
+      nx.clearRect(0,0,nextCV.width,nextCV.height);
+      let off=10, cell=20; let y=10;
+      queue.slice(0,3).forEach((t,i)=>{
+        const shape = SHAPES[t]; const col = COLORS[t];
+        // قياس الحجم
+        let minX=4,maxX=-1,minY=4,maxY=-1;
+        for(let yy=0;yy<4;yy++) for(let xx=0;xx<4;xx++) if(shape[yy][xx]){ minX=Math.min(minX,xx); maxX=Math.max(maxX,xx); minY=Math.min(minY,yy); maxY=Math.max(maxY,yy); }
+        const w=(maxX-minX+1)*cell, h=(maxY-minY+1)*cell; const startX=(nextCV.width - w)/2;
+        for(let yy=minY; yy<=maxY; yy++) for(let xx=minX; xx<=maxX; xx++) if(shape[yy][xx]){
+          drawPreview(startX + (xx-minX)*cell, y + (yy-minY)*cell, cell, col);
+        }
+        y += h + 12;
+      });
+    }
 
-  // التقدّم (ذهبي) — من الإيراد فقط
-  const gw=Math.max(160,W()-220), prog=Math.max(0,Math.min(1,revenue/goal));
-  ctx.fillStyle='#e2e8f0'; ctx.fillRect(20,20,gw,8);
-  ctx.fillStyle= '#eab308'; ctx.fillRect(20,20,gw*prog,8);
+    function drawPreview(px,py,s,color){
+      const r=5; const grad=nx.createLinearGradient(px,py,px,py+s);
+      grad.addColorStop(0, shade(color,1.12)); grad.addColorStop(1, shade(color,0.90));
+      nx.shadowColor='rgba(0,0,0,.25)'; nx.shadowBlur=8; nx.shadowOffsetY=4;
+      roundRect(nx, px+1, py+1, s-2, s-2, r, true, false, grad);
+      nx.shadowBlur=0; nx.shadowOffsetY=0; nx.strokeStyle='rgba(255,255,255,.1)'; nx.lineWidth=1; roundRect(nx, px+1, py+1, s-2, s-2, r, false, true);
+    }
 
-  // الوقت (أخضر)
-  const tp=Math.max(0,timeLeft/LEVELS[S.level-1].time);
-  ctx.fillStyle='#22c55e'; ctx.fillRect(W()-180,20,160*tp,8);
-}
+    // منطق التحديث
+    function update(dt){
+      if(paused || !running) return;
+      dropTimer += dt;
+      if(dropTimer > dropInterval){
+        dropTimer = 0;
+        if(!move(0,1)){ lock(); }
+      }
+    }
 
-/* ===== Start on load (Popup ظاهر تلقائيًا) ===== */
-startLevel(S.level,true);
-requestAnimationFrame(loop);
-ov.style.display='grid'; // لو المتصفح خبّى العرض لأي سبب، ضمن إنه ظاهر.
-</script>
+    function move(dx,dy){
+      if(!collide(cur, cur.x+dx, cur.y+dy)){ cur.x += dx; cur.y += dy; return true; }
+      return false;
+    }
+
+    function hardDrop(){
+      let d=0; while(move(0,1)) d++;
+      score += Math.min(2*d, 40); // مكافأة بسيطة
+      lock();
+    }
+
+    function lock(){
+      merge(cur); clearLines();
+      spawn(); updateHUD(); draw();
+      beep(520,60,.06);
+    }
+
+    function updateHUD(){ scoreEl.textContent = score; linesEl.textContent = lines; levelEl.textContent = level; bestEl.textContent = Math.max(best, score); }
+
+    function gameOver(reason){
+      running=false; paused=false; best = Math.max(best, score); localStorage.setItem('tetris_best', best);
+      updateHUD();
+      showModal('نهاية اللعبة', `${reason} نتيجتك: ${score}`);
+      beep(240,140,.08);
+    }
+
+    function showModal(title,msg){ modalTitle.textContent = title; modalMsg.textContent = msg; modal.style.display='grid'; }
+    function hideModal(){ modal.style.display='none'; }
+
+    // مدخلات لوحة المفاتيح
+    const held = {left:false,right:false,down:false};
+    window.addEventListener('keydown',(e)=>{
+      if(!running) return;
+      if(e.key==='ArrowLeft' || e.key==='a'){ move(-1,0); draw(); }
+      if(e.key==='ArrowRight'|| e.key==='d'){ move(1,0); draw(); }
+      if(e.key==='ArrowDown' || e.key==='s'){ if(move(0,1)){ score+=1; updateHUD(); draw(); } }
+      if(e.key==='ArrowUp' || e.key==='w'){ tryRotate(); draw(); }
+      if(e.code==='Space'){ e.preventDefault(); hardDrop(); draw(); }
+    });
+
+    // أزرار اللمس
+    document.getElementById('leftBtn').onpointerdown = ()=>{ if(running){ move(-1,0); draw(); } };
+    document.getElementById('rightBtn').onpointerdown= ()=>{ if(running){ move(1,0); draw(); } };
+    document.getElementById('downBtn').onpointerdown = ()=>{ if(running){ if(move(0,1)){ score+=1; updateHUD(); draw(); } } };
+    document.getElementById('rotBtn').onpointerdown  = ()=>{ if(running){ tryRotate(); draw(); } };
+    document.getElementById('hardBtn').onpointerdown = ()=>{ if(running){ hardDrop(); draw(); } };
+
+    // أزرار علوية
+    document.getElementById('newBtn').addEventListener('click', startGame);
+    document.getElementById('againBtn').addEventListener('click', startGame);
+    document.getElementById('shareBtn').addEventListener('click', ()=>{
+      const text = `🎮 سجلت ${score} نقطة في Falling Blocks DX!`; navigator.clipboard && navigator.clipboard.writeText(text); modalMsg.textContent='تم نسخ نتيجتك — الصقها أينما تريد!';
+    });
+    document.getElementById('howBtn').addEventListener('click', ()=>{
+      showModal('طريقة اللعب','قطعة رباعية تسقط من الأعلى تلقائيًا. حرّكها بالأسهم أو الأزرار. ↑ للتدوير، ↓ لإسقاط سريع، مسافة = هارد دروب. عند اكتمال صفّ يمسح ويزيد رصيدك، وتزيد السرعة كل 10 صفوف.');
+    });
+    document.getElementById('muteBtn').addEventListener('click', (e)=>{ muted=!muted; e.target.textContent = muted? '🔇 صامت':'🔊 الصوت'; });
+    document.getElementById('pauseBtn').addEventListener('click', (e)=>{ if(!running) return; paused=!paused; e.target.textContent = paused? '▶︎ متابعة':'⏸︎ إيقاف'; });
+
+    function startGame(){
+      hideModal(); grid = emptyGrid(); score=0; lines=0; level=1; dropInterval=900; dropTimer=0; paused=false; running=true; queue=[]; bag=[]; refillQueue(); spawn(); updateHUD(); draw();
+      // kick off loop
+      lastTime = performance.now(); requestAnimationFrame(tick);
+    }
+
+    function tick(now){ if(!running){ draw(); return; } const dt = now-lastTime; lastTime=now; if(!paused){ update(dt); draw(); } requestAnimationFrame(tick); }
+
+    // استجابة الحجم
+    const ro = new ResizeObserver(()=>{
+      const el = cv; const p = el.parentElement; const size = Math.min(500, p.clientWidth);
+      el.style.width = size+'px'; el.style.height = (size*2)+'px';
+    });
+    ro.observe(cv.parentElement);
+
+    // ابدأ فورًا
+    startGame();
+  })();
+  </script>
 </body>
 </html>
