@@ -1,387 +1,315 @@
 <!doctype html>
-<html lang="en">
+<html lang="ar" dir="rtl">
 <head>
-<meta charset="utf-8"/>
-<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover"/>
-<title>Number Match — Levels</title>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Tile Match 3 — Telegram Mini App</title>
+  <!-- Telegram Mini App SDK -->
+  <script src="https://telegram.org/js/telegram-web-app.js"></script>
+  <style>
+    :root{
+      --bg:#e8efe6; /* خلفية خفيفة */
+      --card:#ffffff;
+      --text:#2c2c2c;
+      --accent:#2cc295; /* أخضر أنيق */
+      --accent-2:#68a7ff; /* سماوي فاتح */
+      --muted:#9aa1a7;
+      --shadow:0 8px 24px rgba(0,0,0,.08);
+      --radius:18px;
+    }
+    *{box-sizing:border-box}
+    html,body{height:100%}
+    body{
+      margin:0; font-family: system-ui, -apple-system, Segoe UI, Roboto, sans-serif;
+      background: radial-gradient(1200px 600px at 50% -10%, #f5fff8, var(--bg));
+      color:var(--text);
+      -webkit-tap-highlight-color: transparent;
+      display:flex; justify-content:center; align-items:center;
+    }
+    .app{width:min(920px, 100%); padding:16px}
+    .frame{background:var(--card); border-radius:28px; box-shadow:var(--shadow); padding:14px; position:relative; overflow:hidden}
 
-<!-- AdsGram SDK -->
-<script src="https://sad.adsgram.ai/js/sad.min.js"></script>
+    /* Header */
+    .header{display:flex; justify-content:space-between; align-items:center; padding:8px 10px 6px}
+    .tag{background:linear-gradient(120deg, var(--accent), var(--accent-2)); color:#fff; padding:8px 14px; border-radius:999px; font-weight:700; box-shadow:0 6px 16px rgba(104,167,255,.25)}
+    .coins{display:flex; align-items:center; gap:8px; background:#f3f7ff; color:#1b5cff; border-radius:999px; padding:8px 12px; font-weight:700}
+    .coins i{filter: drop-shadow(0 4px 8px rgba(27,92,255,.25))}
 
-<style>
-:root{--bg:#0b0f18;--p1:#11182a;--p2:#0e1423;--ring:#ffffff24;--txt:#ecf1ff;--mut:#9db0d1;--gold1:#ffd46a;--gold2:#ffb724;--green:#34d399}
-*{box-sizing:border-box}
-html,body{margin:0;height:100%;background:radial-gradient(1200px 620px at 50% -10%,#1b2540 0,#0b0f18 60%);color:var(--txt);font-family:system-ui,Segoe UI,Arial;overflow:hidden}
-[hidden]{display:none !important}
+    /* Tray */
+    .tray{display:grid; grid-template-columns:repeat(7, 1fr); gap:10px; padding:12px; margin:6px 8px 8px; background:#f6faf6; border-radius:20px; border:1px solid #eef3ee}
+    .slot{height:58px; border-radius:14px; background:#fff; box-shadow:inset 0 0 0 2px #edf0f2; display:flex; align-items:center; justify-content:center; font-size:30px}
 
-/* ===== Layout ===== */
-.wrap{height:100%;display:flex;flex-direction:column;padding:12px;padding-top:calc(54px + env(safe-area-inset-top));max-width:780px;margin:0 auto}
-.hud{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-bottom:8px}
-.badge{background:linear-gradient(180deg,var(--p1),var(--p2));border-radius:16px;padding:8px 10px;text-align:center;box-shadow:0 12px 26px #000a,inset 0 1px 0 var(--ring)}
-.k{font-size:12px;color:var(--mut)} .v{font-weight:800;font-size:20px}
-.targets{margin:6px 0;display:flex;gap:6px;flex-wrap:wrap}
-.tg{background:#101828;border:1px solid var(--ring);border-radius:12px;padding:6px 10px;color:#cfe2ff;font-weight:700}
-.ok{color:var(--green)}
-.bar{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:8px}
-button{border:0;border-radius:12px;padding:8px 10px;font-weight:700;color:#0b0f18;background:linear-gradient(180deg,var(--gold1),var(--gold2));box-shadow:0 10px 22px #0007,inset 0 1px 0 #fff7;cursor:pointer}
-button.secondary{background:#1a2337;color:#cfe2ff;border:1px solid var(--ring)}
-.board{flex:1 1 auto;min-height:0;display:flex;align-items:flex-start;justify-content:center;padding:12px 0 12px;overflow:hidden;background:linear-gradient(180deg,var(--p1),var(--p2));border-radius:18px;box-shadow:0 22px 60px #000a,inset 0 1px 0 var(--ring);position:relative}
+    /* Board wrapper (gives perspective) */
+    .board-wrap{position:relative; margin:6px 6px 12px; background:linear-gradient(155deg, #f6fff7, #eff7ff); border-radius:24px; border:1px solid #eef3f3; box-shadow:var(--shadow)}
+    .board{position:relative; width:100%; aspect-ratio: 1/1; max-height:68vh; margin:auto; overflow:visible}
 
-/* Grid */
-.grid{display:grid;grid-template-columns:repeat(9,1fr);grid-template-rows:repeat(9,1fr);gap:6px;width:min(99vmin,100%);height:min(99vmin,100%);margin:0 auto}
+    /* Tile */
+    .tile{position:absolute; width:88px; height:88px; max-width:15.5vw; max-height:15.5vw; display:flex; align-items:center; justify-content:center; font-size:40px; user-select:none; cursor:pointer;
+      background:#fff; border-radius:18px; box-shadow:0 10px 20px rgba(0,0,0,.08), inset 0 0 0 2px #eaeef2; transition:transform .12s ease, box-shadow .12s ease, opacity .2s ease;}
+    .tile:hover{transform:translateY(-2px)}
+    .tile.disabled{opacity:.4; filter:saturate(.7); cursor:not-allowed}
+    .tile.pop{animation:pop .24s ease}
+    @keyframes pop{0%{transform:scale(.9)} 70%{transform:scale(1.06)} 100%{transform:scale(1)}}
 
-/* Cell */
-:root{ --cellSize:64px; }
-.cell{width:100%;aspect-ratio:1/1;border-radius:22%;display:flex;align-items:center;justify-content:center;font-weight:900;font-size:calc(var(--cellSize)*0.62);user-select:none;transition:.12s transform,.12s box-shadow,.2s background}
-.cell.empty{background:#0d1324;border:1px dashed #2b3756;color:#2b3756}
-.cell.blocker{background:#141c2e;border:1px solid #2b3756;box-shadow:none}
-.cell.num{box-shadow:0 6px 14px #0006}
+    /* Toolbar */
+    .toolbar{display:flex; gap:10px; justify-content:center; padding:12px}
+    .btn{display:inline-flex; gap:8px; align-items:center; justify-content:center; padding:11px 14px; background:#fff; border:1px solid #edf1f4; border-radius:16px; box-shadow:var(--shadow); font-weight:700; cursor:pointer}
+    .btn:active{transform:translateY(1px)}
 
-/* Overlay */
-.overlay{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-weight:900;font-size:42px;letter-spacing:2px;color:#fff;text-shadow:0 6px 22px #000a;background:rgba(0,0,0,.35);border-radius:18px;backdrop-filter:blur(1px);z-index:5}
+    .footer{display:flex; justify-content:space-between; align-items:center; padding:8px 10px 16px; color:var(--muted)}
+    .progress{height:8px; background:#ecf2ee; border-radius:999px; overflow:hidden}
+    .progress > span{display:block; height:100%; width:0; background:linear-gradient(90deg, var(--accent), var(--accent-2))}
 
-/* Footer/Ad */
-.banner{margin-top:8px}
-.footer{font-size:12px;color:#9db0d1;text-align:center;margin-top:6px}
-</style>
+    @media (max-width:520px){
+      .tile{width:70px; height:70px; font-size:32px}
+      .slot{height:50px}
+    }
+  </style>
 </head>
 <body>
-<div class="wrap">
-  <div class="hud">
-    <div class="badge"><div class="k">Level</div><div class="v" id="lvl">1</div></div>
-    <div class="badge"><div class="k">Score</div><div class="v" id="score">0</div></div>
-    <div class="badge"><div class="k">Best</div><div class="v" id="best">0</div></div>
-    <div class="badge"><div class="k">Moves</div><div class="v" id="moves">0</div></div>
+  <div class="app">
+    <div class="frame">
+      <div class="header">
+        <div class="tag">المستوى <span id="level">20</span></div>
+        <div class="coins"><i>💎</i><span id="coins">2000</span></div>
+      </div>
+      <div class="tray" id="tray"></div>
+
+      <div class="board-wrap">
+        <div class="board" id="board"></div>
+      </div>
+
+      <div class="toolbar">
+        <button class="btn" id="btn-undo">↩︎ تراجع</button>
+        <button class="btn" id="btn-hint">🧲 تلميح</button>
+        <button class="btn" id="btn-shuffle">🔄 خلط</button>
+      </div>
+
+      <div class="footer">
+        <div>باقي البلاطات: <b id="left">0</b></div>
+        <div class="progress" style="width:45%"><span id="bar"></span></div>
+        <div id="status">جاهز</div>
+      </div>
+    </div>
   </div>
 
-  <div id="targets" class="targets"></div>
-
-  <div class="bar">
-    <button id="new">Start from Level 1</button>
-    <button class="secondary" id="hint">Hint (<span id="hcnt"></span>)</button>
-    <button class="secondary" id="shuffle">Shuffle (<span id="scnt"></span>)</button>
-    <button class="secondary" id="add">Add Row (<span id="acnt"></span>)</button>
-    <button class="secondary" id="undo">Undo (<span id="ucnt"></span>)</button>
-  </div>
-
-  <div class="board">
-    <div id="grid" class="grid"></div>
-    <div id="overlay" class="overlay" hidden></div>
-  </div>
-
-  <div class="banner">[Ad Placeholder] Banner</div>
-  <div class="footer" id="foot">Rule: remove pairs that sum to 10 or are equal — adjacent (8 dirs) or same row/column with only empty cells between.</div>
-</div>
-
-<script>
-/* ===== AdsGram glue (لا يمس منطق اللعب) ===== */
-const REWARD_BLOCK_ID = "14421";
-const INTER_BLOCK_ID  = "int-14422";
-
-// تهيئة الكنترولرز (لو الـ SDK مش موجود نكمل من غير كراش)
-const RewardController = window.Adsgram?.init?.({ blockId: REWARD_BLOCK_ID });
-const InterController  = window.Adsgram?.init?.({ blockId: INTER_BLOCK_ID });
-
-function showRewardAd(){
-  return new Promise((resolve, reject)=>{
-    if(!RewardController || !RewardController.show){ return reject(new Error("Ads SDK not ready")); }
-    RewardController.show()
-      .then(res => {
-        // في الـ Reward لازم يكون res.done=true علشان ندي المكافأة
-        if(res && res.done) resolve(true);
-        else reject(res||new Error("not done"));
-      })
-      .catch(err => reject(err));
-  });
-}
-
-function showInterAd(){
-  return new Promise((resolve)=>{
-    if(!InterController || !InterController.show){ return resolve(); }
-    // في الـ Interstitial نكمّل عند الإغلاق أو أي نتيجة
-    InterController.show()
-      .then(()=>resolve())
-      .catch(()=>resolve());
-  });
-}
-
-/* ===== Config & Levels ===== */
-const COLS=9, START_ROWS=9;
-const COLORS={1:'#67e8f9',2:'#60a5fa',3:'#a78bfa',4:'#34d399',5:'#fbbf24',6:'#fb7185',7:'#f472b6',8:'#22d3ee',9:'#c084fc'};
-const SCORE_PAIR=10;
-
-const LEVELS = Array.from({length:40}, (_, i) => {
-  const n = i+1;
-  return {
-    title:`Level ${n}`,
-    targets:[
-      {type:'digit',value:1+((i*2)%9),need:6+Math.floor(i/6)},
-      {type:'pairs',need:12+Math.floor(i/4)}
-    ],
-    limits:{ hint:n<=10?3:(n<=25?2:1), shuffle:n<=12?2:1, add:n<=8?2:1, undo:2 },
-    maxMoves:Math.max(28,48-Math.floor(i*0.6)),
-    wrapRule:n>=13,
-    blockerRate:Math.min(0.08,0.01*Math.floor(i/5))
-  };
-});
-
-/* ===== State ===== */
-let curLevel=Math.min(Math.max(1,Number(localStorage.getItem('nm_level')||1)),LEVELS.length);
-let grid=[],score=0,best=Number(localStorage.getItem('nm_best')||0),moves=0;
-let sel=null,history=[],donePairs=0,digitCount={};
-let hintLeft,shuffleLeft,addLeft,undoLeft;
-let maxMoves=Infinity,wrapAllowed=true,blockerRate=0;
-let justLoaded=false;
-
-/* ===== Elements ===== */
-const gridEl=document.getElementById('grid'),
-      scoreEl=document.getElementById('score'),
-      bestEl=document.getElementById('best'),
-      movesEl=document.getElementById('moves'),
-      lvlEl=document.getElementById('lvl'),
-      tgEl=document.getElementById('targets'),
-      hCnt=document.getElementById('hcnt'),
-      sCnt=document.getElementById('scnt'),
-      aCnt=document.getElementById('acnt'),
-      uCnt=document.getElementById('ucnt'),
-      foot=document.getElementById('foot'),
-      ovl = document.getElementById('overlay');
-
-bestEl.textContent = best;
-
-/* ===== UI Actions (نربطها بالـ Reward) ===== */
-document.getElementById('new').onclick=()=>loadLevel(1,true);
-
-// الغلاف: تشغيل الإعلان ثم تنفيذ الفعل. لو الرصيد صفر نزود +1 مرة واحدة
-async function useRewardedAction(counterName, actionFn, label){
-  const ok = true; // مفيش popup مزعج – كله بإعلان
-  if(!ok) return;
-
-  try{
-    await showRewardAd();
-  }catch(e){
-    pulse('Ad was skipped or failed');
-    return;
-  }
-
-  let left = (counterName==='hint'? hintLeft :
-              counterName==='shuffle'? shuffleLeft :
-              counterName==='add'? addLeft : undoLeft);
-
-  if(left===0){
-    if(counterName==='hint') hintLeft=1;
-    else if(counterName==='shuffle') shuffleLeft=1;
-    else if(counterName==='add') addLeft=1;
-    else if(counterName==='undo') undoLeft=1;
-  }
-  actionFn(); // الدوال نفسها هي اللي بتنقص العدّاد
-}
-
-document.getElementById('hint').onclick    = ()=>useRewardedAction('hint',   hint,         'Hint');
-document.getElementById('shuffle').onclick = ()=>useRewardedAction('shuffle',shuffleBoard,'Shuffle');
-document.getElementById('add').onclick     = ()=>useRewardedAction('add',    addRow,       'Add Row');
-document.getElementById('undo').onclick    = ()=>useRewardedAction('undo',   undo,         'Undo');
-
-/* ===== Helpers ===== */
-const rand1to9=()=>1+Math.floor(Math.random()*9);
-function snapshot(){history.push({grid:grid.map(r=>r.slice()),score,moves,sel:sel?{...sel}:null,donePairs,digitCount:{...digitCount},hintLeft,shuffleLeft,addLeft,undoLeft});if(history.length>40)history.shift();}
-function restore(st){grid=st.grid.map(r=>r.slice());score=st.score;moves=st.moves;sel=st.sel;donePairs=st.donePairs;digitCount={...st.digitCount};hintLeft=st.hintLeft;shuffleLeft=st.shuffleLeft;addLeft=st.addLeft;undoLeft=st.undoLeft;render();}
-const neighbors=(r1,c1,r2,c2)=>Math.max(Math.abs(r1-r2),Math.abs(c1-c2))===1;
-const pathClearRow=(r,c1,c2)=>{const[a,b]=c1<c2?[c1,c2]:[c2,c1];for(let x=a+1;x<b;x++){if(grid[r][x]!==null)return false}return true}
-const pathClearCol=(c,r1,r2)=>{const[a,b]=r1<r2?[r1,r2]:[r2,r1];for(let y=a+1;y<b;y++){if(grid[y][c]!==null)return false}return true}
-
-/* ===== Rules ===== */
-function validPair(a,b){
-  if(!a||!b||a.r===b.r&&a.c===b.c)return false;
-  const v1=grid[a.r][a.c], v2=grid[b.r][b.c];
-  if(v1===null||v2===null||v1==='X'||v2==='X')return false;
-  if(!(v1===v2||v1+v2===10))return false;
-  if(neighbors(a.r,a.c,b.r,b.c))return true;
-  if(a.r===b.r&&pathClearRow(a.r,a.c,b.c))return true;
-  if(a.c===b.c&&pathClearCol(a.c,a.r,b.r))return true;
-  if(wrapAllowed){
-    if(a.c===COLS-1&&b.c===0&&b.r===a.r+1)return true;
-    if(b.c===COLS-1&&a.c===0&&a.r===b.r+1)return true;
-  }
-  return false;
-}
-
-function removePair(a,b){
-  snapshot();
-  const v1=grid[a.r][a.c],v2=grid[b.r][b.c];
-  grid[a.r][a.c]=null;grid[b.r][b.c]=null;
-  score+=SCORE_PAIR;moves++;donePairs++;
-  digitCount[v1]=(digitCount[v1]||0)+1;digitCount[v2]=(digitCount[v2]||0)+1;
-  if(score>best){best=score;localStorage.setItem('nm_best',best)}
-  sel=null;clearEmptyRows();render();checkWinLose();
-}
-function clearEmptyRows(){grid=grid.filter(row=>row.some(v=>v!==null));if(grid.length===0)grid.push(Array.from({length:COLS},()=>null));}
-
-/* ===== Tools ===== */
-function addRow(){if(addLeft===0)return;pulse('Add Row');if(addLeft!==Infinity)addLeft--;snapshot();const row=[];for(let c=0;c<COLS;c++)row.push(rand1to9());grid.push(row);render();}
-function shuffleBoard(){if(shuffleLeft===0)return;pulse('Shuffle');if(shuffleLeft!==Infinity)shuffleLeft--;snapshot();const vals=[];grid.forEach(r=>r.forEach(v=>{if(v!==null)vals.push(v)}));for(let i=vals.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[vals[i],vals[j]]=[vals[j],vals[i]]}grid.forEach(r=>r.forEach((v,i)=>{if(v!==null)r[i]=vals.pop()}));moves++;render();checkWinLose();}
-function undo(){if(undoLeft===0||!history.length)return;pulse('Undo');if(undoLeft!==Infinity)undoLeft--;restore(history.pop());}
-function hint(){if(hintLeft===0)return;pulse('Hint');const p=findAnyPair();if(!p){pulse('No pairs');checkWinLose();return}if(hintLeft!==Infinity)hintLeft--;flashCells([p.a,p.b]);}
-function findAnyPair(){const coords=[];for(let r=0;r<grid.length;r++)for(let c=0;c<COLS;c++)if(grid[r][c]!==null)coords.push({r,c});for(let i=0;i<coords.length;i++)for(let j=i+1;j<coords.length;j++){const a=coords[i],b=coords[j];if(validPair(a,b))return{a,b}}return null}
-
-/* ===== Feedback ===== */
-function flashCells(list){list.forEach(({r,c})=>{const el=gridEl.children[r*COLS+c];if(el){el.classList.add('flash');setTimeout(()=>el.classList.remove('flash'),600)}})}
-function pulse(msg){if(!foot)return;foot.textContent=msg;foot.style.color='#ffd46a';setTimeout(()=>{foot.textContent='Rule: remove pairs that sum to 10 or are equal — adjacent (8 dirs) or same row/column with only empty cells between.';foot.style.color='';},1500)}
-
-/* ===== Sizing ===== */
-function resizeGrid(){
-  const board = document.querySelector('.board');
-  const grid  = document.getElementById('grid');
-  if(!board || !grid) return;
-  const padV = 24;
-  const size = Math.floor(Math.min(board.clientWidth, board.clientHeight - padV));
-  grid.style.width  = size + 'px';
-  grid.style.height = size + 'px';
-  const cell = Math.max(size / 9, 50);
-  document.documentElement.style.setProperty('--cellSize', cell + 'px');
-}
-
-/* ===== Render ===== */
-function render(){
-  scoreEl.textContent=score; bestEl.textContent=best; movesEl.textContent=moves; lvlEl.textContent=curLevel;
-
-  hCnt.textContent=hintLeft===Infinity?'∞':hintLeft;
-  sCnt.textContent=shuffleLeft===Infinity?'∞':shuffleLeft;
-  aCnt.textContent=addLeft===Infinity?'∞':addLeft;
-  uCnt.textContent=undoLeft===Infinity?'∞':undoLeft;
-
-  const L=LEVELS[curLevel-1];
-  tgEl.innerHTML='';
-  L.targets.forEach(t=>{
-    const d=document.createElement('div');d.className='tg';
-    if(t.type==='digit'){
-      const got=(digitCount[t.value]||0);
-      d.innerHTML=`Remove <b>${t.need}</b> of digit <b>${t.value}</b> — <span class="${got>=t.need?'ok':''}">${got}/${t.need}</span>`;
-    }else{
-      d.innerHTML=`Make <b>${t.need}</b> pairs — <span class="${donePairs>=t.need?'ok':''}">${donePairs}/${t.need}</span>`;
-    }
-    tgEl.appendChild(d);
-  });
-
-  gridEl.innerHTML='';
-  for(let r=0;r<grid.length;r++){
-    for(let c=0;c<COLS;c++){
-      const v=grid[r][c];
-      const d=document.createElement('div');
-      if(v===null){d.className='cell empty';}
-      else if(v==='X'){d.className='cell blocker';d.textContent='X';d.style.color='#9fb4ff';}
-      else{d.className='cell num';d.textContent=v;d.style.background=COLORS[v]||'#7dd3fc';d.style.color='#0b0f18';}
-      if(sel&&sel.r===r&&sel.c===c&&v!=='X'&&v!==null){d.classList.add('sel');}
-      d.onclick=()=>onCell(r,c);
-      gridEl.appendChild(d);
-    }
-  }
-
-  resizeGrid();
-  if (justLoaded) justLoaded = false;
-}
-
-/* ===== Interaction ===== */
-function onCell(r,c){
-  const v=grid[r][c];
-  if(v===null||v==='X')return;
-  const cur={r,c};
-  if(!sel){sel=cur;render();return}
-  if(sel.r===r&&sel.c===c){sel=null;render();return}
-  if(validPair(sel,cur))removePair(sel,cur);else{sel=cur;render()}
-}
-
-/* ===== Win/Lose ===== */
-function showOverlay(txt, ms=1200){
-  if(!ovl) return;
-  ovl.textContent = txt;
-  ovl.hidden = false;
-  if(ms) setTimeout(()=> ovl.hidden = true, ms);
-}
-
-async function checkWinLose(){
-  const L=LEVELS[curLevel-1];
-  if (justLoaded) return;
-
-  const win = L.targets.every(t => t.type==='digit'
-    ? (digitCount[t.value]||0) >= t.need
-    : donePairs >= t.need
-  );
-
-  if (win){
-    localStorage.setItem('nm_level', Math.min(LEVELS.length, curLevel+1));
-    pulse(`🎉 Level ${curLevel} completed!`);
-    await showInterAd(); // إعلان بيني بين الليفلات
-    loadLevel(Math.min(LEVELS.length, curLevel+1), false);
-    return;
-  }
-
-  if (moves >= maxMoves){
-    pulse('😵 Out of moves. Restarting level…');
-    await showInterAd(); // إعلان بيني قبل إعادة الليفل
-    loadLevel(curLevel, true);
-    return;
-  }
-
-  if (!findAnyPair() && hintLeft===0 && shuffleLeft===0 && addLeft===0){
-    showOverlay('GAME OVER', 1200);
-    setTimeout(async () => {
-      await showInterAd();         // إعلان بيني عند الجيم أوفر
-      loadLevel(curLevel, true);
-    }, 1200);
-  }
-}
-
-/* ===== Level Loading ===== */
-function loadLevel(n, resetScore=false){
-  justLoaded = true;
-  if (ovl){ ovl.hidden = true; ovl.textContent=''; }
-
-  curLevel=n; localStorage.setItem('nm_level',curLevel);
-  const L=LEVELS[n-1];
-
-  hintLeft=L.limits.hint;
-  shuffleLeft=L.limits.shuffle;
-  addLeft=L.limits.add;
-  undoLeft=L.limits.undo;
-
-  maxMoves=L.maxMoves;
-  wrapAllowed=L.wrapRule;
-  blockerRate=L.blockerRate||0;
-
-  donePairs=0; digitCount={}; history.length=0; sel=null; moves=0;
-  if(resetScore) score=0;
-
-  grid=[];
-  for(let r=0;r<START_ROWS;r++){
-    const row=[];
-    for(let c=0;c<COLS;c++){
-      if(Math.random()<blockerRate) row.push('X');
-      else row.push(rand1to9());
-    }
-    grid.push(row);
-  }
-  render();
-}
-
-/* ===== Start ===== */
-loadLevel(curLevel);
-resizeGrid();
-window.addEventListener('resize', resizeGrid);
-</script>
-
-<!-- Telegram WebApp (اختياري) -->
-<script src="https://telegram.org/js/telegram-web-app.js"></script>
-<script>
-  document.addEventListener('DOMContentLoaded', () => {
+  <script>
+    // ===== Telegram Mini App bootstrapping =====
     const tg = window.Telegram?.WebApp;
-    if (!tg) return;
-    tg.ready();
-    tg.expand();
-    tg.onEvent('viewportChanged', () => tg.expand());
-    setTimeout(() => tg.expand(), 300);
-    setTimeout(() => tg.expand(), 1000);
-  });
-</script>
+    if (tg){
+      try{ tg.ready(); tg.expand(); }catch(e){}
+      const theme = tg.colorScheme === 'dark';
+      if(theme){ document.documentElement.style.setProperty('--card', '#161a1e');
+        document.documentElement.style.setProperty('--text', '#e8f0f2');
+        document.documentElement.style.setProperty('--bg', '#0f1317');
+        document.documentElement.style.setProperty('--muted', '#96a1aa');
+        document.documentElement.style.setProperty('--shadow', '0 10px 24px rgba(0,0,0,.3)');
+      }
+    }
+
+    // ===== Game Assets =====
+    const ICONS = ['🍓','🍌','🍀','💧','⭐','🍎','🥥','🍉','🧁','💎'];
+    const BOARD = document.getElementById('board');
+    const TRAY = document.getElementById('tray');
+    const LEFT = document.getElementById('left');
+    const STATUS = document.getElementById('status');
+    const BAR = document.getElementById('bar');
+
+    const TRAY_MAX = 7; // لو اتملت بدون 3 متشابهين → خسارة
+    const TRAY_SLOTS = Array.from({length:TRAY_MAX}, ()=>({el:null, id:null}));
+    const STATE = {tiles:[], tray:[], history:[], solved:0};
+
+    // ===== Layout helper: positions (x,y,z) لإحساس تكديس بسيط =====
+    function generateLayout(){
+      const layers = [
+        {rows:3, cols:5, gap:6, offX:10, offY:8},
+        {rows:2, cols:4, gap:6, offX:20, offY:18},
+        {rows:1, cols:3, gap:6, offX:32, offY:32}
+      ];
+      const rect = BOARD.getBoundingClientRect();
+      const tile = Math.min(rect.width, rect.height)/ (layers[0].cols + 2.2); // حجم نسبي
+      const positions = [];
+      let z=1;
+      layers.forEach(L=>{
+        for(let r=0;r<L.rows;r++){
+          for(let c=0;c<L.cols;c++){
+            positions.push({
+              x: (c * (tile+L.gap)) + L.offX,
+              y: (r * (tile+L.gap)) + L.offY,
+              z: z
+            });
+          }
+        }
+        z++;
+      });
+      return {positions, size:tile};
+    }
+
+    function setupTray(){
+      TRAY.innerHTML='';
+      STATE.tray.length = 0;
+      for(let i=0;i<TRAY_MAX;i++){
+        const slot = document.createElement('div');
+        slot.className='slot';
+        TRAY.appendChild(slot);
+        TRAY_SLOTS[i].el = slot;
+        TRAY_SLOTS[i].id = null;
+      }
+    }
+
+    function createDeck(kinds=ICONS.length, copies=3){
+      // كل نوع له 3 نسخ (Triple match)
+      const ids=[]; for(let i=0;i<kinds;i++){ for(let j=0;j<copies;j++) ids.push(i); }
+      // ضاعف عشان نملأ أكثر من طبقة
+      const deck = [...ids, ...ids, ...ids];
+      // Shuffle
+      for(let i=deck.length-1;i>0;i--){ const j=Math.floor(Math.random()*(i+1)); [deck[i],deck[j]]=[deck[j],deck[i]]; }
+      return deck;
+    }
+
+    function drawBoard(){
+      BOARD.innerHTML='';
+      const {positions, size} = generateLayout();
+      const deck = createDeck(Math.min(ICONS.length, 8), 3).slice(0, positions.length);
+      STATE.tiles = [];
+      for(let i=0;i<positions.length;i++){
+        const id = deck[i % deck.length];
+        const p = positions[i];
+        const el = document.createElement('div');
+        el.className='tile pop';
+        el.style.left = p.x+'px';
+        el.style.top = p.y+'px';
+        el.style.zIndex = 100 + p.z; // بسيط
+        el.style.width = el.style.height = size+'px';
+        el.dataset.id = id;
+        el.textContent = ICONS[id];
+        el.addEventListener('click', ()=> onTileClick(el));
+        BOARD.appendChild(el);
+        STATE.tiles.push({el, id});
+      }
+      STATE.solved = 0;
+      updateLeft();
+      progress();
+      STATUS.textContent='جاهز';
+    }
+
+    function updateLeft(){
+      LEFT.textContent = STATE.tiles.filter(t=>!t.removed).length;
+    }
+
+    function haptic(type='impact'){ try{ tg?.HapticFeedback?.impactOccurred(type); }catch(e){} }
+
+    function onTileClick(el){
+      if(el.classList.contains('disabled')) return;
+      const id = +el.dataset.id;
+      // أضف للصينية
+      if(STATE.tray.length >= TRAY_MAX){ lose(); return; }
+      STATE.history.push({type:'pick', id, el});
+      STATE.tray.push(id);
+      placeInTray(id);
+      el.classList.add('disabled');
+      haptic('light');
+      // لو 3 متشابهين → إزالة
+      const count = STATE.tray.filter(x=>x===id).length;
+      if(count === 3){
+        clearTriples(id);
+        haptic('rigid');
+      }
+      // فوز؟
+      const remaining = STATE.tiles.filter(t=>!t.removed && !t.el.classList.contains('disabled')).length;
+      if(remaining===0 && STATE.tray.length===0){ win(); }
+      updateLeft();
+      progress();
+      if(STATE.tray.length>TRAY_MAX-1) lose();
+    }
+
+    function placeInTray(id){
+      const idx = STATE.tray.length-1;
+      const slot = TRAY_SLOTS[idx].el;
+      slot.textContent = ICONS[id];
+      TRAY_SLOTS[idx].id = id;
+    }
+
+    function clearTriples(id){
+      // امسح من الصينية
+      let removed = 0;
+      for(let i=0;i<TRAY_SLOTS.length && removed<3;i++){
+        if(TRAY_SLOTS[i].id===id){ TRAY_SLOTS[i].id=null; TRAY_SLOTS[i].el.textContent=''; removed++; }
+      }
+      STATE.tray = STATE.tray.filter(x=>x!==id);
+      // أعد ترتيب العناصر الباقية بصريًا
+      const rest = [...STATE.tray];
+      TRAY_SLOTS.forEach(s=>{ s.id=null; s.el.textContent=''; });
+      rest.forEach((rid,i)=>{ TRAY_SLOTS[i].id=rid; TRAY_SLOTS[i].el.textContent=ICONS[rid]; });
+      // علّم البلاطات المختارة كمزالة
+      STATE.tiles.forEach(t=>{
+        if(!t.removed && t.el.classList.contains('disabled') && +t.el.dataset.id===id){ t.removed=true; t.el.style.opacity=.0; t.el.style.pointerEvents='none'; t.el.style.transform='scale(.9)'; }
+      });
+      STATE.solved += 3;
+      STATUS.textContent = 'جمعت ثلاثي!';
+    }
+
+    function undo(){
+      const last = STATE.history.pop();
+      if(!last) return;
+      if(last.type==='pick'){
+        // أرجع من الصينية
+        const idx = STATE.tray.lastIndexOf(last.id);
+        if(idx>-1) STATE.tray.splice(idx,1);
+        // امسح آخر خانة ممتلئة
+        for(let i=TRAY_SLOTS.length-1;i>=0;i--){ if(TRAY_SLOTS[i].id!=null){ TRAY_SLOTS[i].id=null; TRAY_SLOTS[i].el.textContent=''; break; } }
+        last.el.classList.remove('disabled');
+        STATUS.textContent='تراجع';
+      }
+      progress();
+    }
+
+    function hint(){
+      // دور على نوع ظاهر 3 مرات على الأقل ولم يُجمع بعد
+      const visible = STATE.tiles.filter(t=>!t.removed && !t.el.classList.contains('disabled'));
+      const freq = {};
+      visible.forEach(t=>{ freq[t.id]=(freq[t.id]||0)+1; });
+      let target = null; Object.keys(freq).forEach(k=>{ if(freq[k]>=3 && target==null) target=+k; });
+      if(target==null){ STATUS.textContent='لا يوجد ثلاثي ظاهر'; haptic('selection'); return; }
+      // لمع 3 بلاطات
+      let glow = 0;
+      visible.forEach(t=>{
+        if(glow<3 && t.id===target){ t.el.animate([{boxShadow:'0 0 0 0 rgba(44,194,149,.0)'},{boxShadow:'0 0 0 6px rgba(44,194,149,.35)'}],{duration:380, direction:'alternate', iterations:2}); glow++; }
+      });
+      STATUS.textContent='هذا الثلاثي مناسب!';
+    }
+
+    function shuffle(){
+      // أعد توزيع البلاطات غير الملتقطة
+      const active = STATE.tiles.filter(t=>!t.removed && !t.el.classList.contains('disabled'));
+      if(active.length<2){ STATUS.textContent='لا يوجد ما يُخلط'; return; }
+      const rects = active.map(t=>({el:t.el}));
+      // خلط بسيط للمواقع
+      for(let i=rects.length-1;i>0;i--){ const j=Math.floor(Math.random()*(i+1)); [rects[i],rects[j]]=[rects[j],rects[i]]; }
+      rects.forEach((r,i)=>{ r.el.style.transform='translateY(-3px)'; setTimeout(()=>{ r.el.style.left = (12 + (i%5)*18) + '%'; r.el.style.top = (8 + Math.floor(i/5)*18) + '%'; r.el.style.transform=''; }, 140); });
+      STATUS.textContent='تم الخلط';
+    }
+
+    function progress(){
+      const total = STATE.tiles.length;
+      const cleared = STATE.tiles.filter(t=>t.removed).length;
+      BAR.style.width = ((cleared/total)*100).toFixed(1)+'%';
+    }
+
+    function win(){ STATUS.textContent='فوز 🎉'; haptic('success'); }
+    function lose(){ STATUS.textContent='خسرت — امتلأت الصينية'; haptic('error'); }
+
+    // ===== Init =====
+    setupTray();
+    drawBoard();
+
+    document.getElementById('btn-undo').onclick = undo;
+    document.getElementById('btn-hint').onclick = hint;
+    document.getElementById('btn-shuffle').onclick = shuffle;
+
+    // إعادة ضبط اللوحة عند تغيير حجم الشاشة (لضبط المقاسات)
+    let R;
+    window.addEventListener('resize', ()=>{ clearTimeout(R); R=setTimeout(()=>{ drawBoard(); setupTray(); }, 220); });
+  </script>
 </body>
 </html>
