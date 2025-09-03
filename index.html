@@ -3,198 +3,164 @@
 <head>
 <meta charset="utf-8"/>
 <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no"/>
-<title>تتريس — بسيط</title>
+<title>تتريس مبسّطة — عربي</title>
 <style>
   :root{
-    --bg:#0a1424; --panel:#0f1d33; --board:#152642; --cell:#1e355b; --muted:#a8b3c7; --text:#eaf2ff;
-    --c1:#e74c3c; --c2:#2ecc71; --c3:#3498db; --c4:#f1c40f; --c5:#9b59b6; --c6:#1abc9c; --c7:#e67e22;
+    --bg:#0e1a2b; --panel:#0b1422; --board:#14233b; --cell:#1f355a; --text:#e8f0ff; --muted:#a8b3c7;
+    --cell-red:#e74c3c; --cell-green:#2ecc71; --cell-blue:#3498db; --cell-yellow:#f1c40f;
+    --cell-purple:#9b59b6; --cell-cyan:#1abc9c; --cell-orange:#e67e22;
+    --btn:#1b2d4a; --btn-hi:#26456f;
   }
-  *{box-sizing:border-box} body{margin:0;background:var(--bg);color:var(--text);font-family:system-ui,Segoe UI,Arial}
-  .wrap{width:min(520px,94vw);margin:14px auto;padding:10px}
-  .top{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:8px}
-  .chip{background:#0c1a2e;border:1px solid rgba(255,255,255,.08);border-radius:10px;padding:6px 10px;font-size:13px;color:var(--muted)}
-  .chip b{color:var(--text)}
-  .game{
-    position:relative; background:var(--board); border-radius:12px; overflow:hidden;
-    border:1px solid rgba(255,255,255,.08);
+  *{box-sizing:border-box}
+  body{
+    margin:0; background:linear-gradient(135deg,#0a1220 0%,#091a2c 60%,#0d2745 100%);
+    color:var(--text); font-family:"Segoe UI",Tahoma,Arial,sans-serif;
+    display:flex; justify-content:center; align-items:flex-start; min-height:100vh;
   }
-  .board{aspect-ratio:10/20; width:100%; position:relative}
-  .grid{position:absolute;inset:0;display:grid;grid-template-columns:repeat(10,1fr);grid-auto-rows:1fr}
-  .cell{border:1px solid rgba(255,255,255,.05);background:var(--cell)}
-  .cI{background:var(--c6)} .cO{background:var(--c4);color:#222}
-  .cT{background:var(--c5)} .cS{background:var(--c2)}
-  .cZ{background:var(--c1)} .cJ{background:var(--c3)} .cL{background:var(--c7)}
-
-  /* صندوق القادم على اليمين أعلى اللوحة */
-  .nextBox{
-    position:absolute; top:8px; right:8px; width:110px; background:#0f1d33;
-    border:1px solid rgba(255,255,255,.1); border-radius:10px; padding:8px;
+  .wrap{
+    width:min(520px,92vw); margin:14px auto 20px; padding:14px;
+    background:rgba(255,255,255,0.03); border:1px solid rgba(255,255,255,0.08);
+    border-radius:18px; box-shadow:0 10px 30px rgba(0,0,0,.35);
   }
-  .nextTitle{font-size:12px;color:var(--muted);margin-bottom:6px}
-  .nextGrid{display:grid;grid-template-columns:repeat(4,1fr);grid-auto-rows:1fr;gap:2px;aspect-ratio:1/1}
-  .nc{background:var(--cell);border:1px solid rgba(255,255,255,.05)}
-
-  /* أزرار التحكم جوه الواجهة تحت اللوحة */
-  .controls{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;padding:10px;background:#0f1d33}
-  .btn{background:#112746;border:1px solid rgba(255,255,255,.12);border-radius:12px;padding:12px 10px;text-align:center;font-size:18px;color:var(--text)}
-  .btn:active{transform:translateY(1px)}
-  .btn.big{grid-column:1/-1;font-weight:700}
-
-  /* جيم أوفر */
-  .gover{position:absolute;inset:0;background:rgba(0,0,0,.55);display:none;place-items:center;z-index:5}
-  .gover .box{background:#0f1d33;border:1px solid rgba(255,255,255,.14);border-radius:12px;padding:14px;text-align:center;width:80%}
-  .gover h3{margin:6px 0 8px}
-
-  @media (max-width:460px){ .wrap{width:96vw} }
+  header{display:flex; gap:8px; align-items:center; justify-content:space-between; margin-bottom:8px}
+  .badges{display:flex; gap:8px; flex-wrap:wrap}
+  .badge{background:#0f1c31;border:1px solid rgba(255,255,255,.08);color:var(--muted);padding:6px 10px;border-radius:12px;font-size:13px;min-width:80px;text-align:center}
+  .badge b{color:var(--text)}
+  /* ثابت: عمودان دائماً (اللوحة يسار/القادم يمين) */
+  .main{display:grid; grid-template-columns: 1fr 120px; gap:12px; align-items:start}
+  .board{
+    position:relative; aspect-ratio:10/20; width:100%;
+    background:var(--board); border-radius:14px; overflow:hidden;
+    box-shadow: inset 0 0 0 1px rgba(255,255,255,.08);
+    margin-top:6px; /* صغّرت المسافة */
+  }
+  .grid{position:absolute; inset:0; display:grid; grid-template-columns:repeat(10,1fr); grid-auto-rows:1fr}
+  .cell{border:1px solid rgba(255,255,255,.04); background:#1f355a}
+  .c-red{background:var(--cell-red)} .c-green{background:var(--cell-green)} .c-blue{background:var(--cell-blue)}
+  .c-yellow{background:var(--cell-yellow)} .c-purple{background:var(--cell-purple)} .c-cyan{background:var(--cell-cyan)}
+  .c-orange{background:var(--cell-orange)}
+  .sidebar{background:#0b1422;border:1px solid rgba(255,255,255,.08);border-radius:14px;padding:10px}
+  .side-title{font-size:14px;color:var(--muted);margin:2px 0 8px}
+  .next{width:100%;aspect-ratio:1/1;background:#0f1c31;border-radius:12px;display:grid;place-items:center;
+        box-shadow: inset 0 0 0 1px rgba(255,255,255,.06)}
+  .next-grid{display:grid;grid-template-columns:repeat(4,1fr);grid-auto-rows:1fr;gap:2px;width:80%;height:80%}
+  .controls{margin-top:10px; display:grid; grid-template-columns:repeat(3,1fr); gap:10px}
+  .btn{background:var(--btn);border:1px solid rgba(255,255,255,.1);color:var(--text);border-radius:16px;
+       padding:12px 10px; font-size:18px; text-align:center; user-select:none; touch-action:manipulation;
+       box-shadow:0 4px 12px rgba(0,0,0,.25)}
+  .btn:active{transform:translateY(1px); background:var(--btn-hi)}
+  .btn.big{grid-column:1/-1; font-weight:700}
+  .pill{padding:8px 10px;border-radius:12px;background:#0f1c31;border:1px solid rgba(255,255,255,.08);font-size:13px;color:var(--muted)}
+  .footer{display:flex;justify-content:space-between;gap:8px;margin-top:8px;flex-wrap:wrap}
+  .gover{position:absolute;inset:0;background:rgba(0,0,0,.6);display:none;place-items:center;z-index:5}
+  .gover .box{background:#0b1422;border:1px solid rgba(255,255,255,.12);padding:16px;border-radius:14px;text-align:center;width:80%}
+  .gover h3{margin:4px 0 6px}
+  /* أزلنا الميديا كويري اللي كانت بترفع الـsidebar فوق */
 </style>
 </head>
 <body>
-<div class="wrap">
-  <div class="top">
-    <div class="chip">المستوى: <b id="level">1</b></div>
-    <div class="chip">الخطوط: <b id="lines">0</b></div>
-    <div class="chip">أفضل نتيجة: <b id="best">0</b></div>
-    <button id="reset" class="chip" style="cursor:pointer">إعادة</button>
-  </div>
+  <div class="wrap">
+    <header>
+      <div class="badges">
+        <div class="badge">المستوى: <b id="level">1</b></div>
+        <div class="badge">الخطوط: <b id="lines">0</b></div>
+        <div class="badge">أفضل نتيجة: <b id="best">0</b></div>
+      </div>
+      <button class="btn" id="reset">إعادة</button>
+    </header>
 
-  <div class="game">
-    <div class="board">
-      <div class="gover" id="gover"><div class="box">
-        <h3>انتهت اللعبة</h3>
-        <div style="color:#b9c4d6;font-size:13px">وصلت القطع لأعلى الصفوف.</div>
-        <button class="btn" id="playAgain" style="margin-top:8px">لعب من جديد</button>
-      </div></div>
+    <div class="main">
+      <div>
+        <div class="board" id="board">
+          <div class="gover" id="gover">
+            <div class="box">
+              <h3>انتهت اللعبة</h3>
+              <div style="margin:6px 0;color:var(--muted)">اضغط “لعب من جديد” للبدء</div>
+              <button class="btn" id="playAgain">لعب من جديد</button>
+            </div>
+          </div>
+          <div class="grid" id="grid"></div>
+        </div>
 
-      <div class="nextBox">
-        <div class="nextTitle">القادم</div>
-        <div class="nextGrid" id="nextGrid"></div>
+        <!-- أزرار التحكم تحت اللوحة مباشرة -->
+        <div class="controls" aria-label="أزرار التحكم">
+          <div class="btn" id="left">←</div>
+          <div class="btn" id="down">↓</div>
+          <div class="btn" id="right">→</div>
+          <div class="btn" id="rotate">⟲ تدوير</div>
+          <div class="btn big" id="hard">⟱ هارد دروب سريع</div>
+        </div>
       </div>
 
-      <div class="grid" id="grid"></div>
-    </div>
-
-    <div class="controls">
-      <div class="btn" id="left">←</div>
-      <div class="btn" id="down">↓</div>
-      <div class="btn" id="right">→</div>
-      <div class="btn" id="rotate">⟲ تدوير</div>
-      <div class="btn big" id="hard">⟱ هارد دروب</div>
+      <aside class="sidebar">
+        <div class="side-title">القادم</div>
+        <div class="next"><div class="next-grid" id="nextGrid"></div></div>
+        <div class="footer">
+          <div class="pill">تلميح: ⟲ للتدوير</div>
+          <div class="pill">⟱ هارد دروب سريع</div>
+        </div>
+      </aside>
     </div>
   </div>
-</div>
 
 <script>
-(()=> {
+(() => {
   const COLS=10, ROWS=20;
-  const gridEl=document.getElementById('grid');
-  const nextEl=document.getElementById('nextGrid');
-  const levelEl=document.getElementById('level');
-  const linesEl=document.getElementById('lines');
-  const bestEl=document.getElementById('best');
+  const gridEl=document.getElementById('grid'), nextGridEl=document.getElementById('nextGrid');
+  const levelEl=document.getElementById('level'), linesEl=document.getElementById('lines'), bestEl=document.getElementById('best');
   const goverEl=document.getElementById('gover');
 
-  // خلايا اللوحة
-  const cells=[];
-  for(let r=0;r<ROWS;r++){
-    for(let c=0;c<COLS;c++){
-      const d=document.createElement('div'); d.className='cell';
-      gridEl.appendChild(d); cells.push(d);
-    }
-  }
-  // خلايا القادم 4x4
-  const ncs=[]; for(let i=0;i<16;i++){const d=document.createElement('div'); d.className='nc'; nextEl.appendChild(d); ncs.push(d);}
+  const cells=[]; gridEl.style.gridTemplateColumns=`repeat(${COLS},1fr)`;
+  for(let r=0;r<ROWS;r++)for(let c=0;c<COLS;c++){const d=document.createElement('div');d.className='cell';gridEl.appendChild(d);cells.push(d)}
+  const nextCells=[]; for(let i=0;i<16;i++){const d=document.createElement('div');d.className='cell';nextGridEl.appendChild(d);nextCells.push(d)}
 
   const SHAPES={I:[[1,1,1,1]],O:[[1,1],[1,1]],T:[[1,1,1],[0,1,0]],S:[[0,1,1],[1,1,0]],Z:[[1,1,0],[0,1,1]],J:[[1,0,0],[1,1,1]],L:[[0,0,1],[1,1,1]]};
-  const COLOR={'I':'cI','O':'cO','T':'cT','S':'cS','Z':'cZ','J':'cJ','L':'cL'};
+  const COLORS={I:'c-cyan',O:'c-yellow',T:'c-purple',S:'c-green',Z:'c-red',J:'c-blue',L:'c-orange'};
 
-  let field,cur,next,x,y,dropMs,timer,lines=0,level=1,best=+localStorage.getItem('tBest')||0,over=false;
+  let field,cur,next,x,y,dropMs,timer,lines=0,level=1,best=Number(localStorage.getItem('tetrisBest')||0),gameOver=false;
 
-  function empty(){return Array.from({length:ROWS},()=>Array(COLS).fill(0))}
-  function rnd(){const ks=Object.keys(SHAPES); const k=ks[Math.floor(Math.random()*ks.length)]; return {k,m:SHAPES[k].map(r=>r.slice())};}
-  function rot(m){const R=m.length,C=m[0].length, o=Array.from({length:C},()=>Array(R).fill(0)); for(let r=0;r<R;r++)for(let c=0;c<C;c++)o[c][R-1-r]=m[r][c]; return o;}
-  function hud(){levelEl.textContent=level; linesEl.textContent=lines; bestEl.textContent=best;}
-  function collide(nx=x,ny=y,m=cur.m){
-    for(let r=0;r<m.length;r++)for(let c=0;c<m[0].length;c++){
-      if(!m[r][c]) continue; const X=nx+c,Y=ny+r;
-      if(X<0||X>=COLS||Y>=ROWS) return true;
-      if(Y>=0 && field[Y][X]) return true;
-    } return false;
-  }
-  function merge(){
-    for(let r=0;r<cur.m.length;r++)for(let c=0;c<cur.m[0].length;c++)
-      if(cur.m[r][c]){const X=x+c,Y=y+r; if(Y>=0) field[Y][X]=cur.k;}
-  }
-  function clearLines(){
-    let n=0;
-    for(let r=ROWS-1;r>=0;r--){
-      if(field[r].every(v=>v)){ field.splice(r,1); field.unshift(Array(COLS).fill(0)); n++; r++; }
-    }
-    if(n){
-      lines+=n; const nl=Math.floor(lines/10)+1;
-      if(nl>level){level=nl; dropMs=Math.max(120,Math.floor(dropMs*0.88)); loop();}
-      if(lines>best){best=lines; localStorage.setItem('tBest',best);}
-      hud();
-    }
-  }
-  function drawNext(){
-    ncs.forEach(c=>c.className='nc');
-    const m=next.m, offR=Math.floor((4-m.length)/2), offC=Math.floor((4-m[0].length)/2);
-    for(let r=0;r<m.length;r++)for(let c=0;c<m[0].length;c++) if(m[r][c]){
-      ncs[(r+offR)*4+(c+offC)].classList.add(COLOR[next.k]);
-    }
-  }
-  function render(){
-    cells.forEach(c=>c.className='cell');
-    for(let r=0;r<ROWS;r++)for(let c=0;c<COLS;c++){const v=field[r][c]; if(v) cells[r*COLS+c].classList.add(COLOR[v]);}
-    for(let r=0;r<cur.m.length;r++)for(let c=0;c<cur.m[0].length;c++) if(cur.m[r][c]){
-      const X=x+c,Y=y+r; if(Y>=0&&Y<ROWS&&X>=0&&X<COLS) cells[Y*COLS+X].classList.add(COLOR[cur.k]);
-    }
-  }
-  function spawn(){
-    cur=next; next=rnd(); x=3; y=0;
-    if(collide(x,y,cur.m)){ over=true; showGO(); clearInterval(timer); }
-    drawNext();
-  }
-  function tick(){
-    if(over) return;
-    if(!collide(x,y+1)) y++; else { merge(); clearLines(); spawn(); }
-    render();
-  }
-  function loop(){ clearInterval(timer); timer=setInterval(tick,dropMs); }
-
-  function showGO(){ document.getElementById('gover').style.display='grid'; }
-  function hideGO(){ document.getElementById('gover').style.display='none'; }
+  function emptyField(){return Array.from({length:ROWS},()=>Array(COLS).fill(0))}
+  function rndPiece(){const k=Object.keys(SHAPES)[Math.floor(Math.random()*7)];return {k,m:SHAPES[k].map(r=>r.slice())}}
+  function reset(){field=emptyField();cur=rndPiece();next=rndPiece();x=3;y=0;dropMs=800;lines=0;level=1;gameOver=false;bestEl.textContent=best;updateHUD();render();drawNext();hideGameOver();loop()}
+  function loop(){clearInterval(timer);timer=setInterval(()=>tick(),dropMs)}
+  function updateHUD(){levelEl.textContent=level;linesEl.textContent=lines;bestEl.textContent=best}
+  function rotate(m){const R=m.length,C=m[0].length,out=Array.from({length:C},()=>Array(R).fill(0));for(let r=0;r<R;r++)for(let c=0;c<C;c++)out[c][R-1-r]=m[r][c];return out}
+  function collide(nx=x,ny=y,m=cur.m){for(let r=0;r<m.length;r++)for(let c=0;c<m[0].length;c++){if(!m[r][c])continue;const X=nx+c,Y=ny+r;if(X<0||X>=COLS||Y>=ROWS)return true;if(Y>=0&&field[Y][X])return true}return false}
+  function merge(){for(let r=0;r<cur.m.length;r++)for(let c=0;c<cur.m[0].length;c++)if(cur.m[r][c]){const X=x+c,Y=y+r;if(Y>=0)field[Y][X]=cur.k}}
+  function clearLines(){let cleared=0;for(let r=ROWS-1;r>=0;r--){if(field[r].every(v=>v)){field.splice(r,1);field.unshift(Array(COLS).fill(0));cleared++;r++}}if(cleared){lines+=cleared;const nl=Math.floor(lines/10)+1;if(nl>level){level=nl;dropMs=Math.max(120,Math.floor(dropMs*0.88));loop()}if(lines>best){best=lines;localStorage.setItem('tetrisBest',best)}updateHUD()}}
+  function spawn(){cur=next;next=rndPiece();x=3;y=0;if(collide(x,y,cur.m)){showGameOver();gameOver=true;clearInterval(timer)}drawNext()}
+  function tick(){if(gameOver)return;if(!collide(x,y+1)){y++}else{merge();clearLines();spawn()}render()}
+  function render(){cells.forEach(c=>c.className='cell');for(let r=0;r<ROWS;r++)for(let c=0;c<COLS;c++){const v=field[r][c];if(v)cells[r*COLS+c].classList.add(COLORS[v])}for(let r=0;r<cur.m.length;r++)for(let c=0;c<cur.m[0].length;c++){if(!cur.m[r][c])continue;const X=x+c,Y=y+r;if(Y>=0&&Y<ROWS&&X>=0&&X<COLS)cells[Y*COLS+X].classList.add(COLORS[cur.k])}}
+  function drawNext(){nextCells.forEach(c=>c.className='cell');const m=next.m,offR=Math.floor((4-m.length)/2),offC=Math.floor((4-m[0].length)/2);for(let r=0;r<m.length;r++)for(let c=0;c<m[0].length;c++)if(m[r][c])nextCells[(r+offR)*4+(c+offC)].classList.add(COLORS[next.k])}
 
   // تحكم
-  const left = ()=>{ if(!collide(x-1,y)){x--; render();} };
-  const right= ()=>{ if(!collide(x+1,y)){x++; render();} };
-  const down = ()=>{ if(!collide(x,y+1)){y++; render();} };
-  const rotate=()=>{ const m=rot(cur.m); if(!collide(x,y,m)) cur.m=m; else if(!collide(x-1,y,m)) {x--;cur.m=m;} else if(!collide(x+1,y,m)){x++;cur.m=m;} render(); };
-  const hard = ()=>{ while(!collide(x,y+1)) y++; render(); tick(); };
+  function moveLeft(){if(!collide(x-1,y)){x--;render()}}
+  function moveRight(){if(!collide(x+1,y)){x++;render()}}
+  function softDown(){if(!collide(x,y+1)){y++;render()}}
+  function rotateCur(){const m=rotate(cur.m);if(!collide(x,y,m)){cur.m=m;render();return}if(!collide(x-1,y,m)){x--;cur.m=m;render();return}if(!collide(x+1,y,m)){x++;cur.m=m;render();return}}
+  function hardDrop(){while(!collide(x,y+1))y++;render();tick()}
 
-  document.getElementById('left').onclick=left;
-  document.getElementById('right').onclick=right;
-  document.getElementById('down').onclick=down;
-  document.getElementById('rotate').onclick=rotate;
-  document.getElementById('hard').onclick=hard;
+  document.getElementById('left').onclick=moveLeft;
+  document.getElementById('right').onclick=moveRight;
+  document.getElementById('down').onclick=softDown;
+  document.getElementById('rotate').onclick=rotateCur;
+  document.getElementById('hard').onclick=hardDrop;
 
-  window.addEventListener('keydown',e=>{
-    if(over && e.key.toLowerCase()!=='r') return;
-    if(e.key==='ArrowLeft') left();
-    else if(e.key==='ArrowRight') right();
-    else if(e.key==='ArrowDown') down();
-    else if(['ArrowUp',' '].includes(e.key)) rotate();
-    else if(e.key==='Enter' || e.key==='Shift') hard();
-    else if(e.key.toLowerCase()==='r') reset();
+  window.addEventListener('keydown',(e)=>{
+    if(gameOver&&e.key.toLowerCase()!=='r')return;
+    if(['ArrowLeft','a','A'].includes(e.key))moveLeft();
+    else if(['ArrowRight','d','D'].includes(e.key))moveRight();
+    else if(['ArrowDown','s','S'].includes(e.key))softDown();
+    else if(['ArrowUp','w','W',' '].includes(e.key))rotateCur();
+    else if(e.key==='Shift'||e.key==='Enter')hardDrop();
+    else if(e.key.toLowerCase()==='r')reset();
   });
 
+  function showGameOver(){goverEl.style.display='grid'}
+  function hideGameOver(){goverEl.style.display='none'}
   document.getElementById('playAgain').onclick=reset;
   document.getElementById('reset').onclick=reset;
 
-  function reset(){
-    field=empty(); cur=rnd(); next=rnd(); x=3; y=0; dropMs=800;
-    lines=0; level=1; over=false; hud(); drawNext(); render(); hideGO(); loop();
-  }
   reset();
 })();
 </script>
