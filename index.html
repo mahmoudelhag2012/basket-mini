@@ -9,28 +9,46 @@
     *{box-sizing:border-box; -webkit-tap-highlight-color:transparent}
     html,body{height:100%}
     body{margin:0;background:linear-gradient(180deg,var(--bg1),var(--bg2));color:var(--text);font-family:system-ui,Segoe UI,Roboto,Arial;display:flex;flex-direction:column}
-    /* Top HUD */
-    .topbar{position:fixed;top:0;left:0;right:0;height:56px;display:flex;align-items:center;justify-content:center;gap:18px;
-            background:linear-gradient(180deg,rgba(8,12,28,.9),rgba(8,12,28,.65));border-bottom:1px solid var(--line);z-index:20}
-    .badge{background:rgba(255,255,255,.07);border:1px solid var(--line);border-radius:12px;padding:6px 10px;font-weight:800}
+    /* ===== Top HUD ===== */
+    .topbar{
+      position:fixed;top:0;left:0;right:0;height:64px;
+      display:flex;align-items:center;justify-content:center;gap:16px;
+      background:linear-gradient(180deg,rgba(8,12,28,.95),rgba(8,12,28,.70));
+      border-bottom:1px solid var(--line);z-index:30;
+    }
+    .badge{background:rgba(255,255,255,.08);border:1px solid var(--line);border-radius:12px;padding:6px 10px;font-weight:800}
     .badge .k{opacity:.75;font-weight:600;margin-left:6px}
-    /* Layout */
-    .wrap{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:flex-start;padding-top:64px;padding-bottom:140px}
-    canvas#cv{background:#0f2146;border-radius:12px;border:1px solid rgba(255,255,255,.08);width:min(520px,92vw);height:auto;aspect-ratio:10/20;box-shadow:inset 0 0 0 2px rgba(255,255,255,.05)}
-    /* Small NEXT at top-right */
-    .nextWrap{position:fixed;top:64px;right:8px;background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:6px 6px;box-shadow:0 6px 18px rgba(0,0,0,.45);z-index:25}
-    .nextTitle{font-size:10px;opacity:.8;margin:0 0 4px;text-align:center}
-    canvas#next{display:block;background:#0b1023;border-radius:6px;width:72px;height:72px}
-    /* Controls */
-    .controls{position:fixed;left:0;right:0;bottom:8px;display:flex;justify-content:center;z-index:20}
-    .pad{display:grid;grid-template-columns:repeat(3,92px);grid-template-rows:repeat(2,92px);gap:12px}
-    .btn{border:none;border-radius:16px;background:#223c6b;color:#fff;font-size:26px;font-weight:800;box-shadow:0 8px 16px rgba(0,0,0,.5);cursor:pointer}
+    /* ===== Layout ===== */
+    .wrap{
+      flex:1;display:flex;flex-direction:column;align-items:center;justify-content:flex-start;
+      padding-top:70px;padding-bottom:110px;
+    }
+    canvas#cv{
+      background:#0f2146;border-radius:12px;border:1px solid rgba(255,255,255,.08);
+      width:min(500px,88vw);height:auto;aspect-ratio:10/20;
+      box-shadow:inset 0 0 0 2px rgba(255,255,255,.05)
+    }
+    /* ===== Tiny NEXT top-right ===== */
+    .nextTiny{
+      position:fixed;top:76px;right:8px;
+      width:74px;background:var(--panel);border:1px solid var(--line);
+      border-radius:10px;padding:6px;box-shadow:0 8px 18px rgba(0,0,0,.45);z-index:35
+    }
+    .nextTiny h4{margin:0 0 4px;font-size:11px;opacity:.85;text-align:center}
+    canvas#next{display:block;background:#0b1023;border-radius:6px}
+    /* ===== Bottom controls smaller ===== */
+    .controls{
+      position:fixed;left:0;right:0;bottom:0;display:flex;justify-content:center;z-index:30;
+      padding:8px 12px;
+    }
+    .pad{display:grid;grid-template-columns:repeat(3,72px);grid-template-rows:repeat(2,72px);gap:10px}
+    .btn{border:none;border-radius:14px;background:#223c6b;color:#fff;font-size:22px;font-weight:800;box-shadow:0 6px 14px rgba(0,0,0,.45);cursor:pointer}
     .btn:active{transform:scale(.96)}
-    .wide{grid-column:span 3;font-size:20px}
+    .wide{grid-column:span 3;font-size:18px;height:56px}
   </style>
 </head>
 <body>
-  <!-- Top HUD -->
+  <!-- HUD -->
   <div class="topbar">
     <div class="badge"><span class="k">النتيجة:</span> <span id="score">0</span></div>
     <div class="badge"><span class="k">الخطوط:</span> <span id="lines">0</span></div>
@@ -42,29 +60,27 @@
     <canvas id="cv" width="300" height="600"></canvas>
   </div>
 
-  <!-- Tiny NEXT at top-right -->
-  <div class="nextWrap" aria-label="القطعة القادمة">
-    <div class="nextTitle">القادم</div>
-    <canvas id="next" width="72" height="72"></canvas>
+  <!-- Tiny NEXT -->
+  <div class="nextTiny">
+    <h4>القادم</h4>
+    <canvas id="next" width="64" height="64"></canvas>
   </div>
 
   <!-- Controls -->
   <div class="controls">
     <div class="pad">
       <div></div>
-      <button id="rotBtn" class="btn" aria-label="تدوير">⤿</button>
+      <button id="rotBtn" class="btn">⤿</button>
       <div></div>
-
-      <button id="leftBtn" class="btn" aria-label="يسار">⟵</button>
-      <button id="downBtn" class="btn" aria-label="إسقاط سريع">⬇</button>
-      <button id="rightBtn" class="btn" aria-label="يمين">⟶</button>
-
-      <button id="hardBtn" class="btn wide" aria-label="هارد دروب">⬇⬇ هارد دروب</button>
+      <button id="leftBtn" class="btn">⟵</button>
+      <button id="downBtn" class="btn">⬇</button>
+      <button id="rightBtn" class="btn">⟶</button>
+      <button id="hardBtn" class="btn wide">⬇⬇ هارد دروب</button>
     </div>
   </div>
 
 <script>
-(()=>{
+(()=> {
   const COLS=10, ROWS=20;
   const cv=document.getElementById('cv'), cx=cv.getContext('2d'), W=cv.width, H=cv.height, CS=W/COLS;
   const nextCV=document.getElementById('next'), nx=nextCV.getContext('2d');
@@ -72,15 +88,10 @@
   let grid,cur,bag=[],nextPiece=null,score=0,lines=0,level=1,best=Number(localStorage.getItem('tetris_best')||0);
   let dropInterval=900,dropTimer=0,last=0,running=false;
   const COLORS={I:'#00f0f0',O:'#f0f000',T:'#a000f0',S:'#00f000',Z:'#f00000',J:'#0000f0',L:'#f0a000'};
-  const SHAPES={
-    I:[[0,0,0,0],[1,1,1,1],[0,0,0,0],[0,0,0,0]],
-    O:[[1,1],[1,1]],
-    T:[[0,1,0],[1,1,1],[0,0,0]],
-    S:[[0,1,1],[1,1,0],[0,0,0]],
-    Z:[[1,1,0],[0,1,1],[0,0,0]],
-    J:[[1,0,0],[1,1,1],[0,0,0]],
-    L:[[0,0,1],[1,1,1],[0,0,0]]
-  };
+  const SHAPES={I:[[0,0,0,0],[1,1,1,1],[0,0,0,0],[0,0,0,0]],
+    O:[[1,1],[1,1]], T:[[0,1,0],[1,1,1],[0,0,0]],
+    S:[[0,1,1],[1,1,0],[0,0,0]], Z:[[1,1,0],[0,1,1],[0,0,0]],
+    J:[[1,0,0],[1,1,1],[0,0,0]], L:[[0,0,1],[1,1,1],[0,0,0]]};
   function id(s){return document.getElementById(s);}
   function emptyGrid(){return Array.from({length:ROWS},()=>Array(COLS).fill(0));}
   function newPiece(t){const s=SHAPES[t].map(r=>r.slice());return{type:t,shape:s,x:Math.floor(COLS/2)-2,y:-2,color:COLORS[t]};}
@@ -96,33 +107,26 @@
   function lock(){merge(cur);clearLines();spawn();updateHUD();draw();}
   function updateHUD(){scoreEl.textContent=score;linesEl.textContent=lines;levelEl.textContent=level;bestEl.textContent=Math.max(best,score);}
   function gameOver(){running=false;best=Math.max(best,score);localStorage.setItem('tetris_best',best);updateHUD();alert('انتهت اللعبة! نتيجتك: '+score);}
-  function draw(){
-    cx.clearRect(0,0,W,H);
-    cx.strokeStyle='rgba(255,255,255,.09)';
+  function draw(){cx.clearRect(0,0,W,H);cx.strokeStyle='rgba(255,255,255,.09)';
     for(let x=0;x<=COLS;x++){cx.beginPath();cx.moveTo(x*CS+.5,0);cx.lineTo(x*CS+.5,H);cx.stroke();}
     for(let y=0;y<=ROWS;y++){cx.beginPath();cx.moveTo(0,y*CS+.5);cx.lineTo(W,y*CS+.5);cx.stroke();}
     for(let y=0;y<ROWS;y++)for(let x=0;x<COLS;x++)if(grid[y][x]) cell(x,y,grid[y][x]);
-    for(let y=0;y<cur.shape.length;y++)for(let x=0;x<cur.shape[y].length;x++) if(cur.shape[y][x]) cell(cur.x+x,cur.y+y,cur.color);
-  }
+    for(let y=0;y<cur.shape.length;y++)for(let x=0;x<cur.shape[y].length;x++) if(cur.shape[y][x]) cell(cur.x+x,cur.y+y,cur.color);}
   function cell(gx,gy,color){ if(gy<0) return; cx.fillStyle=color; cx.fillRect(gx*CS+1,gy*CS+1,CS-2,CS-2); }
-  function drawNext(){
-    nx.clearRect(0,0,nextCV.width,nextCV.height);
-    const s=SHAPES[nextPiece], col=COLORS[nextPiece];
-    // cell size small to fit tiny canvas
-    const size = Math.floor(Math.min(nextCV.width, nextCV.height) / 4);
-    // center
-    const w=s[0].length*size, h=s.length*size, sx=(nextCV.width-w)/2, sy=(nextCV.height-h)/2;
-    for(let y=0;y<s.length;y++)for(let x=0;x<s[y].length;x++) if(s[y][x]){ nx.fillStyle=col; nx.fillRect(sx+x*size+1, sy+y*size+1, size-2, size-2); }
-  }
+  function drawNext(){nx.clearRect(0,0,nextCV.width,nextCV.height);const s=SHAPES[nextPiece], col=COLORS[nextPiece];
+    const size=Math.floor(Math.min(nextCV.width,nextCV.height)/4);
+    const w=s[0].length*size,h=s.length*size,sx=(nextCV.width-w)/2,sy=(nextCV.height-h)/2;
+    for(let y=0;y<s.length;y++)for(let x=0;x<s[y].length;x++) if(s[y][x]){ nx.fillStyle=col; nx.fillRect(sx+x*size+1, sy+y*size+1, size-2, size-2); }}
   function update(dt){ dropTimer+=dt; if(dropTimer>dropInterval){ dropTimer=0; if(!move(0,1)) lock(); } }
   function tick(t){ if(!running) return; const dt=t-last; last=t; update(dt); draw(); requestAnimationFrame(tick); }
   function start(){ grid=emptyGrid(); score=0; lines=0; level=1; dropInterval=900; running=true; nextPiece=null; spawn(); updateHUD(); last=performance.now(); requestAnimationFrame(tick); }
   // Buttons
-  id('leftBtn').addEventListener('click', ()=>{ if(running){ move(-1,0); draw(); } });
-  id('rightBtn').addEventListener('click',()=>{ if(running){ move(1,0);  draw(); } });
-  id('downBtn').addEventListener('click', ()=>{ if(running){ if(move(0,1)){ score++; updateHUD(); draw(); } } });
-  id('rotBtn').addEventListener('click',  ()=>{ if(running){ tryRotate(); draw(); } });
-  id('hardBtn').addEventListener('click', ()=>{ if(running){ hardDrop(); draw(); } });
+  const idc = s => document.getElementById(s);
+  idc('leftBtn').addEventListener('click', ()=>{ if(running){ move(-1,0); draw(); } });
+  idc('rightBtn').addEventListener('click',()=>{ if(running){ move(1,0);  draw(); } });
+  idc('downBtn').addEventListener('click', ()=>{ if(running){ if(move(0,1)){ score++; updateHUD(); draw(); } } });
+  idc('rotBtn').addEventListener('click',  ()=>{ if(running){ tryRotate(); draw(); } });
+  idc('hardBtn').addEventListener('click', ()=>{ if(running){ hardDrop(); draw(); } });
   // Keyboard
   window.addEventListener('keydown', e=>{
     if(!running) return;
