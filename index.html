@@ -8,35 +8,57 @@
     :root{ --bg1:#0b1023; --bg2:#1b2d57; --panel:#0e1531; --line:rgba(255,255,255,.12); --text:#eef2f8; }
     *{box-sizing:border-box; -webkit-tap-highlight-color:transparent}
     html,body{height:100%}
-    body{margin:0;background:linear-gradient(180deg,var(--bg1),var(--bg2));
-         color:var(--text);font-family:system-ui,Segoe UI,Roboto,Arial;
-         display:flex;flex-direction:column}
-    /* ===== Top HUD centered ===== */
-    .topbar{position:fixed;top:0;left:0;right:0;
+    body{
+      margin:0;
+      background:linear-gradient(180deg,var(--bg1),var(--bg2));
+      color:var(--text);font-family:system-ui,Segoe UI,Roboto,Arial;
+      display:flex;flex-direction:column
+    }
+
+    /* ===== Top HUD (أوضح ومتنزل لتحت) ===== */
+    .topbar{
+      position:fixed;top:0;left:0;right:0;
       background:linear-gradient(180deg,rgba(8,12,28,.95),rgba(8,12,28,.70));
-      border-bottom:1px solid var(--line);z-index:30;backdrop-filter: blur(6px)}
-    .top-inner{height:64px;padding-top:calc(env(safe-area-inset-top,0px));
+      border-bottom:1px solid var(--line);z-index:30;backdrop-filter: blur(6px)
+    }
+    .top-inner{
+      height:76px; /* أعلى من قبل */
+      padding-top:calc(env(safe-area-inset-top,0px));
       display:flex;align-items:center;justify-content:center;gap:16px;
-      margin:0 auto;width:min(520px, 92vw)}
+      margin:0 auto;width:min(520px, 92vw)
+    }
     .badge{background:rgba(255,255,255,.08);border:1px solid var(--line);
       border-radius:12px;padding:6px 10px;font-weight:800}
     .badge .k{opacity:.75;font-weight:600;margin-left:6px}
+
     /* ===== Layout ===== */
-    .wrap{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:flex-start;
-      padding-top:calc(70px + env(safe-area-inset-top,0px));
-      padding-bottom:calc(110px + env(safe-area-inset-bottom,0px))}
-    canvas#cv{background:#0f2146;border-radius:12px;border:1px solid rgba(255,255,255,.08);
+    .wrap{
+      flex:1;display:flex;flex-direction:column;align-items:center;justify-content:flex-start;
+      /* مسافة أكبر تحت الشريط */
+      padding-top:calc(92px + env(safe-area-inset-top,0px));
+      padding-bottom:calc(120px + env(safe-area-inset-bottom,0px))
+    }
+    canvas#cv{
+      background:#0f2146;border-radius:12px;border:1px solid rgba(255,255,255,.08);
       width:min(500px,88vw);height:auto;aspect-ratio:10/20;
-      box-shadow:inset 0 0 0 2px rgba(255,255,255,.05)}
-    /* ===== Tiny NEXT ===== */
-    .nextTiny{position:fixed;top:calc(76px + env(safe-area-inset-top,0px));right:8px;
-      width:64px;background:var(--panel);border:1px solid var(--line);
-      border-radius:10px;padding:5px 5px 4px;box-shadow:0 8px 18px rgba(0,0,0,.45);z-index:35}
+      box-shadow:inset 0 0 0 2px rgba(255,255,255,.05)
+    }
+
+    /* ===== Tiny NEXT (صغير ومش داخل على الشاشة) ===== */
+    .nextTiny{
+      position:fixed;
+      top:calc(104px + env(safe-area-inset-top,0px)); /* نازل شوية */
+      right:8px;width:64px;background:var(--panel);border:1px solid var(--line);
+      border-radius:10px;padding:5px 5px 4px;box-shadow:0 8px 18px rgba(0,0,0,.45);z-index:35
+    }
     .nextTiny h4{margin:0 0 3px;font-size:10px;opacity:.85;text-align:center}
     canvas#next{display:block;background:#0b1023;border-radius:6px}
-    /* ===== Bottom controls ===== */
-    .controls{position:fixed;left:0;right:0;bottom:0;display:flex;justify-content:center;z-index:30;
-      padding:8px 12px calc(8px + env(safe-area-inset-bottom,0px))}
+
+    /* ===== Bottom controls (الترتيب ← | ↓ | →) ===== */
+    .controls{
+      position:fixed;left:0;right:0;bottom:0;display:flex;justify-content:center;z-index:30;
+      padding:8px 12px calc(10px + env(safe-area-inset-bottom,0px))
+    }
     .pad{display:grid;grid-template-columns:repeat(3,72px);grid-template-rows:repeat(2,72px);gap:10px}
     .btn{border:none;border-radius:14px;background:#223c6b;color:#fff;font-size:22px;
       font-weight:800;box-shadow:0 6px 14px rgba(0,0,0,.45);cursor:pointer}
@@ -72,8 +94,9 @@
       <button id="rotBtn" class="btn" aria-label="تدوير">⤿</button>
       <div></div>
 
-      <button id="leftBtn" class="btn" aria-label="يسار">⟵</button>
-      <button id="downBtn" class="btn" aria-label="إسقاط سريع">⬇</button>
+      <!-- لاحظ: ترتيب الأزرار ← | ↓ | → -->
+      <button id="leftBtn"  class="btn" aria-label="يسار">⟵</button>
+      <button id="downBtn"  class="btn" aria-label="إسقاط سريع">⬇</button>
       <button id="rightBtn" class="btn" aria-label="يمين">⟶</button>
 
       <button id="hardBtn" class="btn wide" aria-label="هارد دروب">⬇⬇ هارد دروب</button>
@@ -156,14 +179,16 @@
   function tick(t){ if(!running) return; const dt=t-last; last=t; update(dt); draw(); requestAnimationFrame(tick); }
   function start(){ grid=emptyGrid(); score=0; lines=0; level=1; dropInterval=900; running=true;
     nextPiece=null; spawn(); updateHUD(); last=performance.now(); requestAnimationFrame(tick); }
-  // Buttons
+
+  /* ===== الأزرار — يسار/يمين شغّالين بالاتجاه الصحيح ===== */
   const idc = s => document.getElementById(s);
-  idc('leftBtn').addEventListener('click', ()=>{ if(running){ move(-1,0); draw(); } });
-  idc('rightBtn').addEventListener('click',()=>{ if(running){ move(1,0);  draw(); } });
-  idc('downBtn').addEventListener('click', ()=>{ if(running){ if(move(0,1)){ score++; updateHUD(); draw(); } } });
-  idc('rotBtn').addEventListener('click',  ()=>{ if(running){ tryRotate(); draw(); } });
-  idc('hardBtn').addEventListener('click', ()=>{ if(running){ hardDrop(); draw(); } });
-  // Keyboard
+  idc('leftBtn').addEventListener('click',  ()=>{ if(running){ move(-1,0); draw(); } });
+  idc('rightBtn').addEventListener('click', ()=>{ if(running){ move( 1,0); draw(); } });
+  idc('downBtn').addEventListener('click',  ()=>{ if(running){ if(move(0,1)){ score++; updateHUD(); draw(); } } });
+  idc('rotBtn').addEventListener('click',   ()=>{ if(running){ tryRotate(); draw(); } });
+  idc('hardBtn').addEventListener('click',  ()=>{ if(running){ hardDrop(); draw(); } });
+
+  // لوحة مفاتيح (قياسي)
   window.addEventListener('keydown', e=>{
     if(!running) return;
     if(e.key==='ArrowLeft')  move(-1,0);
@@ -173,6 +198,7 @@
     if(e.code==='Space'){ e.preventDefault(); hardDrop(); }
     draw();
   });
+
   start();
 })();
 </script>
