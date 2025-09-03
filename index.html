@@ -1,205 +1,387 @@
 <!DOCTYPE html>
 <html lang="ar" dir="rtl">
 <head>
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no"/>
-  <title>Falling Blocks DX — Tetris (AR)</title>
-  <style>
-    :root{ --bg1:#0b1023; --bg2:#1b2d57; --panel:#0e1531; --line:rgba(255,255,255,.12); --text:#eef2f8; }
-    *{box-sizing:border-box; -webkit-tap-highlight-color:transparent}
-    html,body{height:100%}
-    body{
-      margin:0;
-      background:linear-gradient(180deg,var(--bg1),var(--bg2));
-      color:var(--text);font-family:system-ui,Segoe UI,Roboto,Arial;
-      display:flex;flex-direction:column
-    }
-
-    /* ===== Top HUD (أوضح ومتنزل لتحت) ===== */
-    .topbar{
-      position:fixed;top:0;left:0;right:0;
-      background:linear-gradient(180deg,rgba(8,12,28,.95),rgba(8,12,28,.70));
-      border-bottom:1px solid var(--line);z-index:30;backdrop-filter: blur(6px)
-    }
-    .top-inner{
-      height:76px; /* أعلى من قبل */
-      padding-top:calc(env(safe-area-inset-top,0px));
-      display:flex;align-items:center;justify-content:center;gap:16px;
-      margin:0 auto;width:min(520px, 92vw)
-    }
-    .badge{background:rgba(255,255,255,.08);border:1px solid var(--line);
-      border-radius:12px;padding:6px 10px;font-weight:800}
-    .badge .k{opacity:.75;font-weight:600;margin-left:6px}
-
-    /* ===== Layout ===== */
-    .wrap{
-      flex:1;display:flex;flex-direction:column;align-items:center;justify-content:flex-start;
-      /* مسافة أكبر تحت الشريط */
-      padding-top:calc(92px + env(safe-area-inset-top,0px));
-      padding-bottom:calc(120px + env(safe-area-inset-bottom,0px))
-    }
-    canvas#cv{
-      background:#0f2146;border-radius:12px;border:1px solid rgba(255,255,255,.08);
-      width:min(500px,88vw);height:auto;aspect-ratio:10/20;
-      box-shadow:inset 0 0 0 2px rgba(255,255,255,.05)
-    }
-
-    /* ===== Tiny NEXT (صغير ومش داخل على الشاشة) ===== */
-    .nextTiny{
-      position:fixed;
-      top:calc(104px + env(safe-area-inset-top,0px)); /* نازل شوية */
-      right:8px;width:64px;background:var(--panel);border:1px solid var(--line);
-      border-radius:10px;padding:5px 5px 4px;box-shadow:0 8px 18px rgba(0,0,0,.45);z-index:35
-    }
-    .nextTiny h4{margin:0 0 3px;font-size:10px;opacity:.85;text-align:center}
-    canvas#next{display:block;background:#0b1023;border-radius:6px}
-
-    /* ===== Bottom controls (الترتيب ← | ↓ | →) ===== */
-    .controls{
-      position:fixed;left:0;right:0;bottom:0;display:flex;justify-content:center;z-index:30;
-      padding:8px 12px calc(10px + env(safe-area-inset-bottom,0px))
-    }
-    .pad{display:grid;grid-template-columns:repeat(3,72px);grid-template-rows:repeat(2,72px);gap:10px}
-    .btn{border:none;border-radius:14px;background:#223c6b;color:#fff;font-size:22px;
-      font-weight:800;box-shadow:0 6px 14px rgba(0,0,0,.45);cursor:pointer}
-    .btn:active{transform:scale(.96)}
-    .wide{grid-column:span 3;font-size:18px;height:52px}
-  </style>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no"/>
+<title>تتريس مبسّطة — عربي</title>
+<style>
+  :root{
+    --bg:#0e1a2b; --panel:#0b1422; --board:#14233b; --cell:#1f355a; --grid:#233b62;
+    --text:#e8f0ff; --muted:#a8b3c7; --accent:#4cc9f0; --danger:#ff4757; --ok:#2ed573;
+    --btn:#1b2d4a; --btn-hi:#26456f;
+    --cell-red:#e74c3c; --cell-green:#2ecc71; --cell-blue:#3498db; --cell-yellow:#f1c40f;
+    --cell-purple:#9b59b6; --cell-cyan:#1abc9c; --cell-orange:#e67e22;
+  }
+  *{box-sizing:border-box}
+  body{
+    margin:0; background:linear-gradient(135deg, #0a1220 0%, #091a2c 60%, #0d2745 100%);
+    color:var(--text); font-family: "Segoe UI", Tahoma, Arial, sans-serif;
+    display:flex; justify-content:center; align-items:flex-start; min-height:100vh;
+  }
+  .wrap{
+    width:min(520px, 92vw); margin:18px auto 24px; padding:16px;
+    background:rgba(255,255,255,0.03); border:1px solid rgba(255,255,255,0.08);
+    border-radius:18px; box-shadow:0 10px 30px rgba(0,0,0,0.35);
+  }
+  header{display:flex; gap:10px; align-items:center; justify-content:space-between; margin-bottom:10px}
+  .badges{display:flex; gap:8px; flex-wrap:wrap}
+  .badge{
+    background:var(--panel); border:1px solid rgba(255,255,255,0.08); color:var(--muted);
+    padding:6px 10px; border-radius:12px; font-size:13px; line-height:1; min-width:80px; text-align:center;
+  }
+  .badge b{color:var(--text)}
+  .main{
+    display:grid; grid-template-columns: 1fr 120px; gap:12px; align-items:start;
+  }
+  .board{
+    position:relative; aspect-ratio:10/20; width:100%;
+    background:var(--board); border-radius:14px; overflow:hidden;
+    box-shadow: inset 0 0 0 1px rgba(255,255,255,0.08);
+    margin-top:14px; /* مسافة علوية — يظهر الجزء العلوي بوضوح */
+  }
+  .grid{
+    position:absolute; inset:0; display:grid; grid-template-columns:repeat(10,1fr); grid-auto-rows:1fr;
+  }
+  .cell{
+    border:1px solid rgba(255,255,255,0.04);
+    background:var(--cell); width:100%; height:100%;
+  }
+  .c-red{background:var(--cell-red)}
+  .c-green{background:var(--cell-green)}
+  .c-blue{background:var(--cell-blue)}
+  .c-yellow{background:var(--cell-yellow); color:#222}
+  .c-purple{background:var(--cell-purple)}
+  .c-cyan{background:var(--cell-cyan)}
+  .c-orange{background:var(--cell-orange)}
+  .sidebar{
+    background:var(--panel); border:1px solid rgba(255,255,255,0.08);
+    border-radius:14px; padding:10px;
+  }
+  .side-title{font-size:14px; color:var(--muted); margin:2px 0 8px}
+  .next{
+    width:100%; aspect-ratio:1/1; background:#0f1c31;
+    border-radius:12px; display:grid; place-items:center;
+    box-shadow: inset 0 0 0 1px rgba(255,255,255,0.06);
+  }
+  .next-grid{display:grid; grid-template-columns:repeat(4,1fr); grid-auto-rows:1fr; gap:2px; width:80%; height:80%}
+  .controls{
+    margin-top:14px; display:grid; grid-template-columns:repeat(3,1fr); gap:10px;
+  }
+  .btn{
+    background:var(--btn); border:1px solid rgba(255,255,255,0.1); color:var(--text);
+    border-radius:16px; padding:12px 10px; font-size:18px; text-align:center;
+    user-select:none; touch-action:manipulation; box-shadow:0 4px 12px rgba(0,0,0,0.25);
+  }
+  .btn:active{transform:translateY(1px); background:var(--btn-hi)}
+  .btn.big{grid-column:1/-1; font-weight:700}
+  .footer{
+    display:flex; justify-content:space-between; gap:10px; margin-top:10px; flex-wrap:wrap
+  }
+  .pill{
+    padding:8px 10px; border-radius:12px; background:#0f1c31; border:1px solid rgba(255,255,255,0.08);
+    font-size:13px; color:var(--muted)
+  }
+  .gover{
+    position:absolute; inset:0; background:rgba(0,0,0,0.6); display:none; place-items:center; z-index:5;
+  }
+  .gover .box{
+    background:#0b1422; border:1px solid rgba(255,255,255,0.12); padding:16px; border-radius:14px; text-align:center; width:80%;
+  }
+  .gover h3{margin:4px 0 6px}
+  .gover button{margin-top:8px}
+  /* صغر الواجهة للموبايل الصغير */
+  @media (max-width:460px){
+    .main{grid-template-columns:1fr}
+    .sidebar{order:-1}
+  }
+</style>
 </head>
 <body>
-  <!-- HUD -->
-  <div class="topbar">
-    <div class="top-inner">
-      <div class="badge"><span class="k">النتيجة:</span> <span id="score">0</span></div>
-      <div class="badge"><span class="k">الخطوط:</span> <span id="lines">0</span></div>
-      <div class="badge"><span class="k">المستوى:</span> <span id="level">1</span></div>
-      <div class="badge"><span class="k">أفضل:</span> <span id="best">0</span></div>
-    </div>
-  </div>
-
   <div class="wrap">
-    <canvas id="cv" width="300" height="600"></canvas>
-  </div>
+    <header>
+      <div class="badges">
+        <div class="badge">المستوى: <b id="level">1</b></div>
+        <div class="badge">الخطوط: <b id="lines">0</b></div>
+        <div class="badge">أفضل نتيجة: <b id="best">0</b></div>
+      </div>
+      <button class="btn" id="reset">إعادة</button>
+    </header>
 
-  <!-- Tiny NEXT -->
-  <div class="nextTiny">
-    <h4>القادم</h4>
-    <canvas id="next" width="52" height="52"></canvas>
-  </div>
+    <div class="main">
+      <div class="board" id="board">
+        <div class="gover" id="gover">
+          <div class="box">
+            <h3>انتهت اللعبة</h3>
+            <div style="margin:6px 0;color:var(--muted)">اضغط “لعب من جديد” للبدء</div>
+            <button class="btn" id="playAgain">لعب من جديد</button>
+          </div>
+        </div>
+        <div class="grid" id="grid"></div>
+      </div>
 
-  <!-- Controls -->
-  <div class="controls">
-    <div class="pad">
-      <div></div>
-      <button id="rotBtn" class="btn" aria-label="تدوير">⤿</button>
-      <div></div>
+      <aside class="sidebar">
+        <div class="side-title">القادم</div>
+        <div class="next"><div class="next-grid" id="nextGrid"></div></div>
+        <div class="footer">
+          <div class="pill">تلميح: ⟲ للتدوير</div>
+          <div class="pill">⟱ هارد دروب سريع</div>
+        </div>
+      </aside>
+    </div>
 
-      <!-- لاحظ: ترتيب الأزرار ← | ↓ | → -->
-      <button id="leftBtn"  class="btn" aria-label="يسار">⟵</button>
-      <button id="downBtn"  class="btn" aria-label="إسقاط سريع">⬇</button>
-      <button id="rightBtn" class="btn" aria-label="يمين">⟶</button>
-
-      <button id="hardBtn" class="btn wide" aria-label="هارد دروب">⬇⬇ هارد دروب</button>
+    <!-- أزرار التحكم داخل واجهة اللعبة -->
+    <div class="controls" aria-label="أزرار التحكم">
+      <div class="btn" id="left">←</div>
+      <div class="btn" id="down">↓</div>
+      <div class="btn" id="right">→</div>
+      <div class="btn" id="rotate">⟲ تدوير</div>
+      <div class="btn big" id="hard">⟱ هارد دروب</div>
     </div>
   </div>
 
 <script>
-(()=> {
-  const COLS=10, ROWS=20;
-  const cv=document.getElementById('cv'), cx=cv.getContext('2d'),
-        W=cv.width, H=cv.height, CS=W/COLS;
-  const nextCV=document.getElementById('next'), nx=nextCV.getContext('2d');
-  const scoreEl=id('score'),linesEl=id('lines'),
-        levelEl=id('level'),bestEl=id('best');
-  let grid,cur,bag=[],nextPiece=null,score=0,lines=0,level=1,
-      best=Number(localStorage.getItem('tetris_best')||0);
-  let dropInterval=900,dropTimer=0,last=0,running=false;
-  const COLORS={I:'#00f0f0',O:'#f0f000',T:'#a000f0',S:'#00f000',
-                Z:'#f00000',J:'#0000f0',L:'#f0a000'};
-  const SHAPES={
-    I:[[0,0,0,0],[1,1,1,1],[0,0,0,0],[0,0,0,0]],
+(() => {
+  // إعداد اللوحة
+  const COLS = 10, ROWS = 20;
+  const gridEl = document.getElementById('grid');
+  const nextGridEl = document.getElementById('nextGrid');
+  const levelEl = document.getElementById('level');
+  const linesEl = document.getElementById('lines');
+  const bestEl  = document.getElementById('best');
+  const goverEl = document.getElementById('gover');
+
+  // إنشاء خلايا مرئية
+  const cells = [];
+  gridEl.style.gridTemplateColumns = `repeat(${COLS},1fr)`;
+  for (let r=0;r<ROWS;r++){
+    for (let c=0;c<COLS;c++){
+      const d = document.createElement('div');
+      d.className = 'cell';
+      gridEl.appendChild(d);
+      cells.push(d);
+    }
+  }
+  // شبكة التالي 4x4
+  const nextCells = [];
+  for (let i=0;i<16;i++){
+    const d = document.createElement('div');
+    d.className = 'cell';
+    nextGridEl.appendChild(d);
+    nextCells.push(d);
+  }
+
+  // القطع (تيترومينو) والمصفوفات
+  const SHAPES = {
+    I:[[1,1,1,1]],
     O:[[1,1],[1,1]],
-    T:[[0,1,0],[1,1,1],[0,0,0]],
-    S:[[0,1,1],[1,1,0],[0,0,0]],
-    Z:[[1,1,0],[0,1,1],[0,0,0]],
-    J:[[1,0,0],[1,1,1],[0,0,0]],
-    L:[[0,0,1],[1,1,1],[0,0,0]]
+    T:[[1,1,1],[0,1,0]],
+    S:[[0,1,1],[1,1,0]],
+    Z:[[1,1,0],[0,1,1]],
+    J:[[1,0,0],[1,1,1]],
+    L:[[0,0,1],[1,1,1]],
   };
-  function id(s){return document.getElementById(s);}
-  function emptyGrid(){return Array.from({length:ROWS},()=>Array(COLS).fill(0));}
-  function newPiece(t){const s=SHAPES[t].map(r=>r.slice());
-    return{type:t,shape:s,x:Math.floor(COLS/2)-2,y:-2,color:COLORS[t]};}
-  function bagTake(){if(!bag.length)bag=Object.keys(SHAPES).sort(()=>Math.random()-.5);
-    return bag.pop();}
-  function spawn(){const t=nextPiece||bagTake();cur=newPiece(t);nextPiece=bagTake();
-    drawNext();if(collide(cur,cur.x,cur.y)) return gameOver();}
-  function collide(p,nx,ny,shape=p.shape){
-    for(let y=0;y<shape.length;y++)for(let x=0;x<shape[y].length;x++){
-      if(!shape[y][x])continue;const gx=nx+x,gy=ny+y;
-      if(gy<0)continue;if(gx<0||gx>=COLS||gy>=ROWS)return true;
-      if(grid[gy][gx])return true;}return false;}
-  function merge(p){for(let y=0;y<p.shape.length;y++)for(let x=0;x<p.shape[y].length;x++){
-    if(!p.shape[y][x])continue;const gx=p.x+x,gy=p.y+y;
-    if(gy>=0)grid[gy][gx]=p.color;}}
-  function rotateCW(s){const N=s.length,res=Array.from({length:N},()=>Array(N).fill(0));
-    for(let y=0;y<N;y++)for(let x=0;x<N;x++)res[x][N-1-y]=s[y][x];return res;}
-  function tryRotate(){const r=rotateCW(cur.shape),k=[0,-1,1,-2,2];
-    for(const dx of k){if(!collide(cur,cur.x+dx,cur.y,r)){cur.shape=r;cur.x+=dx;return;}}}
-  function move(dx,dy){if(!collide(cur,cur.x+dx,cur.y+dy)){cur.x+=dx;cur.y+=dy;return true}return false}
-  function hardDrop(){while(move(0,1));lock();}
-  function clearLines(){let c=0;for(let y=ROWS-1;y>=0;){
-    if(grid[y].every(v=>v)){grid.splice(y,1);grid.unshift(Array(COLS).fill(0));c++;}else y--;}
-    if(c){score+=[0,100,300,500,800][c]||c*300;lines+=c;level=1+Math.floor(lines/10);
-      dropInterval=Math.max(120,900-(level-1)*70);}}
-  function lock(){merge(cur);clearLines();spawn();updateHUD();draw();}
-  function updateHUD(){scoreEl.textContent=score;linesEl.textContent=lines;
-    levelEl.textContent=level;bestEl.textContent=Math.max(best,score);}
-  function gameOver(){running=false;best=Math.max(best,score);
-    localStorage.setItem('tetris_best',best);updateHUD();
-    alert('انتهت اللعبة! نتيجتك: '+score);}
-  function draw(){
-    cx.clearRect(0,0,W,H);
-    cx.strokeStyle='rgba(255,255,255,.09)';
-    for(let x=0;x<=COLS;x++){cx.beginPath();cx.moveTo(x*CS+.5,0);cx.lineTo(x*CS+.5,H);cx.stroke();}
-    for(let y=0;y<=ROWS;y++){cx.beginPath();cx.moveTo(0,y*CS+.5);cx.lineTo(W,y*CS+.5);cx.stroke();}
-    for(let y=0;y<ROWS;y++)for(let x=0;x<COLS;x++)if(grid[y][x]) cell(x,y,grid[y][x]);
-    for(let y=0;y<cur.shape.length;y++)for(let x=0;x<cur.shape[y].length;x++)
-      if(cur.shape[y][x]) cell(cur.x+x,cur.y+y,cur.color);}
-  function cell(gx,gy,color){ if(gy<0) return; cx.fillStyle=color;
-    cx.fillRect(gx*CS+1,gy*CS+1,CS-2,CS-2); }
+  const COLORS = {
+    I:'c-cyan', O:'c-yellow', T:'c-purple',
+    S:'c-green', Z:'c-red', J:'c-blue', L:'c-orange'
+  };
+
+  // حالة اللعبة
+  let field, cur, next, x, y, dropMs, timer, lines=0, level=1, best=Number(localStorage.getItem('tetrisBest')||0), gameOver=false;
+
+  function emptyField(){
+    return Array.from({length:ROWS},()=>Array(COLS).fill(0));
+  }
+
+  function rndPiece(){
+    const keys = Object.keys(SHAPES);
+    const k = keys[Math.floor(Math.random()*keys.length)];
+    return {k, m: SHAPES[k].map(row=>row.slice())};
+  }
+
+  function reset(){
+    field = emptyField();
+    cur = rndPiece();
+    next = rndPiece();
+    x = 3; y = 0;
+    dropMs = 800;
+    lines = 0; level = 1; gameOver=false;
+    bestEl.textContent = best;
+    updateHUD();
+    render();
+    drawNext();
+    hideGameOver();
+    loop();
+  }
+
+  function loop(){
+    clearInterval(timer);
+    timer = setInterval(()=>tick(), dropMs);
+  }
+
+  function updateHUD(){
+    levelEl.textContent = level;
+    linesEl.textContent = lines;
+    bestEl.textContent = best;
+  }
+
+  function rotate(mat){
+    const R = mat.length, C = mat[0].length;
+    const out = Array.from({length:C},()=>Array(R).fill(0));
+    for (let r=0;r<R;r++)
+      for (let c=0;c<C;c++)
+        out[c][R-1-r] = mat[r][c];
+    return out;
+  }
+
+  function collide(nx=x, ny=y, m=cur.m){
+    for (let r=0;r<m.length;r++){
+      for (let c=0;c<m[0].length;c++){
+        if (!m[r][c]) continue;
+        const X = nx + c, Y = ny + r;
+        if (X<0 || X>=COLS || Y>=ROWS) return true;
+        if (Y>=0 && field[Y][X]) return true;
+      }
+    }
+    return false;
+  }
+
+  function merge(){
+    for (let r=0;r<cur.m.length;r++)
+      for (let c=0;c<cur.m[0].length;c++)
+        if (cur.m[r][c]) {
+          const X = x+c, Y = y+r;
+          if (Y>=0) field[Y][X] = cur.k;
+        }
+  }
+
+  function clearLines(){
+    let cleared=0;
+    for (let r=ROWS-1;r>=0;r--){
+      if (field[r].every(v=>v)){
+        field.splice(r,1);
+        field.unshift(Array(COLS).fill(0));
+        cleared++; r++;
+      }
+    }
+    if (cleared){
+      lines += cleared;
+      const newLevel = Math.floor(lines/10)+1;
+      if (newLevel>level){
+        level = newLevel;
+        dropMs = Math.max(120, Math.floor(dropMs*0.88)); // أسرع
+        loop();
+      }
+      if (lines>best){ best=lines; localStorage.setItem('tetrisBest',best); }
+      updateHUD();
+    }
+  }
+
+  function spawn(){
+    cur = next;
+    next = rndPiece();
+    x = 3; y = 0;
+    // جيم أوفر: لو التصادم عند الاسبون => انتهت
+    if (collide(x, y, cur.m)){
+      showGameOver();
+      gameOver = true;
+      clearInterval(timer);
+    }
+    drawNext();
+  }
+
+  function tick(){
+    if (gameOver) return;
+    if (!collide(x, y+1)){
+      y++;
+    } else {
+      merge();
+      clearLines();
+      spawn();
+    }
+    render();
+  }
+
+  function render(){
+    // امسح
+    cells.forEach(c=>c.className='cell');
+    // ارسم ثابت
+    for (let r=0;r<ROWS;r++){
+      for (let c=0;c<COLS;c++){
+        const v = field[r][c];
+        if (v){
+          cells[r*COLS+c].classList.add(COLORS[v]);
+        }
+      }
+    }
+    // ارسم القطعة الحالية
+    for (let r=0;r<cur.m.length;r++){
+      for (let c=0;c<cur.m[0].length;c++){
+        if (!cur.m[r][c]) continue;
+        const X = x+c, Y = y+r;
+        if (Y>=0 && Y<ROWS && X>=0 && X<COLS){
+          cells[Y*COLS+X].classList.add(COLORS[cur.k]);
+        }
+      }
+    }
+  }
+
   function drawNext(){
-    nx.clearRect(0,0,nextCV.width,nextCV.height);
-    const s=SHAPES[nextPiece], col=COLORS[nextPiece];
-    const size = Math.floor(Math.min(nextCV.width, nextCV.height)/4);
-    const w=s[0].length*size, h=s.length*size,
-          sx=(nextCV.width-w)/2, sy=(nextCV.height-h)/2;
-    for(let y=0;y<s.length;y++)for(let x=0;x<s[y].length;x++)
-      if(s[y][x]){ nx.fillStyle=col; nx.fillRect(sx+x*size+1, sy+y*size+1, size-2, size-2); }}
-  function update(dt){ dropTimer+=dt; if(dropTimer>dropInterval){ dropTimer=0; if(!move(0,1)) lock(); } }
-  function tick(t){ if(!running) return; const dt=t-last; last=t; update(dt); draw(); requestAnimationFrame(tick); }
-  function start(){ grid=emptyGrid(); score=0; lines=0; level=1; dropInterval=900; running=true;
-    nextPiece=null; spawn(); updateHUD(); last=performance.now(); requestAnimationFrame(tick); }
+    nextCells.forEach(c=>c.className='cell');
+    const mat = next.m;
+    // مركز القطعة داخل 4x4
+    const offsetR = Math.floor((4 - mat.length)/2);
+    const offsetC = Math.floor((4 - mat[0].length)/2);
+    for (let r=0;r<mat.length;r++)
+      for (let c=0;c<mat[0].length;c++)
+        if (mat[r][c]){
+          const idx = (r+offsetR)*4 + (c+offsetC);
+          nextCells[idx].classList.add(COLORS[next.k]);
+        }
+  }
 
-  /* ===== الأزرار — يسار/يمين شغّالين بالاتجاه الصحيح ===== */
-  const idc = s => document.getElementById(s);
-  idc('leftBtn').addEventListener('click',  ()=>{ if(running){ move(-1,0); draw(); } });
-  idc('rightBtn').addEventListener('click', ()=>{ if(running){ move( 1,0); draw(); } });
-  idc('downBtn').addEventListener('click',  ()=>{ if(running){ if(move(0,1)){ score++; updateHUD(); draw(); } } });
-  idc('rotBtn').addEventListener('click',   ()=>{ if(running){ tryRotate(); draw(); } });
-  idc('hardBtn').addEventListener('click',  ()=>{ if(running){ hardDrop(); draw(); } });
+  // تحكم
+  function moveLeft(){ if (!collide(x-1,y)) { x--; render(); } }
+  function moveRight(){ if (!collide(x+1,y)) { x++; render(); } }
+  function softDown(){ if (!collide(x,y+1)) { y++; render(); } }
+  function rotateCur(){
+    const m = rotate(cur.m);
+    if (!collide(x,y,m)) { cur.m = m; render(); return; }
+    // محاولات تعويض (wall kick بسيط)
+    if (!collide(x-1,y,m)) { x--; cur.m=m; render(); return; }
+    if (!collide(x+1,y,m)) { x++; cur.m=m; render(); return; }
+  }
+  function hardDrop(){
+    while(!collide(x,y+1)) y++;
+    render(); tick();
+  }
 
-  // لوحة مفاتيح (قياسي)
-  window.addEventListener('keydown', e=>{
-    if(!running) return;
-    if(e.key==='ArrowLeft')  move(-1,0);
-    if(e.key==='ArrowRight') move(1,0);
-    if(e.key==='ArrowDown'){ if(move(0,1)){ score++; updateHUD(); } }
-    if(e.key==='ArrowUp')    tryRotate();
-    if(e.code==='Space'){ e.preventDefault(); hardDrop(); }
-    draw();
+  // أزرار لمس
+  document.getElementById('left').addEventListener('click', moveLeft);
+  document.getElementById('right').addEventListener('click', moveRight);
+  document.getElementById('down').addEventListener('click', softDown);
+  document.getElementById('rotate').addEventListener('click', rotateCur);
+  document.getElementById('hard').addEventListener('click', hardDrop);
+
+  // كيبورد (اختياري)
+  window.addEventListener('keydown', (e)=>{
+    if (gameOver && e.key.toLowerCase()!=='r') return;
+    if (['ArrowLeft','a','A'].includes(e.key)) moveLeft();
+    else if (['ArrowRight','d','D'].includes(e.key)) moveRight();
+    else if (['ArrowDown','s','S'].includes(e.key)) softDown();
+    else if (['ArrowUp','w','W',' '].includes(e.key)) rotateCur();
+    else if (e.key==='Shift' || e.key==='Enter') hardDrop();
+    else if (e.key.toLowerCase()==='r') reset();
   });
 
-  start();
+  // جيم أوفر UI
+  function showGameOver(){ goverEl.style.display='grid'; }
+  function hideGameOver(){ goverEl.style.display='none'; }
+
+  document.getElementById('playAgain').onclick = reset;
+  document.getElementById('reset').onclick = reset;
+
+  // ابدأ
+  reset();
 })();
 </script>
 </body>
