@@ -16,41 +16,130 @@
     margin:0; background:linear-gradient(135deg,#0a1220 0%,#091a2c 60%,#0d2745 100%);
     color:var(--text); font-family:"Segoe UI",Tahoma,Arial,sans-serif;
     display:flex; justify-content:center; align-items:flex-start; min-height:100vh;
-    overflow-x: hidden;
+    overflow-x: hidden; padding: 10px;
   }
   .wrap{
-    width:min(520px,92vw); margin:14px auto 20px; padding:14px;
+    width:100%; max-width:500px; margin:10px auto; padding:12px;
     background:rgba(255,255,255,0.03); border:1px solid rgba(255,255,255,0.08);
-    border-radius:18px; box-shadow:var(--shadow);
-    transition: transform 0.3s ease;
+    border-radius:16px; box-shadow:var(--shadow);
   }
-  .wrap.shake {
-    animation: shake 0.5s cubic-bezier(.36,.07,.19,.97) both;
-  }
-  @keyframes shake {
-    10%, 90% { transform: translateX(-1px); }
-    20%, 80% { transform: translateX(2px); }
-    30%, 50%, 70% { transform: translateX(-3px); }
-    40%, 60% { transform: translateX(3px); }
-  }
-  header{display:flex; gap:8px; align-items:center; justify-content:space-between; margin-bottom:8px}
-  .badges{display:flex; gap:8px; flex-wrap:wrap}
-  .badge{background:#0f1c31;border:1px solid rgba(255,255,255,.08);color:var(--muted);padding:6px 10px;border-radius:12px;font-size:13px;min-width:80px;text-align:center}
+  header{display:flex; gap:8px; align-items:center; justify-content:space-between; margin-bottom:8px; flex-wrap: wrap;}
+  .badges{display:flex; gap:6px; flex-wrap:wrap; justify-content: center;}
+  .badge{background:#0f1c31;border:1px solid rgba(255,255,255,.08);color:var(--muted);padding:5px 8px;border-radius:10px;font-size:12px;min-width:70px;text-align:center}
   .badge b{color:var(--text)}
-  /* ثابت: عمودان دائماً (اللوحة يسار/القادم يمين) */
-  .main{display:grid; grid-template-columns: 1fr 120px; gap:12px; align-items:start}
+  /* تصميم متجاوب للهواتف */
+  .main{display:flex; flex-direction: column; gap:12px; align-items:start}
   .board{
-    position:relative; aspect-ratio:10/20; width:100%;
-    background:var(--board); border-radius:14px; overflow:hidden;
+    position:relative; 
+    width:100%; height:0; padding-bottom: 200%; /* نسبة 1:2 */
+    background:var(--board); border-radius:12px; overflow:hidden;
     box-shadow: inset 0 0 0 1px rgba(255,255,255,.08);
-    margin-top:6px; /* صغّرت المسافة */
+    margin-top:4px;
   }
   .grid{position:absolute; inset:0; display:grid; grid-template-columns:repeat(10,1fr); grid-auto-rows:1fr}
-  .cell{
-    border:1px solid rgba(255,255,255,.04); 
-    background:#1f355a;
-    transition: background-color 0.15s ease, transform 0.1s ease;
+  .cell{border:1px solid rgba(255,255,255,.04); background:#1f355a}
+  .c-red{background:var(--cell-red)} .c-green{background:var(--cell-green)} .c-blue{background:var(--cell-blue)}
+  .c-yellow{background:var(--cell-yellow)} .c-purple{background:var(--cell-purple)} .c-cyan{background:var(--cell-cyan)}
+  .c-orange{background:var(--cell-orange)}
+  .sidebar{
+    display: flex; flex-direction: row; gap: 15px; width: 100%;
+    background:#0b1422;border:1px solid rgba(255,255,255,.08);border-radius:12px;padding:8px;
+    justify-content: space-between; align-items: center;
   }
+  .next-container{display: flex; flex-direction: column; align-items: center;}
+  .side-title{font-size:13px;color:var(--muted);margin:2px 0 5px}
+  .next{width:80px;height:80px;background:#0f1c31;border-radius:10px;display:grid;place-items:center;
+        box-shadow: inset 0 0 0 1px rgba(255,255,255,.06)}
+  .next-grid{display:grid;grid-template-columns:repeat(4,1fr);grid-auto-rows:1fr;gap:2px;width:80%;height:80%}
+  .controls{
+    display: grid; 
+    grid-template-areas: 
+      ". up ."
+      "left down right"
+      "rotate rotate rotate"
+      "hard hard hard";
+    gap:8px; width: 100%; margin-top: 10px;
+  }
+  #rotate { grid-area: rotate; }
+  #hard { grid-area: hard; }
+  #left { grid-area: left; }
+  #right { grid-area: right; }
+  #down { grid-area: down; }
+  #up { grid-area: up; }
+  
+  .btn{
+    background:var(--btn);border:1px solid rgba(255,255,255,.1);color:var(--text);border-radius:14px;
+    padding:12px 8px; font-size:16px; text-align:center; user-select:none; touch-action:manipulation;
+    box-shadow:0 4px 12px rgba(0,0,0,.25); min-height: 50px; display: flex; align-items: center; justify-content: center;
+  }
+  .btn:active{transform:translateY(1px); background:var(--btn-hi)}
+  .btn.big{font-weight:700}
+  .pill{padding:6px 8px;border-radius:10px;background:#0f1c31;border:1px solid rgba(255,255,255,.08);font-size:12px;color:var(--muted); text-align: center;}
+  .footer{display:flex;justify-content:space-between;gap:6px;margin-top:8px;flex-wrap:wrap; width: 100%;}
+  .gover{
+    position:absolute;inset:0;background:rgba(0,0,0,.6);
+    display:none;place-items:center;z-index:5;
+    backdrop-filter: blur(4px);
+  }
+  .gover .box{
+    background:#0b1422;border:1px solid rgba(255,255,255,.12);padding:16px;border-radius:14px;
+    text-align:center;width:80%; 
+  }
+  .gover h3{margin:4px 0 6px}
+  .timer {
+    text-align: center;
+    margin-top: 8px;
+    font-size: 13px;
+    color: var(--muted);
+  }
+  .timer span {
+    color: var(--text);
+    font-weight: bold;
+  }
+  
+  /* تحسينات للهواتف بشكل عام */
+  @media (max-width: 500px) {
+    .wrap {
+      padding: 10px;
+      margin: 5px auto;
+    }
+    .badge {
+      font-size: 11px;
+      min-width: 60px;
+      padding: 4px 6px;
+    }
+    .btn {
+      padding: 10px 6px;
+      font-size: 14px;
+      min-height: 45px;
+    }
+    .sidebar {
+      flex-direction: column;
+      gap: 8px;
+    }
+    .next {
+      width: 70px;
+      height: 70px;
+    }
+  }
+  
+  /* تحسينات للهواتف صغيرة جدًا */
+  @media (max-width: 350px) {
+    .badges {
+      justify-content: space-between;
+      width: 100%;
+    }
+    header {
+      flex-direction: column;
+      align-items: stretch;
+    }
+    #reset {
+      width: 100%;
+      margin-top: 5px;
+    }
+  }
+  
+  /* تأثيرات بصرية */
   .cell.clear {
     animation: clearLine 0.5s ease forwards;
   }
@@ -59,72 +148,7 @@
     50% { transform: scale(1.1); opacity: 0.8; background-color: white; }
     100% { transform: scale(0); opacity: 0; }
   }
-  .c-red{background:var(--cell-red)} .c-green{background:var(--cell-green)} .c-blue{background:var(--cell-blue)}
-  .c-yellow{background:var(--cell-yellow)} .c-purple{background:var(--cell-purple)} .c-cyan{background:var(--cell-cyan)}
-  .c-orange{background:var(--cell-orange)}
-  .sidebar{background:#0b1422;border:1px solid rgba(255,255,255,.08);border-radius:14px;padding:10px}
-  .side-title{font-size:14px;color:var(--muted);margin:2px 0 8px; text-align: center;}
-  .next{width:100%;aspect-ratio:1/1;background:#0f1c31;border-radius:12px;display:grid;place-items:center;
-        box-shadow: inset 0 0 0 1px rgba(255,255,255,.06)}
-  .next-grid{display:grid;grid-template-columns:repeat(4,1fr);grid-auto-rows:1fr;gap:2px;width:80%;height:80%}
-  .controls{margin-top:10px; display:grid; grid-template-columns:repeat(3,1fr); gap:10px}
-  .btn{
-    background:var(--btn);border:1px solid rgba(255,255,255,.1);color:var(--text);border-radius:16px;
-    padding:12px 10px; font-size:18px; text-align:center; user-select:none; touch-action:manipulation;
-    box-shadow:0 4px 12px rgba(0,0,0,.25);
-    cursor: pointer;
-    transition: all 0.1s ease;
-  }
-  .btn:active{transform:translateY(1px); background:var(--btn-hi)}
-  .btn.big{grid-column:1/-1; font-weight:700}
-  .pill{padding:8px 10px;border-radius:12px;background:#0f1c31;border:1px solid rgba(255,255,255,.08);font-size:13px;color:var(--muted); text-align: center;}
-  .footer{display:flex;justify-content:space-between;gap:8px;margin-top:8px;flex-wrap:wrap}
-  .gover{
-    position:absolute;inset:0;background:rgba(0,0,0,.6);
-    display:none;place-items:center;z-index:5;
-    backdrop-filter: blur(4px);
-  }
-  .gover .box{
-    background:#0b1422;border:1px solid rgba(255,255,255,.12);padding:16px;border-radius:14px;
-    text-align:center;width:80%; animation: popIn 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
-  }
-  @keyframes popIn {
-    from { transform: scale(0.8); opacity: 0; }
-    to { transform: scale(1); opacity: 1; }
-  }
-  .gover h3{margin:4px 0 6px}
-  .timer {
-    text-align: center;
-    margin-top: 10px;
-    font-size: 14px;
-    color: var(--muted);
-  }
-  .timer span {
-    color: var(--text);
-    font-weight: bold;
-  }
   
-  /* تحسينات للهواتف */
-  @media (max-width: 500px) {
-    .main {
-      grid-template-columns: 1fr;
-      gap: 16px;
-    }
-    .sidebar {
-      order: -1;
-    }
-    .controls {
-      grid-template-columns: repeat(4, 1fr);
-    }
-    .btn.big {
-      grid-column: span 4;
-    }
-    .footer {
-      flex-direction: column;
-    }
-  }
-  
-  /* تأثير سقوط القطعة */
   @keyframes drop {
     0% { transform: translateY(-5px); opacity: 0.8; }
     100% { transform: translateY(0); opacity: 1; }
@@ -146,39 +170,41 @@
     </header>
 
     <div class="main">
-      <div>
-        <div class="board" id="board">
-          <div class="gover" id="gover">
-            <div class="box">
-              <h3>انتهت اللعبة</h3>
-              <div style="margin:6px 0;color:var(--muted)">اضغط "لعب من جديد" للبدء</div>
-              <div style="margin:6px 0;color:var(--muted)">الوقت: <span id="finalTime">00:00</span></div>
-              <button class="btn" id="playAgain">لعب من جديد</button>
-            </div>
+      <div class="board" id="board">
+        <div class="gover" id="gover">
+          <div class="box">
+            <h3>انتهت اللعبة</h3>
+            <div style="margin:6px 0;color:var(--muted)">اضغط "لعب من جديد" للبدء</div>
+            <div style="margin:6px 0;color:var(--muted)">الوقت: <span id="finalTime">00:00</span></div>
+            <button class="btn" id="playAgain">لعب من جديد</button>
           </div>
-          <div class="grid" id="grid"></div>
         </div>
-
-        <!-- أزرار التحكم تحت اللوحة مباشرة -->
-        <div class="controls" aria-label="أزرار التحكم">
-          <div class="btn" id="left">←</div>
-          <div class="btn" id="down">↓</div>
-          <div class="btn" id="right">→</div>
-          <div class="btn" id="rotate">⟲ تدوير</div>
-          <div class="btn big" id="hard">⟱ هارد دروب سريع</div>
-        </div>
-        
-        <div class="timer">الوقت: <span id="time">00:00</span></div>
+        <div class="grid" id="grid"></div>
       </div>
 
       <aside class="sidebar">
-        <div class="side-title">القادم</div>
-        <div class="next"><div class="next-grid" id="nextGrid"></div></div>
+        <div class="next-container">
+          <div class="side-title">القادم</div>
+          <div class="next"><div class="next-grid" id="nextGrid"></div></div>
+        </div>
+        
         <div class="footer">
           <div class="pill">تلميح: ⟲ للتدوير</div>
           <div class="pill">⟱ هارد دروب سريع</div>
         </div>
       </aside>
+
+      <!-- أزرار التحكم تحت اللوحة مباشرة -->
+      <div class="controls" aria-label="أزرار التحكم">
+        <div class="btn" id="left">←</div>
+        <div class="btn" id="up">↑</div>
+        <div class="btn" id="right">→</div>
+        <div class="btn" id="down">↓</div>
+        <div class="btn" id="rotate">⟲ تدوير</div>
+        <div class="btn big" id="hard">⟱ هارد دروب</div>
+      </div>
+      
+      <div class="timer">الوقت: <span id="time">00:00</span></div>
     </div>
   </div>
 
@@ -188,7 +214,6 @@
   const gridEl=document.getElementById('grid'), nextGridEl=document.getElementById('nextGrid');
   const levelEl=document.getElementById('level'), linesEl=document.getElementById('lines'), bestEl=document.getElementById('best');
   const goverEl=document.getElementById('gover'), timeEl = document.getElementById('time'), finalTimeEl = document.getElementById('finalTime');
-  const wrapEl = document.querySelector('.wrap');
 
   const cells=[]; gridEl.style.gridTemplateColumns=`repeat(${COLS},1fr)`;
   for(let r=0;r<ROWS;r++)for(let c=0;c<COLS;c++){const d=document.createElement('div');d.className='cell';gridEl.appendChild(d);cells.push(d)}
@@ -311,9 +336,6 @@
           level=nl;
           dropMs=Math.max(120,Math.floor(dropMs*0.88));
           loop();
-          // تأثير اهتزاز عند تغيير المستوى
-          wrapEl.classList.add('shake');
-          setTimeout(() => wrapEl.classList.remove('shake'), 500);
         }
         if(lines>best){
           best=lines;
@@ -418,6 +440,7 @@
   document.getElementById('left').addEventListener('click', moveLeft);
   document.getElementById('right').addEventListener('click', moveRight);
   document.getElementById('down').addEventListener('click', softDown);
+  document.getElementById('up').addEventListener('click', rotateCur);
   document.getElementById('rotate').addEventListener('click', rotateCur);
   document.getElementById('hard').addEventListener('click', hardDrop);
 
