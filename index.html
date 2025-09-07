@@ -27,20 +27,36 @@
   .badges{display:flex; gap:6px; flex-wrap:wrap; justify-content: center;}
   .badge{background:#0f1c31;border:1px solid rgba(255,255,255,.08);color:var(--muted);padding:5px 8px;border-radius:10px;font-size:12px;min-width:70px;text-align:center}
   .badge b{color:var(--text)}
+  
   /* تصميم متجاوب للهواتف */
-  .main{display:flex; flex-direction: column; gap:12px; align-items:start}
+  .main{display:flex; flex-direction: column; gap:12px;}
+  
+  /* اللوحة الرئيسية */
+  .game-area {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+  }
+  
+  .board-container {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+  }
+  
   .board{
     position:relative; 
-    width:100%; height:0; padding-bottom: 200%; /* نسبة 1:2 */
+    width:100%; height:0; padding-bottom: 140%; /* نسبة مناسبة للهواتف */
     background:var(--board); border-radius:12px; overflow:hidden;
     box-shadow: inset 0 0 0 1px rgba(255,255,255,.08);
-    margin-top:4px;
   }
   .grid{position:absolute; inset:0; display:grid; grid-template-columns:repeat(10,1fr); grid-auto-rows:1fr}
   .cell{border:1px solid rgba(255,255,255,.04); background:#1f355a}
   .c-red{background:var(--cell-red)} .c-green{background:var(--cell-green)} .c-blue{background:var(--cell-blue)}
   .c-yellow{background:var(--cell-yellow)} .c-purple{background:var(--cell-purple)} .c-cyan{background:var(--cell-cyan)}
   .c-orange{background:var(--cell-orange)}
+  
+  /* الشريط الجانبي */
   .sidebar{
     display: flex; flex-direction: row; gap: 15px; width: 100%;
     background:#0b1422;border:1px solid rgba(255,255,255,.08);border-radius:12px;padding:8px;
@@ -48,9 +64,11 @@
   }
   .next-container{display: flex; flex-direction: column; align-items: center;}
   .side-title{font-size:13px;color:var(--muted);margin:2px 0 5px}
-  .next{width:80px;height:80px;background:#0f1c31;border-radius:10px;display:grid;place-items:center;
+  .next{width:70px;height:70px;background:#0f1c31;border-radius:10px;display:grid;place-items:center;
         box-shadow: inset 0 0 0 1px rgba(255,255,255,.06)}
   .next-grid{display:grid;grid-template-columns:repeat(4,1fr);grid-auto-rows:1fr;gap:2px;width:80%;height:80%}
+  
+  /* أزرار التحكم */
   .controls{
     display: grid; 
     grid-template-areas: 
@@ -58,7 +76,7 @@
       "left down right"
       "rotate rotate rotate"
       "hard hard hard";
-    gap:8px; width: 100%; margin-top: 10px;
+    gap:8px; width: 100%; margin-top: 5px;
   }
   #rotate { grid-area: rotate; }
   #hard { grid-area: hard; }
@@ -74,8 +92,12 @@
   }
   .btn:active{transform:translateY(1px); background:var(--btn-hi)}
   .btn.big{font-weight:700}
-  .pill{padding:6px 8px;border-radius:10px;background:#0f1c31;border:1px solid rgba(255,255,255,.08);font-size:12px;color:var(--muted); text-align: center;}
+  
+  /* التذييل */
   .footer{display:flex;justify-content:space-between;gap:6px;margin-top:8px;flex-wrap:wrap; width: 100%;}
+  .pill{padding:6px 8px;border-radius:10px;background:#0f1c31;border:1px solid rgba(255,255,255,.08);font-size:12px;color:var(--muted); text-align: center;}
+  
+  /* شاشة نهاية اللعبة */
   .gover{
     position:absolute;inset:0;background:rgba(0,0,0,.6);
     display:none;place-items:center;z-index:5;
@@ -86,6 +108,8 @@
     text-align:center;width:80%; 
   }
   .gover h3{margin:4px 0 6px}
+  
+  /* المؤقت */
   .timer {
     text-align: center;
     margin-top: 8px;
@@ -118,8 +142,11 @@
       gap: 8px;
     }
     .next {
-      width: 70px;
-      height: 70px;
+      width: 60px;
+      height: 60px;
+    }
+    .board {
+      padding-bottom: 150%;
     }
   }
   
@@ -136,6 +163,9 @@
     #reset {
       width: 100%;
       margin-top: 5px;
+    }
+    .board {
+      padding-bottom: 160%;
     }
   }
   
@@ -170,41 +200,45 @@
     </header>
 
     <div class="main">
-      <div class="board" id="board">
-        <div class="gover" id="gover">
-          <div class="box">
-            <h3>انتهت اللعبة</h3>
-            <div style="margin:6px 0;color:var(--muted)">اضغط "لعب من جديد" للبدء</div>
-            <div style="margin:6px 0;color:var(--muted)">الوقت: <span id="finalTime">00:00</span></div>
-            <button class="btn" id="playAgain">لعب من جديد</button>
+      <div class="game-area">
+        <div class="board-container">
+          <div class="board" id="board">
+            <div class="gover" id="gover">
+              <div class="box">
+                <h3>انتهت اللعبة</h3>
+                <div style="margin:6px 0;color:var(--muted)">اضغط "لعب من جديد" للبدء</div>
+                <div style="margin:6px 0;color:var(--muted)">الوقت: <span id="finalTime">00:00</span></div>
+                <button class="btn" id="playAgain">لعب من جديد</button>
+              </div>
+            </div>
+            <div class="grid" id="grid"></div>
           </div>
+          
+          <div class="timer">الوقت: <span id="time">00:00</span></div>
         </div>
-        <div class="grid" id="grid"></div>
-      </div>
 
-      <aside class="sidebar">
-        <div class="next-container">
-          <div class="side-title">القادم</div>
-          <div class="next"><div class="next-grid" id="nextGrid"></div></div>
-        </div>
-        
-        <div class="footer">
-          <div class="pill">تلميح: ⟲ للتدوير</div>
-          <div class="pill">⟱ هارد دروب سريع</div>
-        </div>
-      </aside>
+        <aside class="sidebar">
+          <div class="next-container">
+            <div class="side-title">القادم</div>
+            <div class="next"><div class="next-grid" id="nextGrid"></div></div>
+          </div>
+          
+          <div class="footer">
+            <div class="pill">تلميح: ⟲ للتدوير</div>
+            <div class="pill">⟱ هارد دروب سريع</div>
+          </div>
+        </aside>
 
-      <!-- أزرار التحكم تحت اللوحة مباشرة -->
-      <div class="controls" aria-label="أزرار التحكم">
-        <div class="btn" id="left">←</div>
-        <div class="btn" id="up">↑</div>
-        <div class="btn" id="right">→</div>
-        <div class="btn" id="down">↓</div>
-        <div class="btn" id="rotate">⟲ تدوير</div>
-        <div class="btn big" id="hard">⟱ هارد دروب</div>
+        <!-- أزرار التحكم تحت اللوحة مباشرة -->
+        <div class="controls" aria-label="أزرار التحكم">
+          <div class="btn" id="left">←</div>
+          <div class="btn" id="up">↑</div>
+          <div class="btn" id="right">→</div>
+          <div class="btn" id="down">↓</div>
+          <div class="btn" id="rotate">⟲ تدوير</div>
+          <div class="btn big" id="hard">⟱ هارد دروب</div>
+        </div>
       </div>
-      
-      <div class="timer">الوقت: <span id="time">00:00</span></div>
     </div>
   </div>
 
