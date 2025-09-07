@@ -1,9 +1,9 @@
 <!DOCTYPE html>
 <html lang="ar" dir="rtl">
 <head>
-    <meta charset="utf-8">
+    <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>تتريس للجوال - Tetris Mobile</title>
+    <title>تتريس للجوال</title>
     <style>
         * {
             margin: 0;
@@ -151,6 +151,14 @@
         .next-cell {
             border-radius: 2px;
         }
+        
+        .next-cell.i { background: #1abc9c; }
+        .next-cell.o { background: #f1c40f; }
+        .next-cell.t { background: #9b59b6; }
+        .next-cell.s { background: #2ecc71; }
+        .next-cell.z { background: #e74c3c; }
+        .next-cell.j { background: #3498db; }
+        .next-cell.l { background: #e67e22; }
         
         .controls {
             display: grid;
@@ -375,11 +383,6 @@
                     <div class="next-title">القادم</div>
                     <div class="next-display" id="nextDisplay"></div>
                 </div>
-                
-                <div class="next-piece">
-                    <div class="next-title">الوقت</div>
-                    <div class="score-value" id="time">00:00</div>
-                </div>
             </div>
             
             <div class="controls">
@@ -406,7 +409,6 @@
             const scoreEl = document.getElementById('score');
             const levelEl = document.getElementById('level');
             const linesEl = document.getElementById('lines');
-            const timeEl = document.getElementById('time');
             const gameOverEl = document.getElementById('gameOver');
             const finalScoreEl = document.getElementById('finalScore');
             const finalLinesEl = document.getElementById('finalLines');
@@ -425,7 +427,6 @@
             // إعدادات اللعبة
             const COLS = 10;
             const ROWS = 20;
-            const CELL_SIZE = 1; // نسبي بسبب CSS Grid
             const EMPTY = 'empty';
             
             // أشكال القطع وألوانها
@@ -450,8 +451,6 @@
             let dropInterval = 800; // ms
             let isPaused = false;
             let isGameOver = false;
-            let startTime = null;
-            let timerInterval = null;
             
             // تهيئة اللعبة
             function init() {
@@ -755,7 +754,6 @@
                 
                 if (!gameInterval) {
                     gameInterval = setInterval(moveDown, dropInterval);
-                    startTimer();
                 }
                 
                 isPaused = false;
@@ -772,22 +770,17 @@
                 if (isPaused) {
                     clearInterval(gameInterval);
                     gameInterval = null;
-                    clearInterval(timerInterval);
-                    timerInterval = null;
                     pauseBtn.textContent = 'استئناف';
                 } else {
                     gameInterval = setInterval(moveDown, dropInterval);
-                    startTimer();
-                    pauseBtn.textContent = 'إوقف';
+                    pauseBtn.textContent = 'إيقاف';
                 }
             }
             
             // إعادة تعيين اللعبة
             function resetGame() {
                 clearInterval(gameInterval);
-                clearInterval(timerInterval);
                 gameInterval = null;
-                timerInterval = null;
                 
                 score = 0;
                 level = 1;
@@ -805,16 +798,13 @@
                 drawBoard();
                 drawNextPiece();
                 updateStats();
-                timeEl.textContent = '00:00';
             }
             
             // نهاية اللعبة
             function gameOver() {
                 isGameOver = true;
                 clearInterval(gameInterval);
-                clearInterval(timerInterval);
                 gameInterval = null;
-                timerInterval = null;
                 
                 finalScoreEl.textContent = score;
                 finalLinesEl.textContent = lines;
@@ -826,29 +816,6 @@
                 scoreEl.textContent = score;
                 levelEl.textContent = level;
                 linesEl.textContent = lines;
-            }
-            
-            // بدء المؤقت
-            function startTimer() {
-                if (timerInterval) {
-                    clearInterval(timerInterval);
-                }
-                
-                if (!startTime) {
-                    startTime = new Date();
-                }
-                
-                timerInterval = setInterval(updateTimer, 1000);
-            }
-            
-            // تحديث المؤقت
-            function updateTimer() {
-                const now = new Date();
-                const diff = Math.floor((now - startTime) / 1000);
-                const minutes = Math.floor(diff / 60);
-                const seconds = diff % 60;
-                
-                timeEl.textContent = `${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
             }
             
             // إضافة مستمعي الأحداث
