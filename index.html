@@ -1,508 +1,737 @@
 <!DOCTYPE html>
 <html lang="ar" dir="rtl">
 <head>
-<meta charset="utf-8"/>
-<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no"/>
-<title>تتريس مبسّطة — عربي</title>
-<style>
-  :root{
-    --bg:#0e1a2b; --panel:#0b1422; --board:#14233b; --cell:#1f355a; --text:#e8f0ff; --muted:#a8b3c7;
-    --cell-red:#e74c3c; --cell-green:#2ecc71; --cell-blue:#3498db; --cell-yellow:#f1c40f;
-    --cell-purple:#9b59b6; --cell-cyan:#1abc9c; --cell-orange:#e67e22;
-    --btn:#1b2d4a; --btn-hi:#26456f; --shadow:0 10px 30px rgba(0,0,0,.35);
-  }
-  *{box-sizing:border-box}
-  body{
-    margin:0; background:linear-gradient(135deg,#0a1220 0%,#091a2c 60%,#0d2745 100%);
-    color:var(--text); font-family:"Segoe UI",Tahoma,Arial,sans-serif;
-    display:flex; justify-content:center; align-items:flex-start; min-height:100vh;
-    overflow-x: hidden; padding: 10px;
-  }
-  .wrap{
-    width:100%; max-width:500px; margin:10px auto; padding:12px;
-    background:rgba(255,255,255,0.03); border:1px solid rgba(255,255,255,0.08);
-    border-radius:16px; box-shadow:var(--shadow);
-  }
-  header{display:flex; gap:8px; align-items:center; justify-content:space-between; margin-bottom:8px; flex-wrap: wrap;}
-  .badges{display:flex; gap:6px; flex-wrap:wrap; justify-content: center;}
-  .badge{background:#0f1c31;border:1px solid rgba(255,255,255,.08);color:var(--muted);padding:5px 8px;border-radius:10px;font-size:12px;min-width:70px;text-align:center}
-  .badge b{color:var(--text)}
-  
-  /* تصميم متجاوب للهواتف */
-  .main{display:flex; flex-direction: column; gap:12px;}
-  
-  /* اللوحة الرئيسية */
-  .game-area {
-    display: flex;
-    flex-direction: column;
-    gap: 12px;
-  }
-  
-  .board-container {
-    display: flex;
-    flex-direction: column;
-    gap: 10px;
-  }
-  
-  .board{
-    position:relative; 
-    width:100%; height:0; padding-bottom: 140%; /* نسبة مناسبة للهواتف */
-    background:var(--board); border-radius:12px; overflow:hidden;
-    box-shadow: inset 0 0 0 1px rgba(255,255,255,.08);
-  }
-  .grid{position:absolute; inset:0; display:grid; grid-template-columns:repeat(10,1fr); grid-auto-rows:1fr}
-  .cell{border:1px solid rgba(255,255,255,.04); background:#1f355a}
-  .c-red{background:var(--cell-red)} .c-green{background:var(--cell-green)} .c-blue{background:var(--cell-blue)}
-  .c-yellow{background:var(--cell-yellow)} .c-purple{background:var(--cell-purple)} .c-cyan{background:var(--cell-cyan)}
-  .c-orange{background:var(--cell-orange)}
-  
-  /* الشريط الجانبي */
-  .sidebar{
-    display: flex; flex-direction: row; gap: 15px; width: 100%;
-    background:#0b1422;border:1px solid rgba(255,255,255,.08);border-radius:12px;padding:8px;
-    justify-content: space-between; align-items: center;
-  }
-  .next-container{display: flex; flex-direction: column; align-items: center;}
-  .side-title{font-size:13px;color:var(--muted);margin:2px 0 5px}
-  .next{width:70px;height:70px;background:#0f1c31;border-radius:10px;display:grid;place-items:center;
-        box-shadow: inset 0 0 0 1px rgba(255,255,255,.06)}
-  .next-grid{display:grid;grid-template-columns:repeat(4,1fr);grid-auto-rows:1fr;gap:2px;width:80%;height:80%}
-  
-  /* أزرار التحكم */
-  .controls{
-    display: grid; 
-    grid-template-areas: 
-      ". up ."
-      "left down right"
-      "rotate rotate rotate"
-      "hard hard hard";
-    gap:8px; width: 100%; margin-top: 5px;
-  }
-  #rotate { grid-area: rotate; }
-  #hard { grid-area: hard; }
-  #left { grid-area: left; }
-  #right { grid-area: right; }
-  #down { grid-area: down; }
-  #up { grid-area: up; }
-  
-  .btn{
-    background:var(--btn);border:1px solid rgba(255,255,255,.1);color:var(--text);border-radius:14px;
-    padding:12px 8px; font-size:16px; text-align:center; user-select:none; touch-action:manipulation;
-    box-shadow:0 4px 12px rgba(0,0,0,.25); min-height: 50px; display: flex; align-items: center; justify-content: center;
-  }
-  .btn:active{transform:translateY(1px); background:var(--btn-hi)}
-  .btn.big{font-weight:700}
-  
-  /* التذييل */
-  .footer{display:flex;justify-content:space-between;gap:6px;margin-top:8px;flex-wrap:wrap; width: 100%;}
-  .pill{padding:6px 8px;border-radius:10px;background:#0f1c31;border:1px solid rgba(255,255,255,.08);font-size:12px;color:var(--muted); text-align: center;}
-  
-  /* شاشة نهاية اللعبة */
-  .gover{
-    position:absolute;inset:0;background:rgba(0,0,0,.6);
-    display:none;place-items:center;z-index:5;
-    backdrop-filter: blur(4px);
-  }
-  .gover .box{
-    background:#0b1422;border:1px solid rgba(255,255,255,.12);padding:16px;border-radius:14px;
-    text-align:center;width:80%; 
-  }
-  .gover h3{margin:4px 0 6px}
-  
-  /* المؤقت */
-  .timer {
-    text-align: center;
-    margin-top: 8px;
-    font-size: 13px;
-    color: var(--muted);
-  }
-  .timer span {
-    color: var(--text);
-    font-weight: bold;
-  }
-  
-  /* تحسينات للهواتف بشكل عام */
-  @media (max-width: 500px) {
-    .wrap {
-      padding: 10px;
-      margin: 5px auto;
-    }
-    .badge {
-      font-size: 11px;
-      min-width: 60px;
-      padding: 4px 6px;
-    }
-    .btn {
-      padding: 10px 6px;
-      font-size: 14px;
-      min-height: 45px;
-    }
-    .sidebar {
-      flex-direction: column;
-      gap: 8px;
-    }
-    .next {
-      width: 60px;
-      height: 60px;
-    }
-    .board {
-      padding-bottom: 150%;
-    }
-  }
-  
-  /* تحسينات للهواتف صغيرة جدًا */
-  @media (max-width: 350px) {
-    .badges {
-      justify-content: space-between;
-      width: 100%;
-    }
-    header {
-      flex-direction: column;
-      align-items: stretch;
-    }
-    #reset {
-      width: 100%;
-      margin-top: 5px;
-    }
-    .board {
-      padding-bottom: 160%;
-    }
-  }
-  
-  /* تأثيرات بصرية */
-  .cell.clear {
-    animation: clearLine 0.5s ease forwards;
-  }
-  @keyframes clearLine {
-    0% { transform: scale(1); opacity: 1; }
-    50% { transform: scale(1.1); opacity: 0.8; background-color: white; }
-    100% { transform: scale(0); opacity: 0; }
-  }
-  
-  @keyframes drop {
-    0% { transform: translateY(-5px); opacity: 0.8; }
-    100% { transform: translateY(0); opacity: 1; }
-  }
-  .cell.drop {
-    animation: drop 0.2s ease;
-  }
-</style>
+    <meta charset="utf-8"/>
+    <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no"/>
+    <title>تتريس مبسّطة — عربي</title>
+    <style>
+        :root {
+            --bg: #0e1a2b; --panel: #0b1422; --board: #14233b; --cell: #1f355a; --text: #e8f0ff; --muted: #a8b3c7;
+            --cell-red: #e74c3c; --cell-green: #2ecc71; --cell-blue: #3498db; --cell-yellow: #f1c40f;
+            --cell-purple: #9b59b6; --cell-cyan: #1abc9c; --cell-orange: #e67e22;
+            --btn: #1b2d4a; --btn-hi: #26456f; --shadow: 0 4px 12px rgba(0,0,0,.25);
+        }
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            -webkit-tap-highlight-color: transparent;
+        }
+        body {
+            margin: 0; 
+            background: linear-gradient(135deg, #0a1220 0%, #091a2c 60%, #0d2745 100%);
+            color: var(--text); 
+            font-family: "Segoe UI", Tahoma, Arial, sans-serif;
+            display: flex; 
+            justify-content: center; 
+            align-items: flex-start; 
+            min-height: 100vh;
+            overflow-x: hidden; 
+            padding: 10px;
+        }
+        .container {
+            width: 100%;
+            max-width: 100%;
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+        header {
+            display: flex; 
+            justify-content: space-between; 
+            align-items: center; 
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+        .badges {
+            display: flex; 
+            gap: 6px; 
+            flex-wrap: wrap;
+        }
+        .badge {
+            background: #0f1c31;
+            border: 1px solid rgba(255,255,255,.08);
+            color: var(--muted);
+            padding: 6px 10px;
+            border-radius: 10px;
+            font-size: 12px;
+            min-width: 70px;
+            text-align: center;
+        }
+        .badge b {
+            color: var(--text);
+            display: block;
+            font-size: 14px;
+        }
+        #reset {
+            background: var(--btn);
+            border: 1px solid rgba(255,255,255,.1);
+            color: var(--text);
+            border-radius: 12px;
+            padding: 10px 14px;
+            font-size: 14px;
+            text-align: center;
+            user-select: none;
+            touch-action: manipulation;
+            box-shadow: var(--shadow);
+            white-space: nowrap;
+        }
+        #reset:active {
+            transform: translateY(1px); 
+            background: var(--btn-hi);
+        }
+        .game-area {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+        .main-content {
+            display: flex;
+            gap: 12px;
+            justify-content: space-between;
+        }
+        .board-container {
+            flex: 1;
+            position: relative;
+        }
+        .board {
+            width: 100%;
+            aspect-ratio: 10/20;
+            background: var(--board); 
+            border-radius: 12px; 
+            overflow: hidden;
+            box-shadow: inset 0 0 0 1px rgba(255,255,255,.08);
+        }
+        .grid {
+            position: absolute;
+            inset: 0;
+            display: grid;
+            grid-template-columns: repeat(10, 1fr);
+            grid-auto-rows: 1fr;
+        }
+        .cell {
+            border: 1px solid rgba(255,255,255,.04); 
+            background: #1f355a;
+        }
+        .c-red { background: var(--cell-red); } 
+        .c-green { background: var(--cell-green); } 
+        .c-blue { background: var(--cell-blue); }
+        .c-yellow { background: var(--cell-yellow); } 
+        .c-purple { background: var(--cell-purple); } 
+        .c-cyan { background: var(--cell-cyan); }
+        .c-orange { background: var(--cell-orange); }
+        .sidebar {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            width: 90px;
+        }
+        .next-container {
+            background: #0b1422;
+            border: 1px solid rgba(255,255,255,.08);
+            border-radius: 12px;
+            padding: 10px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 6px;
+        }
+        .side-title {
+            font-size: 12px;
+            color: var(--muted);
+            text-align: center;
+        }
+        .next {
+            width: 70px;
+            height: 70px;
+            background: #0f1c31;
+            border-radius: 8px;
+            display: grid;
+            place-items: center;
+            box-shadow: inset 0 0 0 1px rgba(255,255,255,.06);
+        }
+        .next-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            grid-auto-rows: 1fr;
+            gap: 2px;
+            width: 80%;
+            height: 80%;
+        }
+        .timer {
+            background: #0b1422;
+            border: 1px solid rgba(255,255,255,.08);
+            border-radius: 12px;
+            padding: 10px;
+            text-align: center;
+            font-size: 12px;
+            color: var(--muted);
+        }
+        .timer span {
+            color: var(--text);
+            font-weight: bold;
+            display: block;
+            font-size: 14px;
+            margin-top: 4px;
+        }
+        .controls {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 8px;
+            margin-top: 8px;
+        }
+        .btn {
+            background: var(--btn);
+            border: 1px solid rgba(255,255,255,.1);
+            color: var(--text);
+            border-radius: 12px;
+            padding: 12px 8px;
+            font-size: 16px;
+            text-align: center;
+            user-select: none;
+            touch-action: manipulation;
+            box-shadow: var(--shadow);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            min-height: 50px;
+        }
+        .btn:active {
+            transform: translateY(1px); 
+            background: var(--btn-hi);
+        }
+        .btn.big {
+            grid-column: span 3;
+            font-weight: 700;
+        }
+        .footer {
+            display: flex;
+            justify-content: space-between;
+            gap: 6px;
+            margin-top: 8px;
+        }
+        .pill {
+            padding: 6px 10px;
+            border-radius: 10px;
+            background: #0f1c31;
+            border: 1px solid rgba(255,255,255,.08);
+            font-size: 11px;
+            color: var(--muted);
+            text-align: center;
+            flex: 1;
+        }
+        .gover {
+            position: absolute;
+            inset: 0;
+            background: rgba(0,0,0,.6);
+            display: none;
+            place-items: center;
+            z-index: 5;
+            backdrop-filter: blur(4px);
+        }
+        .gover .box {
+            background: #0b1422;
+            border: 1px solid rgba(255,255,255,.12);
+            padding: 16px;
+            border-radius: 14px;
+            text-align: center;
+            width: 80%;
+            max-width: 300px;
+        }
+        .gover h3 {
+            margin: 4px 0 6px;
+            color: var(--text);
+        }
+        .gover div {
+            margin: 6px 0;
+            color: var(--muted);
+        }
+        #playAgain {
+            background: var(--btn);
+            border: 1px solid rgba(255,255,255,.1);
+            color: var(--text);
+            border-radius: 12px;
+            padding: 10px 14px;
+            font-size: 14px;
+            text-align: center;
+            user-select: none;
+            touch-action: manipulation;
+            box-shadow: var(--shadow);
+            margin-top: 10px;
+            width: 100%;
+        }
+        #playAgain:active {
+            transform: translateY(1px); 
+            background: var(--btn-hi);
+        }
+        
+        /* تحسينات للهواتف صغيرة */
+        @media (max-width: 480px) {
+            .container {
+                gap: 10px;
+            }
+            header {
+                flex-direction: column;
+                align-items: stretch;
+                gap: 8px;
+            }
+            .badges {
+                justify-content: space-between;
+                width: 100%;
+            }
+            .badge {
+                flex: 1;
+                min-width: 0;
+                padding: 5px 8px;
+            }
+            #reset {
+                width: 100%;
+            }
+            .main-content {
+                flex-direction: column;
+            }
+            .sidebar {
+                width: 100%;
+                flex-direction: row;
+                justify-content: space-between;
+            }
+            .next-container {
+                flex: 1;
+            }
+            .timer {
+                flex: 1;
+                display: flex;
+                flex-direction: column;
+                justify-content: center;
+            }
+            .controls {
+                grid-template-columns: repeat(4, 1fr);
+                gap: 6px;
+            }
+            .btn {
+                padding: 10px 6px;
+                font-size: 14px;
+                min-height: 44px;
+            }
+            .btn.big {
+                grid-column: span 4;
+            }
+            .footer {
+                flex-direction: column;
+                gap: 6px;
+            }
+        }
+        
+        /* تحسينات للهواتف أفقية */
+        @media (max-height: 500px) and (orientation: landscape) {
+            .container {
+                max-width: 100%;
+                flex-direction: row;
+                flex-wrap: wrap;
+            }
+            header {
+                width: 100%;
+            }
+            .board-container {
+                flex: 2;
+            }
+            .sidebar {
+                flex: 1;
+                width: auto;
+            }
+            .controls {
+                width: 100%;
+            }
+        }
+        
+        /* تأثيرات بصرية */
+        .cell.clear {
+            animation: clearLine 0.5s ease forwards;
+        }
+        @keyframes clearLine {
+            0% { transform: scale(1); opacity: 1; }
+            50% { transform: scale(1.1); opacity: 0.8; background-color: white; }
+            100% { transform: scale(0); opacity: 0; }
+        }
+        
+        @keyframes drop {
+            0% { transform: translateY(-5px); opacity: 0.8; }
+            100% { transform: translateY(0); opacity: 1; }
+        }
+        .cell.drop {
+            animation: drop 0.2s ease;
+        }
+    </style>
 </head>
 <body>
-  <div class="wrap">
-    <header>
-      <div class="badges">
-        <div class="badge">المستوى: <b id="level">1</b></div>
-        <div class="badge">الخطوط: <b id="lines">0</b></div>
-        <div class="badge">أفضل نتيجة: <b id="best">0</b></div>
-      </div>
-      <button class="btn" id="reset">إعادة</button>
-    </header>
-
-    <div class="main">
-      <div class="game-area">
-        <div class="board-container">
-          <div class="board" id="board">
-            <div class="gover" id="gover">
-              <div class="box">
-                <h3>انتهت اللعبة</h3>
-                <div style="margin:6px 0;color:var(--muted)">اضغط "لعب من جديد" للبدء</div>
-                <div style="margin:6px 0;color:var(--muted)">الوقت: <span id="finalTime">00:00</span></div>
-                <button class="btn" id="playAgain">لعب من جديد</button>
-              </div>
+    <div class="container">
+        <header>
+            <div class="badges">
+                <div class="badge">المستوى: <b id="level">1</b></div>
+                <div class="badge">الخطوط: <b id="lines">0</b></div>
+                <div class="badge">أفضل نتيجة: <b id="best">0</b></div>
             </div>
-            <div class="grid" id="grid"></div>
-          </div>
-          
-          <div class="timer">الوقت: <span id="time">00:00</span></div>
-        </div>
+            <button id="reset">إعادة</button>
+        </header>
 
-        <aside class="sidebar">
-          <div class="next-container">
-            <div class="side-title">القادم</div>
-            <div class="next"><div class="next-grid" id="nextGrid"></div></div>
-          </div>
-          
-          <div class="footer">
-            <div class="pill">تلميح: ⟲ للتدوير</div>
-            <div class="pill">⟱ هارد دروب سريع</div>
-          </div>
-        </aside>
+        <div class="game-area">
+            <div class="main-content">
+                <div class="board-container">
+                    <div class="board" id="board">
+                        <div class="gover" id="gover">
+                            <div class="box">
+                                <h3>انتهت اللعبة</h3>
+                                <div>اضغط "لعب من جديد" للبدء</div>
+                                <div>الوقت: <span id="finalTime">00:00</span></div>
+                                <button id="playAgain">لعب من جديد</button>
+                            </div>
+                        </div>
+                        <div class="grid" id="grid"></div>
+                    </div>
+                </div>
+                
+                <div class="sidebar">
+                    <div class="next-container">
+                        <div class="side-title">القادم</div>
+                        <div class="next"><div class="next-grid" id="nextGrid"></div></div>
+                    </div>
+                    
+                    <div class="timer">
+                        الوقت: <span id="time">00:00</span>
+                    </div>
+                </div>
+            </div>
 
-        <!-- أزرار التحكم تحت اللوحة مباشرة -->
-        <div class="controls" aria-label="أزرار التحكم">
-          <div class="btn" id="left">←</div>
-          <div class="btn" id="up">↑</div>
-          <div class="btn" id="right">→</div>
-          <div class="btn" id="down">↓</div>
-          <div class="btn" id="rotate">⟲ تدوير</div>
-          <div class="btn big" id="hard">⟱ هارد دروب</div>
+            <div class="controls" aria-label="أزرار التحكم">
+                <div class="btn" id="left">←</div>
+                <div class="btn" id="up">↑</div>
+                <div class="btn" id="right">→</div>
+                <div class="btn" id="down">↓</div>
+                <div class="btn" id="rotate">⟲ تدوير</div>
+                <div class="btn big" id="hard">⟱ هارد دروب</div>
+            </div>
+            
+            <div class="footer">
+                <div class="pill">تلميح: ⟲ للتدوير</div>
+                <div class="pill">⟱ هارد دروب سريع</div>
+            </div>
         </div>
-      </div>
     </div>
-  </div>
 
-<script>
-(() => {
-  const COLS=10, ROWS=20;
-  const gridEl=document.getElementById('grid'), nextGridEl=document.getElementById('nextGrid');
-  const levelEl=document.getElementById('level'), linesEl=document.getElementById('lines'), bestEl=document.getElementById('best');
-  const goverEl=document.getElementById('gover'), timeEl = document.getElementById('time'), finalTimeEl = document.getElementById('finalTime');
+    <script>
+    (() => {
+        const COLS = 10, ROWS = 20;
+        const gridEl = document.getElementById('grid'), nextGridEl = document.getElementById('nextGrid');
+        const levelEl = document.getElementById('level'), linesEl = document.getElementById('lines'), bestEl = document.getElementById('best');
+        const goverEl = document.getElementById('gover'), timeEl = document.getElementById('time'), finalTimeEl = document.getElementById('finalTime');
 
-  const cells=[]; gridEl.style.gridTemplateColumns=`repeat(${COLS},1fr)`;
-  for(let r=0;r<ROWS;r++)for(let c=0;c<COLS;c++){const d=document.createElement('div');d.className='cell';gridEl.appendChild(d);cells.push(d)}
-  const nextCells=[]; for(let i=0;i<16;i++){const d=document.createElement('div');d.className='cell';nextGridEl.appendChild(d);nextCells.push(d)}
-
-  const SHAPES={I:[[1,1,1,1]],O:[[1,1],[1,1]],T:[[1,1,1],[0,1,0]],S:[[0,1,1],[1,1,0]],Z:[[1,1,0],[0,1,1]],J:[[1,0,0],[1,1,1]],L:[[0,0,1],[1,1,1]]};
-  const COLORS={I:'c-cyan',O:'c-yellow',T:'c-purple',S:'c-green',Z:'c-red',J:'c-blue',L:'c-orange'};
-
-  let field,cur,next,x,y,dropMs,timer,lines=0,level=1,best=Number(localStorage.getItem('tetrisBest')||0),gameOver=false;
-  let startTime = 0, gameTimeInterval;
-
-  function formatTime(seconds) {
-    const mins = Math.floor(seconds / 60);
-    const secs = seconds % 60;
-    return `${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
-  }
-
-  function updateTimer() {
-    if (gameOver) return;
-    const elapsedSeconds = Math.floor((Date.now() - startTime) / 1000);
-    timeEl.textContent = formatTime(elapsedSeconds);
-  }
-
-  function startTimer() {
-    startTime = Date.now();
-    clearInterval(gameTimeInterval);
-    gameTimeInterval = setInterval(updateTimer, 1000);
-  }
-
-  function stopTimer() {
-    clearInterval(gameTimeInterval);
-  }
-
-  function emptyField(){return Array.from({length:ROWS},()=>Array(COLS).fill(0))}
-  function rndPiece(){const k=Object.keys(SHAPES)[Math.floor(Math.random()*7)];return {k,m:SHAPES[k].map(r=>r.slice())}}
-  
-  function reset(){
-    field=emptyField();
-    cur=rndPiece();
-    next=rndPiece();
-    x=3;
-    y=0;
-    dropMs=800;
-    lines=0;
-    level=1;
-    gameOver=false;
-    bestEl.textContent=best;
-    updateHUD();
-    render();
-    drawNext();
-    hideGameOver();
-    startTimer();
-    loop();
-  }
-  
-  function loop(){clearInterval(timer);timer=setInterval(()=>tick(),dropMs)}
-  function updateHUD(){levelEl.textContent=level;linesEl.textContent=lines;bestEl.textContent=best}
-  
-  function rotate(m){
-    const R=m.length,C=m[0].length,out=Array.from({length:C},()=>Array(R).fill(0));
-    for(let r=0;r<R;r++)for(let c=0;c<C;c++)out[c][R-1-r]=m[r][c];
-    return out;
-  }
-  
-  function collide(nx=x,ny=y,m=cur.m){
-    for(let r=0;r<m.length;r++)for(let c=0;c<m[0].length;c++){
-      if(!m[r][c])continue;
-      const X=nx+c,Y=ny+r;
-      if(X<0||X>=COLS||Y>=ROWS)return true;
-      if(Y>=0&&field[Y][X])return true;
-    }
-    return false;
-  }
-  
-  function merge(){
-    for(let r=0;r<cur.m.length;r++)for(let c=0;c<cur.m[0].length;c++){
-      if(cur.m[r][c]){
-        const X=x+c,Y=y+r;
-        if(Y>=0) {
-          field[Y][X]=cur.k;
-          // إضافة تأثير السقوط للخلية
-          const cellIndex = Y*COLS+X;
-          cells[cellIndex].classList.add('drop');
-          setTimeout(() => cells[cellIndex].classList.remove('drop'), 200);
+        const cells = []; 
+        gridEl.style.gridTemplateColumns = `repeat(${COLS}, 1fr)`;
+        for (let r = 0; r < ROWS; r++) {
+            for (let c = 0; c < COLS; c++) {
+                const d = document.createElement('div');
+                d.className = 'cell';
+                gridEl.appendChild(d);
+                cells.push(d);
+            }
         }
-      }
-    }
-  }
-  
-  function clearLines(){
-    let cleared = 0;
-    let rowsToClear = [];
-    
-    for(let r=ROWS-1;r>=0;r--){
-      if(field[r].every(v=>v)){
-        rowsToClear.push(r);
-        cleared++;
-        r++;
-      }
-    }
-    
-    if(cleared){
-      // تطبيق تأثير إزالة الخط
-      rowsToClear.forEach(r => {
-        for(let c=0; c<COLS; c++){
-          const cellIndex = r*COLS+c;
-          cells[cellIndex].classList.add('clear');
-        }
-      });
-      
-      setTimeout(() => {
-        rowsToClear.forEach(r => {
-          field.splice(r,1);
-          field.unshift(Array(COLS).fill(0));
-        });
         
-        lines+=cleared;
-        const nl=Math.floor(lines/10)+1;
-        if(nl>level){
-          level=nl;
-          dropMs=Math.max(120,Math.floor(dropMs*0.88));
-          loop();
+        const nextCells = []; 
+        for (let i = 0; i < 16; i++) {
+            const d = document.createElement('div');
+            d.className = 'cell';
+            nextGridEl.appendChild(d);
+            nextCells.push(d);
         }
-        if(lines>best){
-          best=lines;
-          localStorage.setItem('tetrisBest',best);
+
+        const SHAPES = {
+            I: [[1,1,1,1]],
+            O: [[1,1],[1,1]],
+            T: [[1,1,1],[0,1,0]],
+            S: [[0,1,1],[1,1,0]],
+            Z: [[1,1,0],[0,1,1]],
+            J: [[1,0,0],[1,1,1]],
+            L: [[0,0,1],[1,1,1]]
+        };
+        
+        const COLORS = {
+            I: 'c-cyan',
+            O: 'c-yellow',
+            T: 'c-purple',
+            S: 'c-green',
+            Z: 'c-red',
+            J: 'c-blue',
+            L: 'c-orange'
+        };
+
+        let field, cur, next, x, y, dropMs, timer, lines = 0, level = 1, best = Number(localStorage.getItem('tetrisBest') || 0), gameOver = false;
+        let startTime = 0, gameTimeInterval;
+
+        function formatTime(seconds) {
+            const mins = Math.floor(seconds / 60);
+            const secs = seconds % 60;
+            return `${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
         }
-        updateHUD();
-        render();
-      }, 500);
-    }
-  }
-  
-  function spawn(){
-    cur=next;
-    next=rndPiece();
-    x=3;
-    y=0;
-    if(collide(x,y,cur.m)){
-      showGameOver();
-      gameOver=true;
-      clearInterval(timer);
-      stopTimer();
-      const elapsedSeconds = Math.floor((Date.now() - startTime) / 1000);
-      finalTimeEl.textContent = formatTime(elapsedSeconds);
-    }
-    drawNext();
-  }
-  
-  function tick(){
-    if(gameOver) return;
-    if(!collide(x,y+1)){
-      y++;
-    } else {
-      merge();
-      clearLines();
-      spawn();
-    }
-    render();
-  }
-  
-  function render(){
-    // إزالة جميع الألوان من الخلايا
-    cells.forEach(c => {
-      c.className = 'cell';
-      c.classList.remove('clear', 'drop');
-    });
-    
-    // رسم الحقل
-    for(let r=0;r<ROWS;r++){
-      for(let c=0;c<COLS;c++){
-        const v=field[r][c];
-        if(v) cells[r*COLS+c].classList.add(COLORS[v]);
-      }
-    }
-    
-    // رسم القطعة الحالية
-    for(let r=0;r<cur.m.length;r++){
-      for(let c=0;c<cur.m[0].length;c++){
-        if(!cur.m[r][c]) continue;
-        const X=x+c,Y=y+r;
-        if(Y>=0&&Y<ROWS&&X>=0&&X<COLS){
-          cells[Y*COLS+X].classList.add(COLORS[cur.k]);
+
+        function updateTimer() {
+            if (gameOver) return;
+            const elapsedSeconds = Math.floor((Date.now() - startTime) / 1000);
+            timeEl.textContent = formatTime(elapsedSeconds);
         }
-      }
-    }
-  }
-  
-  function drawNext(){
-    nextCells.forEach(c=>c.className='cell');
-    const m=next.m,offR=Math.floor((4-m.length)/2),offC=Math.floor((4-m[0].length)/2);
-    for(let r=0;r<m.length;r++){
-      for(let c=0;c<m[0].length;c++){
-        if(m[r][c]) nextCells[(r+offR)*4+(c+offC)].classList.add(COLORS[next.k]);
-      }
-    }
-  }
 
-  // تحكم
-  function moveLeft(){if(!collide(x-1,y)){x--;render()}}
-  function moveRight(){if(!collide(x+1,y)){x++;render()}}
-  function softDown(){if(!collide(x,y+1)){y++;render()}}
-  
-  function rotateCur(){
-    const m=rotate(cur.m);
-    if(!collide(x,y,m)){cur.m=m;render();return}
-    if(!collide(x-1,y,m)){x--;cur.m=m;render();return}
-    if(!collide(x+1,y,m)){x++;cur.m=m;render();return}
-  }
-  
-  function hardDrop(){
-    let dropDistance = 0;
-    while(!collide(x,y+1)){
-      y++;
-      dropDistance++;
-    }
-    if (dropDistance > 0) {
-      render();
-      tick();
-    }
-  }
+        function startTimer() {
+            startTime = Date.now();
+            clearInterval(gameTimeInterval);
+            gameTimeInterval = setInterval(updateTimer, 1000);
+        }
 
-  // إضافة مستمعي الأحداث للأزرار
-  document.getElementById('left').addEventListener('click', moveLeft);
-  document.getElementById('right').addEventListener('click', moveRight);
-  document.getElementById('down').addEventListener('click', softDown);
-  document.getElementById('up').addEventListener('click', rotateCur);
-  document.getElementById('rotate').addEventListener('click', rotateCur);
-  document.getElementById('hard').addEventListener('click', hardDrop);
+        function stopTimer() {
+            clearInterval(gameTimeInterval);
+        }
 
-  // تحسين إدخال لوحة المفاتيح لمنع التمرير
-  window.addEventListener('keydown',(e)=>{
-    if(['ArrowLeft','ArrowRight','ArrowDown','ArrowUp',' ','Shift','Enter'].includes(e.key)){
-      e.preventDefault();
-    }
-    
-    if(gameOver&&e.key.toLowerCase()!=='r')return;
-    
-    if(['ArrowLeft','a','A'].includes(e.key)) moveLeft();
-    else if(['ArrowRight','d','D'].includes(e.key)) moveRight();
-    else if(['ArrowDown','s','S'].includes(e.key)) softDown();
-    else if(['ArrowUp','w','W',' '].includes(e.key)) rotateCur();
-    else if(e.key==='Shift'||e.key==='Enter') hardDrop();
-    else if(e.key.toLowerCase()==='r') reset();
-  });
+        function emptyField() {
+            return Array.from({length: ROWS}, () => Array(COLS).fill(0));
+        }
+        
+        function rndPiece() {
+            const keys = Object.keys(SHAPES);
+            const k = keys[Math.floor(Math.random() * keys.length)];
+            return {k, m: SHAPES[k].map(r => r.slice())};
+        }
+        
+        function reset() {
+            field = emptyField();
+            cur = rndPiece();
+            next = rndPiece();
+            x = 3;
+            y = 0;
+            dropMs = 800;
+            lines = 0;
+            level = 1;
+            gameOver = false;
+            bestEl.textContent = best;
+            updateHUD();
+            render();
+            drawNext();
+            hideGameOver();
+            startTimer();
+            loop();
+        }
+        
+        function loop() {
+            clearInterval(timer);
+            timer = setInterval(() => tick(), dropMs);
+        }
+        
+        function updateHUD() {
+            levelEl.textContent = level;
+            linesEl.textContent = lines;
+            bestEl.textContent = best;
+        }
+        
+        function rotate(m) {
+            const R = m.length, C = m[0].length;
+            const out = Array.from({length: C}, () => Array(R).fill(0));
+            for (let r = 0; r < R; r++) {
+                for (let c = 0; c < C; c++) {
+                    out[c][R-1-r] = m[r][c];
+                }
+            }
+            return out;
+        }
+        
+        function collide(nx = x, ny = y, m = cur.m) {
+            for (let r = 0; r < m.length; r++) {
+                for (let c = 0; c < m[0].length; c++) {
+                    if (!m[r][c]) continue;
+                    const X = nx + c, Y = ny + r;
+                    if (X < 0 || X >= COLS || Y >= ROWS) return true;
+                    if (Y >= 0 && field[Y][X]) return true;
+                }
+            }
+            return false;
+        }
+        
+        function merge() {
+            for (let r = 0; r < cur.m.length; r++) {
+                for (let c = 0; c < cur.m[0].length; c++) {
+                    if (cur.m[r][c]) {
+                        const X = x + c, Y = y + r;
+                        if (Y >= 0) {
+                            field[Y][X] = cur.k;
+                            const cellIndex = Y * COLS + X;
+                            cells[cellIndex].classList.add('drop');
+                            setTimeout(() => cells[cellIndex].classList.remove('drop'), 200);
+                        }
+                    }
+                }
+            }
+        }
+        
+        function clearLines() {
+            let cleared = 0;
+            let rowsToClear = [];
+            
+            for (let r = ROWS-1; r >= 0; r--) {
+                if (field[r].every(v => v)) {
+                    rowsToClear.push(r);
+                    cleared++;
+                    r++;
+                }
+            }
+            
+            if (cleared) {
+                rowsToClear.forEach(r => {
+                    for (let c = 0; c < COLS; c++) {
+                        const cellIndex = r * COLS + c;
+                        cells[cellIndex].classList.add('clear');
+                    }
+                });
+                
+                setTimeout(() => {
+                    rowsToClear.forEach(r => {
+                        field.splice(r, 1);
+                        field.unshift(Array(COLS).fill(0));
+                    });
+                    
+                    lines += cleared;
+                    const nl = Math.floor(lines / 10) + 1;
+                    if (nl > level) {
+                        level = nl;
+                        dropMs = Math.max(120, Math.floor(dropMs * 0.88));
+                        loop();
+                    }
+                    if (lines > best) {
+                        best = lines;
+                        localStorage.setItem('tetrisBest', best);
+                    }
+                    updateHUD();
+                    render();
+                }, 500);
+            }
+        }
+        
+        function spawn() {
+            cur = next;
+            next = rndPiece();
+            x = 3;
+            y = 0;
+            if (collide(x, y, cur.m)) {
+                showGameOver();
+                gameOver = true;
+                clearInterval(timer);
+                stopTimer();
+                const elapsedSeconds = Math.floor((Date.now() - startTime) / 1000);
+                finalTimeEl.textContent = formatTime(elapsedSeconds);
+            }
+            drawNext();
+        }
+        
+        function tick() {
+            if (gameOver) return;
+            if (!collide(x, y+1)) {
+                y++;
+            } else {
+                merge();
+                clearLines();
+                spawn();
+            }
+            render();
+        }
+        
+        function render() {
+            cells.forEach(c => {
+                c.className = 'cell';
+                c.classList.remove('clear', 'drop');
+            });
+            
+            for (let r = 0; r < ROWS; r++) {
+                for (let c = 0; c < COLS; c++) {
+                    const v = field[r][c];
+                    if (v) cells[r * COLS + c].classList.add(COLORS[v]);
+                }
+            }
+            
+            for (let r = 0; r < cur.m.length; r++) {
+                for (let c = 0; c < cur.m[0].length; c++) {
+                    if (!cur.m[r][c]) continue;
+                    const X = x + c, Y = y + r;
+                    if (Y >= 0 && Y < ROWS && X >= 0 && X < COLS) {
+                        cells[Y * COLS + X].classList.add(COLORS[cur.k]);
+                    }
+                }
+            }
+        }
+        
+        function drawNext() {
+            nextCells.forEach(c => c.className = 'cell');
+            const m = next.m;
+            const offR = Math.floor((4 - m.length) / 2);
+            const offC = Math.floor((4 - m[0].length) / 2);
+            for (let r = 0; r < m.length; r++) {
+                for (let c = 0; c < m[0].length; c++) {
+                    if (m[r][c]) nextCells[(r + offR) * 4 + (c + offC)].classList.add(COLORS[next.k]);
+                }
+            }
+        }
 
-  function showGameOver(){goverEl.style.display='grid'}
-  function hideGameOver(){goverEl.style.display='none'}
-  
-  document.getElementById('playAgain').addEventListener('click', reset);
-  document.getElementById('reset').addEventListener('click', reset);
+        // تحكم
+        function moveLeft() { if (!collide(x-1, y)) { x--; render(); } }
+        function moveRight() { if (!collide(x+1, y)) { x++; render(); } }
+        function softDown() { if (!collide(x, y+1)) { y++; render(); } }
+        
+        function rotateCur() {
+            const m = rotate(cur.m);
+            if (!collide(x, y, m)) { cur.m = m; render(); return; }
+            if (!collide(x-1, y, m)) { x--; cur.m = m; render(); return; }
+            if (!collide(x+1, y, m)) { x++; cur.m = m; render(); return; }
+        }
+        
+        function hardDrop() {
+            let dropDistance = 0;
+            while (!collide(x, y+1)) {
+                y++;
+                dropDistance++;
+            }
+            if (dropDistance > 0) {
+                render();
+                tick();
+            }
+        }
 
-  // تهيئة اللعبة
-  reset();
-})();
-</script>
+        // إضافة مستمعي الأحداث للأزرار
+        document.getElementById('left').addEventListener('click', moveLeft);
+        document.getElementById('right').addEventListener('click', moveRight);
+        document.getElementById('down').addEventListener('click', softDown);
+        document.getElementById('up').addEventListener('click', rotateCur);
+        document.getElementById('rotate').addEventListener('click', rotateCur);
+        document.getElementById('hard').addEventListener('click', hardDrop);
+
+        // تحسين إدخال لوحة المفاتيح لمنع التمرير
+        window.addEventListener('keydown', (e) => {
+            if (['ArrowLeft','ArrowRight','ArrowDown','ArrowUp',' ','Shift','Enter'].includes(e.key)) {
+                e.preventDefault();
+            }
+            
+            if (gameOver && e.key.toLowerCase() !== 'r') return;
+            
+            if (['ArrowLeft','a','A'].includes(e.key)) moveLeft();
+            else if (['ArrowRight','d','D'].includes(e.key)) moveRight();
+            else if (['ArrowDown','s','S'].includes(e.key)) softDown();
+            else if (['ArrowUp','w','W',' '].includes(e.key)) rotateCur();
+            else if (e.key === 'Shift' || e.key === 'Enter') hardDrop();
+            else if (e.key.toLowerCase() === 'r') reset();
+        });
+
+        function showGameOver() { goverEl.style.display = 'grid'; }
+        function hideGameOver() { goverEl.style.display = 'none'; }
+        
+        document.getElementById('playAgain').addEventListener('click', reset);
+        document.getElementById('reset').addEventListener('click', reset);
+
+        // تهيئة اللعبة
+        reset();
+    })();
+    </script>
 </body>
 </html>
