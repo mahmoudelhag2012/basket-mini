@@ -1,737 +1,905 @@
 <!DOCTYPE html>
 <html lang="ar" dir="rtl">
 <head>
-    <meta charset="utf-8"/>
-    <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no"/>
-    <title>تتريس مبسّطة — عربي</title>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>تتريس للجوال - Tetris Mobile</title>
     <style>
-        :root {
-            --bg: #0e1a2b; --panel: #0b1422; --board: #14233b; --cell: #1f355a; --text: #e8f0ff; --muted: #a8b3c7;
-            --cell-red: #e74c3c; --cell-green: #2ecc71; --cell-blue: #3498db; --cell-yellow: #f1c40f;
-            --cell-purple: #9b59b6; --cell-cyan: #1abc9c; --cell-orange: #e67e22;
-            --btn: #1b2d4a; --btn-hi: #26456f; --shadow: 0 4px 12px rgba(0,0,0,.25);
-        }
         * {
-            box-sizing: border-box;
             margin: 0;
             padding: 0;
+            box-sizing: border-box;
             -webkit-tap-highlight-color: transparent;
+            touch-action: manipulation;
         }
+        
         body {
-            margin: 0; 
+            font-family: 'Segoe UI', Tahoma, sans-serif;
             background: linear-gradient(135deg, #0a1220 0%, #091a2c 60%, #0d2745 100%);
-            color: var(--text); 
-            font-family: "Segoe UI", Tahoma, Arial, sans-serif;
-            display: flex; 
-            justify-content: center; 
-            align-items: flex-start; 
-            min-height: 100vh;
-            overflow-x: hidden; 
+            color: #e8f0ff;
+            line-height: 1.6;
             padding: 10px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            min-height: 100vh;
+            overflow: hidden;
         }
+        
         .container {
             width: 100%;
             max-width: 100%;
             display: flex;
             flex-direction: column;
-            gap: 12px;
+            gap: 15px;
         }
+        
         header {
-            display: flex; 
-            justify-content: space-between; 
-            align-items: center; 
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 10px 0;
+            width: 100%;
+        }
+        
+        .logo {
+            font-size: 1.5rem;
+            font-weight: bold;
+            color: #3498db;
+        }
+        
+        .score-board {
+            display: flex;
             gap: 10px;
-            flex-wrap: wrap;
         }
-        .badges {
-            display: flex; 
-            gap: 6px; 
-            flex-wrap: wrap;
-        }
-        .badge {
-            background: #0f1c31;
-            border: 1px solid rgba(255,255,255,.08);
-            color: var(--muted);
-            padding: 6px 10px;
+        
+        .score-box {
+            background: rgba(11, 20, 34, 0.8);
+            border: 1px solid rgba(255, 255, 255, 0.1);
             border-radius: 10px;
-            font-size: 12px;
-            min-width: 70px;
+            padding: 8px 12px;
             text-align: center;
+            min-width: 80px;
         }
-        .badge b {
-            color: var(--text);
-            display: block;
-            font-size: 14px;
+        
+        .score-title {
+            font-size: 0.75rem;
+            color: #a8b3c7;
+            margin-bottom: 4px;
         }
-        #reset {
-            background: var(--btn);
-            border: 1px solid rgba(255,255,255,.1);
-            color: var(--text);
-            border-radius: 12px;
-            padding: 10px 14px;
-            font-size: 14px;
-            text-align: center;
-            user-select: none;
-            touch-action: manipulation;
-            box-shadow: var(--shadow);
-            white-space: nowrap;
+        
+        .score-value {
+            font-size: 1.1rem;
+            font-weight: bold;
+            color: #e8f0ff;
         }
-        #reset:active {
-            transform: translateY(1px); 
-            background: var(--btn-hi);
-        }
+        
         .game-area {
             display: flex;
             flex-direction: column;
-            gap: 12px;
+            gap: 15px;
+            width: 100%;
         }
-        .main-content {
-            display: flex;
-            gap: 12px;
-            justify-content: space-between;
-        }
+        
         .board-container {
-            flex: 1;
             position: relative;
+            width: 100%;
+            margin: 0 auto;
         }
+        
         .board {
             width: 100%;
             aspect-ratio: 10/20;
-            background: var(--board); 
-            border-radius: 12px; 
+            background: #14233b;
+            border-radius: 12px;
             overflow: hidden;
-            box-shadow: inset 0 0 0 1px rgba(255,255,255,.08);
-        }
-        .grid {
-            position: absolute;
-            inset: 0;
+            box-shadow: inset 0 0 0 2px rgba(255, 255, 255, 0.08);
             display: grid;
             grid-template-columns: repeat(10, 1fr);
-            grid-auto-rows: 1fr;
+            grid-template-rows: repeat(20, 1fr);
         }
+        
         .cell {
-            border: 1px solid rgba(255,255,255,.04); 
+            border: 1px solid rgba(255, 255, 255, 0.05);
             background: #1f355a;
         }
-        .c-red { background: var(--cell-red); } 
-        .c-green { background: var(--cell-green); } 
-        .c-blue { background: var(--cell-blue); }
-        .c-yellow { background: var(--cell-yellow); } 
-        .c-purple { background: var(--cell-purple); } 
-        .c-cyan { background: var(--cell-cyan); }
-        .c-orange { background: var(--cell-orange); }
-        .sidebar {
+        
+        .cell.i { background: #1abc9c; }
+        .cell.o { background: #f1c40f; }
+        .cell.t { background: #9b59b6; }
+        .cell.s { background: #2ecc71; }
+        .cell.z { background: #e74c3c; }
+        .cell.j { background: #3498db; }
+        .cell.l { background: #e67e22; }
+        
+        .game-info {
             display: flex;
-            flex-direction: column;
+            justify-content: space-between;
             gap: 10px;
-            width: 90px;
         }
-        .next-container {
-            background: #0b1422;
-            border: 1px solid rgba(255,255,255,.08);
-            border-radius: 12px;
+        
+        .next-piece {
+            background: rgba(11, 20, 34, 0.8);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 10px;
             padding: 10px;
             display: flex;
             flex-direction: column;
             align-items: center;
-            gap: 6px;
+            flex: 1;
         }
-        .side-title {
-            font-size: 12px;
-            color: var(--muted);
-            text-align: center;
+        
+        .next-title {
+            font-size: 0.8rem;
+            color: #a8b3c7;
+            margin-bottom: 8px;
         }
-        .next {
-            width: 70px;
-            height: 70px;
+        
+        .next-display {
+            width: 80px;
+            height: 80px;
             background: #0f1c31;
             border-radius: 8px;
             display: grid;
-            place-items: center;
-            box-shadow: inset 0 0 0 1px rgba(255,255,255,.06);
-        }
-        .next-grid {
-            display: grid;
             grid-template-columns: repeat(4, 1fr);
-            grid-auto-rows: 1fr;
+            grid-template-rows: repeat(4, 1fr);
             gap: 2px;
-            width: 80%;
-            height: 80%;
+            padding: 8px;
         }
-        .timer {
-            background: #0b1422;
-            border: 1px solid rgba(255,255,255,.08);
-            border-radius: 12px;
-            padding: 10px;
-            text-align: center;
-            font-size: 12px;
-            color: var(--muted);
+        
+        .next-cell {
+            border-radius: 2px;
         }
-        .timer span {
-            color: var(--text);
-            font-weight: bold;
-            display: block;
-            font-size: 14px;
-            margin-top: 4px;
-        }
+        
         .controls {
             display: grid;
             grid-template-columns: repeat(3, 1fr);
+            grid-template-rows: repeat(3, 1fr);
             gap: 8px;
-            margin-top: 8px;
-        }
-        .btn {
-            background: var(--btn);
-            border: 1px solid rgba(255,255,255,.1);
-            color: var(--text);
-            border-radius: 12px;
-            padding: 12px 8px;
-            font-size: 16px;
-            text-align: center;
-            user-select: none;
-            touch-action: manipulation;
-            box-shadow: var(--shadow);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            min-height: 50px;
-        }
-        .btn:active {
-            transform: translateY(1px); 
-            background: var(--btn-hi);
-        }
-        .btn.big {
-            grid-column: span 3;
-            font-weight: 700;
-        }
-        .footer {
-            display: flex;
-            justify-content: space-between;
-            gap: 6px;
-            margin-top: 8px;
-        }
-        .pill {
-            padding: 6px 10px;
-            border-radius: 10px;
-            background: #0f1c31;
-            border: 1px solid rgba(255,255,255,.08);
-            font-size: 11px;
-            color: var(--muted);
-            text-align: center;
-            flex: 1;
-        }
-        .gover {
-            position: absolute;
-            inset: 0;
-            background: rgba(0,0,0,.6);
-            display: none;
-            place-items: center;
-            z-index: 5;
-            backdrop-filter: blur(4px);
-        }
-        .gover .box {
-            background: #0b1422;
-            border: 1px solid rgba(255,255,255,.12);
-            padding: 16px;
-            border-radius: 14px;
-            text-align: center;
-            width: 80%;
-            max-width: 300px;
-        }
-        .gover h3 {
-            margin: 4px 0 6px;
-            color: var(--text);
-        }
-        .gover div {
-            margin: 6px 0;
-            color: var(--muted);
-        }
-        #playAgain {
-            background: var(--btn);
-            border: 1px solid rgba(255,255,255,.1);
-            color: var(--text);
-            border-radius: 12px;
-            padding: 10px 14px;
-            font-size: 14px;
-            text-align: center;
-            user-select: none;
-            touch-action: manipulation;
-            box-shadow: var(--shadow);
             margin-top: 10px;
             width: 100%;
         }
-        #playAgain:active {
-            transform: translateY(1px); 
-            background: var(--btn-hi);
+        
+        .control-btn {
+            background: #1b2d4a;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            color: #e8f0ff;
+            border-radius: 12px;
+            font-size: 1.2rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            height: 60px;
+            cursor: pointer;
+            user-select: none;
+            transition: all 0.1s;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
         }
         
-        /* تحسينات للهواتف صغيرة */
-        @media (max-width: 480px) {
-            .container {
-                gap: 10px;
-            }
-            header {
-                flex-direction: column;
-                align-items: stretch;
-                gap: 8px;
-            }
-            .badges {
-                justify-content: space-between;
-                width: 100%;
-            }
-            .badge {
-                flex: 1;
-                min-width: 0;
-                padding: 5px 8px;
-            }
-            #reset {
-                width: 100%;
-            }
-            .main-content {
-                flex-direction: column;
-            }
-            .sidebar {
-                width: 100%;
-                flex-direction: row;
-                justify-content: space-between;
-            }
-            .next-container {
-                flex: 1;
-            }
-            .timer {
-                flex: 1;
-                display: flex;
-                flex-direction: column;
-                justify-content: center;
-            }
+        .control-btn:active {
+            background: #26456f;
+            transform: translateY(2px);
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+        }
+        
+        .rotate-btn {
+            grid-column: 2;
+            grid-row: 1;
+        }
+        
+        .left-btn {
+            grid-column: 1;
+            grid-row: 2;
+        }
+        
+        .down-btn {
+            grid-column: 2;
+            grid-row: 2;
+        }
+        
+        .right-btn {
+            grid-column: 3;
+            grid-row: 2;
+        }
+        
+        .hard-drop-btn {
+            grid-column: 1 / span 3;
+            grid-row: 3;
+            font-size: 1rem;
+            padding: 0 10px;
+        }
+        
+        .action-buttons {
+            display: flex;
+            gap: 10px;
+            margin-top: 15px;
+            width: 100%;
+        }
+        
+        .action-btn {
+            flex: 1;
+            background: #1b2d4a;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            color: #e8f0ff;
+            border-radius: 12px;
+            padding: 12px;
+            font-size: 1rem;
+            font-weight: bold;
+            cursor: pointer;
+            user-select: none;
+            transition: all 0.1s;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+        }
+        
+        .action-btn:active {
+            background: #26456f;
+            transform: translateY(2px);
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+        }
+        
+        .start-btn {
+            background: #2ecc71;
+        }
+        
+        .pause-btn {
+            background: #f39c12;
+        }
+        
+        .reset-btn {
+            background: #e74c3c;
+        }
+        
+        .game-over {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.85);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            border-radius: 12px;
+            z-index: 10;
+            backdrop-filter: blur(5px);
+        }
+        
+        .game-over h2 {
+            font-size: 1.8rem;
+            margin-bottom: 15px;
+            color: #e74c3c;
+        }
+        
+        .game-over p {
+            margin-bottom: 20px;
+            text-align: center;
+            font-size: 1.1rem;
+        }
+        
+        .restart-btn {
+            background: #3498db;
+            border: none;
+            color: white;
+            padding: 12px 25px;
+            border-radius: 10px;
+            font-size: 1.1rem;
+            font-weight: bold;
+            cursor: pointer;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
+        }
+        
+        @media (max-height: 700px) {
             .controls {
-                grid-template-columns: repeat(4, 1fr);
-                gap: 6px;
+                grid-template-rows: repeat(3, 50px);
             }
-            .btn {
-                padding: 10px 6px;
-                font-size: 14px;
-                min-height: 44px;
+            
+            .control-btn {
+                height: 50px;
+                font-size: 1.1rem;
             }
-            .btn.big {
-                grid-column: span 4;
-            }
-            .footer {
-                flex-direction: column;
-                gap: 6px;
+            
+            .action-btn {
+                padding: 10px;
+                font-size: 0.9rem;
             }
         }
         
-        /* تحسينات للهواتف أفقية */
-        @media (max-height: 500px) and (orientation: landscape) {
-            .container {
-                max-width: 100%;
-                flex-direction: row;
-                flex-wrap: wrap;
+        @media (max-width: 350px) {
+            .score-box {
+                min-width: 70px;
+                padding: 6px 8px;
             }
-            header {
-                width: 100%;
+            
+            .score-title {
+                font-size: 0.7rem;
             }
-            .board-container {
-                flex: 2;
+            
+            .score-value {
+                font-size: 1rem;
             }
-            .sidebar {
-                flex: 1;
-                width: auto;
-            }
-            .controls {
-                width: 100%;
+            
+            .next-display {
+                width: 70px;
+                height: 70px;
             }
         }
         
-        /* تأثيرات بصرية */
+        /* تأثيرات للخلايا */
         .cell.clear {
-            animation: clearLine 0.5s ease forwards;
-        }
-        @keyframes clearLine {
-            0% { transform: scale(1); opacity: 1; }
-            50% { transform: scale(1.1); opacity: 0.8; background-color: white; }
-            100% { transform: scale(0); opacity: 0; }
+            animation: clearAnimation 0.5s ease-out;
         }
         
-        @keyframes drop {
-            0% { transform: translateY(-5px); opacity: 0.8; }
-            100% { transform: translateY(0); opacity: 1; }
-        }
-        .cell.drop {
-            animation: drop 0.2s ease;
+        @keyframes clearAnimation {
+            0% { opacity: 1; transform: scale(1); }
+            50% { opacity: 0.5; transform: scale(1.1); background-color: white; }
+            100% { opacity: 0; transform: scale(0.5); }
         }
     </style>
 </head>
 <body>
     <div class="container">
         <header>
-            <div class="badges">
-                <div class="badge">المستوى: <b id="level">1</b></div>
-                <div class="badge">الخطوط: <b id="lines">0</b></div>
-                <div class="badge">أفضل نتيجة: <b id="best">0</b></div>
+            <div class="logo">تتريس</div>
+            <div class="score-board">
+                <div class="score-box">
+                    <div class="score-title">النتيجة</div>
+                    <div class="score-value" id="score">0</div>
+                </div>
+                <div class="score-box">
+                    <div class="score-title">المستوى</div>
+                    <div class="score-value" id="level">1</div>
+                </div>
+                <div class="score-box">
+                    <div class="score-title">الخطوط</div>
+                    <div class="score-value" id="lines">0</div>
+                </div>
             </div>
-            <button id="reset">إعادة</button>
         </header>
-
+        
         <div class="game-area">
-            <div class="main-content">
-                <div class="board-container">
-                    <div class="board" id="board">
-                        <div class="gover" id="gover">
-                            <div class="box">
-                                <h3>انتهت اللعبة</h3>
-                                <div>اضغط "لعب من جديد" للبدء</div>
-                                <div>الوقت: <span id="finalTime">00:00</span></div>
-                                <button id="playAgain">لعب من جديد</button>
-                            </div>
-                        </div>
-                        <div class="grid" id="grid"></div>
-                    </div>
-                </div>
+            <div class="board-container">
+                <div class="board" id="board"></div>
                 
-                <div class="sidebar">
-                    <div class="next-container">
-                        <div class="side-title">القادم</div>
-                        <div class="next"><div class="next-grid" id="nextGrid"></div></div>
-                    </div>
-                    
-                    <div class="timer">
-                        الوقت: <span id="time">00:00</span>
-                    </div>
+                <div class="game-over" id="gameOver" style="display: none;">
+                    <h2>انتهت اللعبة!</h2>
+                    <p>نتيجتك: <span id="finalScore">0</span></p>
+                    <p>عدد الخطوط: <span id="finalLines">0</span></p>
+                    <button class="restart-btn" id="restartBtn">لعب مرة أخرى</button>
                 </div>
-            </div>
-
-            <div class="controls" aria-label="أزرار التحكم">
-                <div class="btn" id="left">←</div>
-                <div class="btn" id="up">↑</div>
-                <div class="btn" id="right">→</div>
-                <div class="btn" id="down">↓</div>
-                <div class="btn" id="rotate">⟲ تدوير</div>
-                <div class="btn big" id="hard">⟱ هارد دروب</div>
             </div>
             
-            <div class="footer">
-                <div class="pill">تلميح: ⟲ للتدوير</div>
-                <div class="pill">⟱ هارد دروب سريع</div>
+            <div class="game-info">
+                <div class="next-piece">
+                    <div class="next-title">القادم</div>
+                    <div class="next-display" id="nextDisplay"></div>
+                </div>
+                
+                <div class="next-piece">
+                    <div class="next-title">الوقت</div>
+                    <div class="score-value" id="time">00:00</div>
+                </div>
+            </div>
+            
+            <div class="controls">
+                <div class="control-btn rotate-btn" id="rotateBtn">⟲</div>
+                <div class="control-btn left-btn" id="leftBtn">←</div>
+                <div class="control-btn down-btn" id="downBtn">↓</div>
+                <div class="control-btn right-btn" id="rightBtn">→</div>
+                <div class="control-btn hard-drop-btn" id="hardDropBtn">هبوط سريع</div>
+            </div>
+            
+            <div class="action-buttons">
+                <button class="action-btn start-btn" id="startBtn">بدء</button>
+                <button class="action-btn pause-btn" id="pauseBtn">إيقاف</button>
+                <button class="action-btn reset-btn" id="resetBtn">إعادة</button>
             </div>
         </div>
     </div>
 
     <script>
-    (() => {
-        const COLS = 10, ROWS = 20;
-        const gridEl = document.getElementById('grid'), nextGridEl = document.getElementById('nextGrid');
-        const levelEl = document.getElementById('level'), linesEl = document.getElementById('lines'), bestEl = document.getElementById('best');
-        const goverEl = document.getElementById('gover'), timeEl = document.getElementById('time'), finalTimeEl = document.getElementById('finalTime');
-
-        const cells = []; 
-        gridEl.style.gridTemplateColumns = `repeat(${COLS}, 1fr)`;
-        for (let r = 0; r < ROWS; r++) {
-            for (let c = 0; c < COLS; c++) {
-                const d = document.createElement('div');
-                d.className = 'cell';
-                gridEl.appendChild(d);
-                cells.push(d);
-            }
-        }
-        
-        const nextCells = []; 
-        for (let i = 0; i < 16; i++) {
-            const d = document.createElement('div');
-            d.className = 'cell';
-            nextGridEl.appendChild(d);
-            nextCells.push(d);
-        }
-
-        const SHAPES = {
-            I: [[1,1,1,1]],
-            O: [[1,1],[1,1]],
-            T: [[1,1,1],[0,1,0]],
-            S: [[0,1,1],[1,1,0]],
-            Z: [[1,1,0],[0,1,1]],
-            J: [[1,0,0],[1,1,1]],
-            L: [[0,0,1],[1,1,1]]
-        };
-        
-        const COLORS = {
-            I: 'c-cyan',
-            O: 'c-yellow',
-            T: 'c-purple',
-            S: 'c-green',
-            Z: 'c-red',
-            J: 'c-blue',
-            L: 'c-orange'
-        };
-
-        let field, cur, next, x, y, dropMs, timer, lines = 0, level = 1, best = Number(localStorage.getItem('tetrisBest') || 0), gameOver = false;
-        let startTime = 0, gameTimeInterval;
-
-        function formatTime(seconds) {
-            const mins = Math.floor(seconds / 60);
-            const secs = seconds % 60;
-            return `${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
-        }
-
-        function updateTimer() {
-            if (gameOver) return;
-            const elapsedSeconds = Math.floor((Date.now() - startTime) / 1000);
-            timeEl.textContent = formatTime(elapsedSeconds);
-        }
-
-        function startTimer() {
-            startTime = Date.now();
-            clearInterval(gameTimeInterval);
-            gameTimeInterval = setInterval(updateTimer, 1000);
-        }
-
-        function stopTimer() {
-            clearInterval(gameTimeInterval);
-        }
-
-        function emptyField() {
-            return Array.from({length: ROWS}, () => Array(COLS).fill(0));
-        }
-        
-        function rndPiece() {
-            const keys = Object.keys(SHAPES);
-            const k = keys[Math.floor(Math.random() * keys.length)];
-            return {k, m: SHAPES[k].map(r => r.slice())};
-        }
-        
-        function reset() {
-            field = emptyField();
-            cur = rndPiece();
-            next = rndPiece();
-            x = 3;
-            y = 0;
-            dropMs = 800;
-            lines = 0;
-            level = 1;
-            gameOver = false;
-            bestEl.textContent = best;
-            updateHUD();
-            render();
-            drawNext();
-            hideGameOver();
-            startTimer();
-            loop();
-        }
-        
-        function loop() {
-            clearInterval(timer);
-            timer = setInterval(() => tick(), dropMs);
-        }
-        
-        function updateHUD() {
-            levelEl.textContent = level;
-            linesEl.textContent = lines;
-            bestEl.textContent = best;
-        }
-        
-        function rotate(m) {
-            const R = m.length, C = m[0].length;
-            const out = Array.from({length: C}, () => Array(R).fill(0));
-            for (let r = 0; r < R; r++) {
-                for (let c = 0; c < C; c++) {
-                    out[c][R-1-r] = m[r][c];
+        document.addEventListener('DOMContentLoaded', () => {
+            // عناصر DOM
+            const boardEl = document.getElementById('board');
+            const nextDisplayEl = document.getElementById('nextDisplay');
+            const scoreEl = document.getElementById('score');
+            const levelEl = document.getElementById('level');
+            const linesEl = document.getElementById('lines');
+            const timeEl = document.getElementById('time');
+            const gameOverEl = document.getElementById('gameOver');
+            const finalScoreEl = document.getElementById('finalScore');
+            const finalLinesEl = document.getElementById('finalLines');
+            
+            // أزرار التحكم
+            const rotateBtn = document.getElementById('rotateBtn');
+            const leftBtn = document.getElementById('leftBtn');
+            const downBtn = document.getElementById('downBtn');
+            const rightBtn = document.getElementById('rightBtn');
+            const hardDropBtn = document.getElementById('hardDropBtn');
+            const startBtn = document.getElementById('startBtn');
+            const pauseBtn = document.getElementById('pauseBtn');
+            const resetBtn = document.getElementById('resetBtn');
+            const restartBtn = document.getElementById('restartBtn');
+            
+            // إعدادات اللعبة
+            const COLS = 10;
+            const ROWS = 20;
+            const CELL_SIZE = 1; // نسبي بسبب CSS Grid
+            const EMPTY = 'empty';
+            
+            // أشكال القطع وألوانها
+            const PIECES = [
+                { shape: [[1, 1, 1, 1]], color: 'i', name: 'I' },
+                { shape: [[1, 1], [1, 1]], color: 'o', name: 'O' },
+                { shape: [[0, 1, 0], [1, 1, 1]], color: 't', name: 'T' },
+                { shape: [[0, 1, 1], [1, 1, 0]], color: 's', name: 'S' },
+                { shape: [[1, 1, 0], [0, 1, 1]], color: 'z', name: 'Z' },
+                { shape: [[1, 0, 0], [1, 1, 1]], color: 'j', name: 'J' },
+                { shape: [[0, 0, 1], [1, 1, 1]], color: 'l', name: 'L' }
+            ];
+            
+            // حالة اللعبة
+            let board = [];
+            let currentPiece = null;
+            let nextPiece = null;
+            let score = 0;
+            let level = 1;
+            let lines = 0;
+            let gameInterval = null;
+            let dropInterval = 800; // ms
+            let isPaused = false;
+            let isGameOver = false;
+            let startTime = null;
+            let timerInterval = null;
+            
+            // تهيئة اللعبة
+            function init() {
+                createBoard();
+                generatePieces();
+                drawBoard();
+                drawNextPiece();
+                updateStats();
+                
+                // إضافة خلايا لعرض القطعة التالية
+                for (let i = 0; i < 16; i++) {
+                    const cell = document.createElement('div');
+                    cell.className = 'next-cell';
+                    nextDisplayEl.appendChild(cell);
                 }
             }
-            return out;
-        }
-        
-        function collide(nx = x, ny = y, m = cur.m) {
-            for (let r = 0; r < m.length; r++) {
-                for (let c = 0; c < m[0].length; c++) {
-                    if (!m[r][c]) continue;
-                    const X = nx + c, Y = ny + r;
-                    if (X < 0 || X >= COLS || Y >= ROWS) return true;
-                    if (Y >= 0 && field[Y][X]) return true;
+            
+            // إنشاء لوحة اللعب
+            function createBoard() {
+                board = [];
+                boardEl.innerHTML = '';
+                
+                for (let r = 0; r < ROWS; r++) {
+                    board[r] = [];
+                    for (let c = 0; c < COLS; c++) {
+                        board[r][c] = EMPTY;
+                        const cell = document.createElement('div');
+                        cell.className = 'cell';
+                        cell.dataset.row = r;
+                        cell.dataset.col = c;
+                        boardEl.appendChild(cell);
+                    }
                 }
             }
-            return false;
-        }
-        
-        function merge() {
-            for (let r = 0; r < cur.m.length; r++) {
-                for (let c = 0; c < cur.m[0].length; c++) {
-                    if (cur.m[r][c]) {
-                        const X = x + c, Y = y + r;
-                        if (Y >= 0) {
-                            field[Y][X] = cur.k;
-                            const cellIndex = Y * COLS + X;
-                            cells[cellIndex].classList.add('drop');
-                            setTimeout(() => cells[cellIndex].classList.remove('drop'), 200);
+            
+            // توليد القطع الحالية والتالية
+            function generatePieces() {
+                if (!nextPiece) {
+                    nextPiece = getRandomPiece();
+                }
+                
+                currentPiece = nextPiece;
+                nextPiece = getRandomPiece();
+                
+                // وضع القطعة في منتصف الأعلى
+                currentPiece.x = Math.floor(COLS / 2) - Math.floor(currentPiece.shape[0].length / 2);
+                currentPiece.y = 0;
+                
+                // التحقق من نهاية اللعبة
+                if (isCollision()) {
+                    gameOver();
+                }
+            }
+            
+            // الحصول على قطعة عشوائية
+            function getRandomPiece() {
+                const piece = PIECES[Math.floor(Math.random() * PIECES.length)];
+                return {
+                    shape: piece.shape.map(row => [...row]),
+                    color: piece.color,
+                    x: 0,
+                    y: 0
+                };
+            }
+            
+            // رسم لوحة اللعب
+            function drawBoard() {
+                // مسح اللوحة
+                document.querySelectorAll('.cell').forEach(cell => {
+                    cell.className = 'cell';
+                });
+                
+                // رسم القطع المستقرة
+                for (let r = 0; r < ROWS; r++) {
+                    for (let c = 0; c < COLS; c++) {
+                        if (board[r][c] !== EMPTY) {
+                            const cell = document.querySelector(`.cell[data-row="${r}"][data-col="${c}"]`);
+                            if (cell) {
+                                cell.classList.add('cell', board[r][c]);
+                            }
+                        }
+                    }
+                }
+                
+                // رسم القطعة الحالية
+                if (currentPiece) {
+                    for (let r = 0; r < currentPiece.shape.length; r++) {
+                        for (let c = 0; c < currentPiece.shape[r].length; c++) {
+                            if (currentPiece.shape[r][c]) {
+                                const x = currentPiece.x + c;
+                                const y = currentPiece.y + r;
+                                
+                                if (y >= 0) {
+                                    const cell = document.querySelector(`.cell[data-row="${y}"][data-col="${x}"]`);
+                                    if (cell) {
+                                        cell.classList.add('cell', currentPiece.color);
+                                    }
+                                }
+                            }
                         }
                     }
                 }
             }
-        }
-        
-        function clearLines() {
-            let cleared = 0;
-            let rowsToClear = [];
             
-            for (let r = ROWS-1; r >= 0; r--) {
-                if (field[r].every(v => v)) {
-                    rowsToClear.push(r);
-                    cleared++;
-                    r++;
-                }
-            }
-            
-            if (cleared) {
-                rowsToClear.forEach(r => {
-                    for (let c = 0; c < COLS; c++) {
-                        const cellIndex = r * COLS + c;
-                        cells[cellIndex].classList.add('clear');
-                    }
+            // رسم القطعة التالية
+            function drawNextPiece() {
+                const cells = nextDisplayEl.querySelectorAll('.next-cell');
+                cells.forEach(cell => {
+                    cell.className = 'next-cell';
                 });
                 
-                setTimeout(() => {
-                    rowsToClear.forEach(r => {
-                        field.splice(r, 1);
-                        field.unshift(Array(COLS).fill(0));
-                    });
+                if (nextPiece) {
+                    const offsetX = Math.floor((4 - nextPiece.shape[0].length) / 2);
+                    const offsetY = Math.floor((4 - nextPiece.shape.length) / 2);
                     
-                    lines += cleared;
-                    const nl = Math.floor(lines / 10) + 1;
-                    if (nl > level) {
-                        level = nl;
-                        dropMs = Math.max(120, Math.floor(dropMs * 0.88));
-                        loop();
+                    for (let r = 0; r < nextPiece.shape.length; r++) {
+                        for (let c = 0; c < nextPiece.shape[r].length; c++) {
+                            if (nextPiece.shape[r][c]) {
+                                const index = (r + offsetY) * 4 + (c + offsetX);
+                                if (index >= 0 && index < cells.length) {
+                                    cells[index].classList.add(nextPiece.color);
+                                }
+                            }
+                        }
                     }
-                    if (lines > best) {
-                        best = lines;
-                        localStorage.setItem('tetrisBest', best);
+                }
+            }
+            
+            // التحقق من التصادم
+            function isCollision() {
+                for (let r = 0; r < currentPiece.shape.length; r++) {
+                    for (let c = 0; c < currentPiece.shape[r].length; c++) {
+                        if (currentPiece.shape[r][c]) {
+                            const newX = currentPiece.x + c;
+                            const newY = currentPiece.y + r;
+                            
+                            if (
+                                newX < 0 || 
+                                newX >= COLS || 
+                                newY >= ROWS ||
+                                (newY >= 0 && board[newY][newX] !== EMPTY)
+                            ) {
+                                return true;
+                            }
+                        }
                     }
-                    updateHUD();
-                    render();
-                }, 500);
+                }
+                return false;
             }
-        }
-        
-        function spawn() {
-            cur = next;
-            next = rndPiece();
-            x = 3;
-            y = 0;
-            if (collide(x, y, cur.m)) {
-                showGameOver();
-                gameOver = true;
-                clearInterval(timer);
-                stopTimer();
-                const elapsedSeconds = Math.floor((Date.now() - startTime) / 1000);
-                finalTimeEl.textContent = formatTime(elapsedSeconds);
-            }
-            drawNext();
-        }
-        
-        function tick() {
-            if (gameOver) return;
-            if (!collide(x, y+1)) {
-                y++;
-            } else {
-                merge();
+            
+            // تثبيت القطعة
+            function lockPiece() {
+                for (let r = 0; r < currentPiece.shape.length; r++) {
+                    for (let c = 0; c < currentPiece.shape[r].length; c++) {
+                        if (currentPiece.shape[r][c]) {
+                            const y = currentPiece.y + r;
+                            const x = currentPiece.x + c;
+                            
+                            if (y >= 0) {
+                                board[y][x] = currentPiece.color;
+                            }
+                        }
+                    }
+                }
+                
+                // مسح الخطوط المكتملة
                 clearLines();
-                spawn();
+                
+                // توليد قطعة جديدة
+                generatePieces();
+                drawBoard();
+                drawNextPiece();
             }
-            render();
-        }
-        
-        function render() {
-            cells.forEach(c => {
-                c.className = 'cell';
-                c.classList.remove('clear', 'drop');
+            
+            // مسح الخطوط المكتملة
+            function clearLines() {
+                let linesCleared = 0;
+                
+                for (let r = ROWS - 1; r >= 0; r--) {
+                    if (board[r].every(cell => cell !== EMPTY)) {
+                        // إضافة تأثير المسح
+                        for (let c = 0; c < COLS; c++) {
+                            const cell = document.querySelector(`.cell[data-row="${r}"][data-col="${c}"]`);
+                            if (cell) {
+                                cell.classList.add('clear');
+                            }
+                        }
+                        
+                        // إزالة الخط
+                        board.splice(r, 1);
+                        board.unshift(Array(COLS).fill(EMPTY));
+                        linesCleared++;
+                        r++; // التحقق من نفس المؤشر مرة أخرى
+                    }
+                }
+                
+                if (linesCleared > 0) {
+                    // تحديث النقاط والخطوط
+                    lines += linesCleared;
+                    score += linesCleared * 100 * level;
+                    
+                    // زيادة المستوى كل 10 خطوط
+                    level = Math.floor(lines / 10) + 1;
+                    
+                    // زيادة السرعة مع زيادة المستوى
+                    dropInterval = Math.max(100, 800 - (level - 1) * 70);
+                    
+                    if (gameInterval) {
+                        clearInterval(gameInterval);
+                        gameInterval = setInterval(moveDown, dropInterval);
+                    }
+                    
+                    updateStats();
+                }
+            }
+            
+            // تحريك القطعة لأسفل
+            function moveDown() {
+                if (isPaused || isGameOver) return;
+                
+                currentPiece.y++;
+                
+                if (isCollision()) {
+                    currentPiece.y--;
+                    lockPiece();
+                }
+                
+                drawBoard();
+            }
+            
+            // تحريك القطعة لليسار
+            function moveLeft() {
+                if (isPaused || isGameOver) return;
+                
+                currentPiece.x--;
+                
+                if (isCollision()) {
+                    currentPiece.x++;
+                }
+                
+                drawBoard();
+            }
+            
+            // تحريك القطعة لليمين
+            function moveRight() {
+                if (isPaused || isGameOver) return;
+                
+                currentPiece.x++;
+                
+                if (isCollision()) {
+                    currentPiece.x--;
+                }
+                
+                drawBoard();
+            }
+            
+            // تدوير القطعة
+            function rotate() {
+                if (isPaused || isGameOver) return;
+                
+                const originalShape = currentPiece.shape.map(row => [...row]);
+                const rows = currentPiece.shape.length;
+                const cols = currentPiece.shape[0].length;
+                
+                // إنشاء مصفوفة rotated بأبعاد معكوسة
+                const rotated = [];
+                for (let c = 0; c < cols; c++) {
+                    rotated[c] = [];
+                    for (let r = rows - 1; r >= 0; r--) {
+                        rotated[c][rows - 1 - r] = currentPiece.shape[r][c];
+                    }
+                }
+                
+                currentPiece.shape = rotated;
+                
+                if (isCollision()) {
+                    currentPiece.shape = originalShape;
+                }
+                
+                drawBoard();
+            }
+            
+            // هبوط سريع
+            function hardDrop() {
+                if (isPaused || isGameOver) return;
+                
+                while (!isCollision()) {
+                    currentPiece.y++;
+                }
+                
+                currentPiece.y--;
+                lockPiece();
+            }
+            
+            // بدء اللعبة
+            function startGame() {
+                if (isGameOver) {
+                    resetGame();
+                    return;
+                }
+                
+                if (!gameInterval) {
+                    gameInterval = setInterval(moveDown, dropInterval);
+                    startTimer();
+                }
+                
+                isPaused = false;
+                startBtn.textContent = 'بدء';
+                pauseBtn.textContent = 'إيقاف';
+            }
+            
+            // إيقاف/استئناف اللعبة
+            function togglePause() {
+                if (isGameOver) return;
+                
+                isPaused = !isPaused;
+                
+                if (isPaused) {
+                    clearInterval(gameInterval);
+                    gameInterval = null;
+                    clearInterval(timerInterval);
+                    timerInterval = null;
+                    pauseBtn.textContent = 'استئناف';
+                } else {
+                    gameInterval = setInterval(moveDown, dropInterval);
+                    startTimer();
+                    pauseBtn.textContent = 'إوقف';
+                }
+            }
+            
+            // إعادة تعيين اللعبة
+            function resetGame() {
+                clearInterval(gameInterval);
+                clearInterval(timerInterval);
+                gameInterval = null;
+                timerInterval = null;
+                
+                score = 0;
+                level = 1;
+                lines = 0;
+                dropInterval = 800;
+                isPaused = false;
+                isGameOver = false;
+                
+                gameOverEl.style.display = 'none';
+                startBtn.textContent = 'بدء';
+                pauseBtn.textContent = 'إيقاف';
+                
+                createBoard();
+                generatePieces();
+                drawBoard();
+                drawNextPiece();
+                updateStats();
+                timeEl.textContent = '00:00';
+            }
+            
+            // نهاية اللعبة
+            function gameOver() {
+                isGameOver = true;
+                clearInterval(gameInterval);
+                clearInterval(timerInterval);
+                gameInterval = null;
+                timerInterval = null;
+                
+                finalScoreEl.textContent = score;
+                finalLinesEl.textContent = lines;
+                gameOverEl.style.display = 'flex';
+            }
+            
+            // تحديث الإحصائيات
+            function updateStats() {
+                scoreEl.textContent = score;
+                levelEl.textContent = level;
+                linesEl.textContent = lines;
+            }
+            
+            // بدء المؤقت
+            function startTimer() {
+                if (timerInterval) {
+                    clearInterval(timerInterval);
+                }
+                
+                if (!startTime) {
+                    startTime = new Date();
+                }
+                
+                timerInterval = setInterval(updateTimer, 1000);
+            }
+            
+            // تحديث المؤقت
+            function updateTimer() {
+                const now = new Date();
+                const diff = Math.floor((now - startTime) / 1000);
+                const minutes = Math.floor(diff / 60);
+                const seconds = diff % 60;
+                
+                timeEl.textContent = `${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
+            }
+            
+            // إضافة مستمعي الأحداث
+            rotateBtn.addEventListener('click', rotate);
+            leftBtn.addEventListener('click', moveLeft);
+            downBtn.addEventListener('click', moveDown);
+            rightBtn.addEventListener('click', moveRight);
+            hardDropBtn.addEventListener('click', hardDrop);
+            startBtn.addEventListener('click', startGame);
+            pauseBtn.addEventListener('click', togglePause);
+            resetBtn.addEventListener('click', resetGame);
+            restartBtn.addEventListener('click', resetGame);
+            
+            // إضافة تحكم باللوحة المفاتيح
+            document.addEventListener('keydown', (e) => {
+                if (isPaused || isGameOver) return;
+                
+                switch (e.key) {
+                    case 'ArrowLeft':
+                    case 'a':
+                    case 'A':
+                        moveLeft();
+                        break;
+                    case 'ArrowRight':
+                    case 'd':
+                    case 'D':
+                        moveRight();
+                        break;
+                    case 'ArrowDown':
+                    case 's':
+                    case 'S':
+                        moveDown();
+                        break;
+                    case 'ArrowUp':
+                    case 'w':
+                    case 'W':
+                        rotate();
+                        break;
+                    case ' ':
+                        hardDrop();
+                        break;
+                    case 'p':
+                    case 'P':
+                        togglePause();
+                        break;
+                }
             });
             
-            for (let r = 0; r < ROWS; r++) {
-                for (let c = 0; c < COLS; c++) {
-                    const v = field[r][c];
-                    if (v) cells[r * COLS + c].classList.add(COLORS[v]);
-                }
-            }
-            
-            for (let r = 0; r < cur.m.length; r++) {
-                for (let c = 0; c < cur.m[0].length; c++) {
-                    if (!cur.m[r][c]) continue;
-                    const X = x + c, Y = y + r;
-                    if (Y >= 0 && Y < ROWS && X >= 0 && X < COLS) {
-                        cells[Y * COLS + X].classList.add(COLORS[cur.k]);
-                    }
-                }
-            }
-        }
-        
-        function drawNext() {
-            nextCells.forEach(c => c.className = 'cell');
-            const m = next.m;
-            const offR = Math.floor((4 - m.length) / 2);
-            const offC = Math.floor((4 - m[0].length) / 2);
-            for (let r = 0; r < m.length; r++) {
-                for (let c = 0; c < m[0].length; c++) {
-                    if (m[r][c]) nextCells[(r + offR) * 4 + (c + offC)].classList.add(COLORS[next.k]);
-                }
-            }
-        }
-
-        // تحكم
-        function moveLeft() { if (!collide(x-1, y)) { x--; render(); } }
-        function moveRight() { if (!collide(x+1, y)) { x++; render(); } }
-        function softDown() { if (!collide(x, y+1)) { y++; render(); } }
-        
-        function rotateCur() {
-            const m = rotate(cur.m);
-            if (!collide(x, y, m)) { cur.m = m; render(); return; }
-            if (!collide(x-1, y, m)) { x--; cur.m = m; render(); return; }
-            if (!collide(x+1, y, m)) { x++; cur.m = m; render(); return; }
-        }
-        
-        function hardDrop() {
-            let dropDistance = 0;
-            while (!collide(x, y+1)) {
-                y++;
-                dropDistance++;
-            }
-            if (dropDistance > 0) {
-                render();
-                tick();
-            }
-        }
-
-        // إضافة مستمعي الأحداث للأزرار
-        document.getElementById('left').addEventListener('click', moveLeft);
-        document.getElementById('right').addEventListener('click', moveRight);
-        document.getElementById('down').addEventListener('click', softDown);
-        document.getElementById('up').addEventListener('click', rotateCur);
-        document.getElementById('rotate').addEventListener('click', rotateCur);
-        document.getElementById('hard').addEventListener('click', hardDrop);
-
-        // تحسين إدخال لوحة المفاتيح لمنع التمرير
-        window.addEventListener('keydown', (e) => {
-            if (['ArrowLeft','ArrowRight','ArrowDown','ArrowUp',' ','Shift','Enter'].includes(e.key)) {
-                e.preventDefault();
-            }
-            
-            if (gameOver && e.key.toLowerCase() !== 'r') return;
-            
-            if (['ArrowLeft','a','A'].includes(e.key)) moveLeft();
-            else if (['ArrowRight','d','D'].includes(e.key)) moveRight();
-            else if (['ArrowDown','s','S'].includes(e.key)) softDown();
-            else if (['ArrowUp','w','W',' '].includes(e.key)) rotateCur();
-            else if (e.key === 'Shift' || e.key === 'Enter') hardDrop();
-            else if (e.key.toLowerCase() === 'r') reset();
+            // تهيئة اللعبة
+            init();
         });
-
-        function showGameOver() { goverEl.style.display = 'grid'; }
-        function hideGameOver() { goverEl.style.display = 'none'; }
-        
-        document.getElementById('playAgain').addEventListener('click', reset);
-        document.getElementById('reset').addEventListener('click', reset);
-
-        // تهيئة اللعبة
-        reset();
-    })();
     </script>
 </body>
 </html>
